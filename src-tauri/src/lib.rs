@@ -29,24 +29,36 @@ fn search_web(query: String) {
 #[command]
 async fn get_installed_apps() -> Vec<AppItem> {
     let mut apps = Vec::new();
-    // Resolve dynamic User AppData path
-    let user_start_menu = format!(
-        "{}\\Microsoft\\Windows\\Start Menu\\Programs",
-        env::var("APPDATA").unwrap_or_default()
-    );
-
-    let paths = vec![
-        "C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs".to_string(),
-        user_start_menu,
-        "C:\\Users\\Public\\Desktop".to_string(),
-    ];
-
-    for path in paths {
-        scan_dir_recursive(Path::new(&path), &mut apps);
+    
+    #[cfg(target_os = "windows")]
+    {
+        let user_start = format!("{}\\Microsoft\\Windows\\Start Menu\\Programs", std::env::var("APPDATA").unwrap_or_default());
+        let paths = vec!["C:\\ProgramData\\Microsoft\\Windows\\Start Menu\\Programs".to_string(), user_start];
+        for p in paths { scan_dir_recursive(std::path::Path::new(&p), &mut apps); }
     }
 
-    apps.sort_by(|a, b| a.name.cmp(&b.name));
-    apps.dedup_by(|a, b| a.name == b.name);
+    #[cfg(target_os = "macos")]
+    {
+        let paths = vec!["/Applications", "/System/Applications"];
+        for p in paths {
+            if let Ok(entries) = std::fs::read_dir(p) {
+                for entry in entries.flatten() {
+                    let path = entry.path();
+                    if path.extension().and_then(|s| s.to_str()) == Some("app") {
+                        let name = path.file_stem().unwrap().to_string_lossy().into_owned();
+                        apps.push(AppItem { name, path: path.to_string_lossy().into_owned() });
+                    }
+                }
+            }
+        }
+    }
+
+    #[cfg(target_os = "linux")]
+    {
+        let paths = vec!["/usr/share/applications", "/usr/local/share/applications"];
+        // Linux .desktop files are text files; you'd parse the "Name=" line
+        for p in paths { scan_linux_desktop_files(std::path::Path::new(p), &mut apps); }
+    }
 
     apps
 }
@@ -69,6 +81,19 @@ fn scan_dir_recursive(dir: &Path, apps: &mut Vec<AppItem>) {
     }
 }
 
+fn scan_linux_desktop_files(dir: &std::path::Path, apps: &mut Vec<AppItem>) {
+    if let Ok(entries) = std::fs::read_dir(dir) {
+        for entry in entries.flatten() {
+            let content = std::fs::read_to_string(entry.path()).unwrap_or_default();
+            // Simple logic: find line starting with Name=
+            if let Some(name_line) = content.lines().find(|l| l.starts_with("Name=")) {
+                let name = name_line.replace("Name=", "");
+                apps.push(AppItem { name, path: entry.path().to_string_lossy().into_owned() });
+            }
+        }
+    }
+}
+
 #[command]
 fn launch_app(path: String) {
     let _ = open::that(path);
@@ -81,14 +106,14 @@ pub fn run() {
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
 
-            // --- Windows Specific Polish ---
+            // --- Polish ---
             #[cfg(target_os = "windows")]
-            {
-                // This removes the native Windows border and the Alt+Space system menu
-                let _ = window.set_decorations(false);
-                apply_acrylic(&window, Some((0, 0, 0, 175)))
-                    .expect("Failed to apply acrylic blur");
-            }
+            apply_acrylic(&window, Some((0, 0, 0, 175))).expect("Unsupported");
+
+            #[cfg(target_os = "macos")]
+            use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
+            #[cfg(target_os = "macos")]
+            apply_vibrancy(&window, NSVisualEffectMaterial::UnderWindowBackground, None, None).expect("Unsupported");
 
             // --- System Tray ---
             let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
