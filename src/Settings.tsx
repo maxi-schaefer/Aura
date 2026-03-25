@@ -2,8 +2,10 @@ import { useEffect, useState } from "react";
 import { enable, disable, isEnabled } from "@tauri-apps/plugin-autostart";
 import { motion, AnimatePresence } from "framer-motion";
 import { getVersion } from "@tauri-apps/api/app";
-import { Settings as SettingsIcon, Layout, Zap, Info, Shield } from "lucide-react";
+import { Settings as SettingsIcon, Layout, Zap, Info, Shield, FolderClosed } from "lucide-react";
 import "./App.css"
+import AliasSettings from "./components/settings/Aliases";
+import About from "./components/settings/About";
 
 export default function Settings() {
     const [activeTab, setActiveTab] = useState("General");
@@ -12,6 +14,7 @@ export default function Settings() {
 
     const tabs = [
         { id: "General", icon: <SettingsIcon size={16} /> },
+        { id: "Aliases", icon: <FolderClosed size={16} /> },
         { id: "Appearance", icon: <Layout size={16} /> },
         { id: "Shortcuts", icon: <Zap size={16} /> },
         { id: "Privacy", icon: <Shield size={16} /> },
@@ -81,7 +84,7 @@ export default function Settings() {
                         exit={{ opacity: 0, x: -10 }}
                         transition={{ duration: 0.2 }}
                     >
-                        <h1 className="text-2xl font-bold mb-8">{activeTab}</h1>
+                        <h1 className="text-2xl font-bold mb-8">{activeTab !== "About" && activeTab}</h1>
 
                         {activeTab === "General" && (
                             <div className="space-y-6">
@@ -94,7 +97,7 @@ export default function Settings() {
                                         </div>
                                         <button 
                                             onClick={toggleAutostart}
-                                            className={`w-10 h-6 rounded-full relative transition-all duration-500 ${autoStart ? 'bg-blue-600' : 'bg-white/10'}`}
+                                            className={`cursor-pointer w-10 h-6 rounded-full relative transition-all duration-500 ${autoStart ? 'bg-blue-600' : 'bg-white/10'}`}
                                         >
                                             <motion.div 
                                                 animate={{ x: autoStart ? 18 : 4 }}
@@ -114,10 +117,12 @@ export default function Settings() {
                             </div>
                         )}
 
-                        {activeTab !== "General" && (
-                            <div className="space-y-4">
-                                <h2 className="text-md text-white/30 italic">Coming soon...</h2>
-                            </div>
+                        {activeTab === "Aliases" && (
+                            <AliasSettings />
+                        )}
+                        
+                        {activeTab === "About" && (
+                            <About />
                         )}
                     </motion.div>
                 </AnimatePresence>

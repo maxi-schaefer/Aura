@@ -1,4 +1,5 @@
 import { evaluate } from "mathjs";
+import { open } from "@tauri-apps/plugin-shell";
 
 /**
  * Checks if a string is a math expression and returns the result
@@ -46,4 +47,8 @@ export const detectColor = (query: string): string | null => {
     }
 
     return null;
+};
+
+export const handleLinkClick = async (url: string) => {
+  await open(url);
 };

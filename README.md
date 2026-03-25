@@ -10,19 +10,21 @@ A modern, fast, and versatile application launcher built with Tauri. Launch apps
 
 ---
 
+## Screenshots 🖼️
+
+![Launcher Screenshot](assets/demo.gif)  
+*Clean and intuitive interface for all your tasks.*
+
+![Launcher Screenshot](assets/settings.png)
+*Clean and simple Settings for easy configuration.*
+
 ## Features ✨
 
 - **Application Launcher** – Quickly open your installed apps.  
 - **Calculator** – Perform calculations without leaving the launcher.  
 - **Google Search** – Instantly search Google from the launcher.  
 - **Hex Color Preview** – Visualize any hex color code with a live preview.  
-
----
-
-## Screenshots 🖼️
-
-![Launcher Screenshot](assets/demo.gif)  
-*Clean and intuitive interface for all your tasks.*
+- **Aliase** – Add any URL as an alias to get done even faster
 
 ---
 

@@ -13,10 +13,13 @@ import Footer from "./components/Footer";
 
 export default function App() {
     const [query, setQuery] = useState("");
+    const isAliasMode = query.startsWith("@");
     const [isLoading, setIsLoading] = useState(true);
     const [allApps, setAllApps] = useState<any[]>([]);
+    const [aliases, setAliases] = useState<{ [key: string]: string }>({});
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [filteredApps, setFilteredApps] = useState<any[]>([]);
+    const [filteredAliases, setFilteredAliases] = useState<[string, string][]>([]);
     const [calculation, setCalculation] = useState<string | null>(null);
     const [detectedColor, setDetectedColor] = useState<string | null>(null);
     const [time, setTime] = useState("");
@@ -30,26 +33,43 @@ export default function App() {
         setDetectedColor(detectColor(query));
     }, [query]);
 
-    // 1. Initial Load
+    // Initial Load
     useEffect(() => {
         setIsLoading(true);
-        invoke("get_installed_apps").then((res: any) => { 
-            setAllApps(res); 
-            setFilteredApps(res); 
-        })
-        .finally(() => setTimeout(() => setIsLoading(false), 300));
+        Promise.all([
+            invoke("get_installed_apps"),
+            invoke("get_aliases")
+        ]).then(([apps, aliasMap]: [any, any]) => {
+            setAllApps(apps);
+            setFilteredApps(apps);
+            setAliases(aliasMap);
+        }).finally(() => setTimeout(() => setIsLoading(false), 300));
     }, []);
 
-    // 2. Math Logic
+    // Math Logic
     useEffect(() => {
         setCalculation(calculateExpression(query));
     }, [query]);
 
-    // 3. Filtering Logic
+    // Filtering Logic
     useEffect(() => {
         setFilteredApps(query ? matchSorter(allApps, query, { keys: ["name"] }) : allApps);
         setSelectedIndex(0);
     }, [query, allApps]);
+
+    // Filtering Logic for Aliases
+    useEffect(() => {
+        if (query.startsWith("@")) {
+            const searchTerm = query.slice(1).toLowerCase();
+            const matches = Object.entries(aliases).filter(([key]) => 
+                key.includes(searchTerm)
+            );
+            setFilteredAliases(matches);
+        } else {
+            setFilteredAliases([]);
+        }
+        setSelectedIndex(0);
+    }, [query, aliases]);
 
     // 4. Keyboard Navigation
     useEffect(() => {
@@ -59,8 +79,10 @@ export default function App() {
                 return;
             }
 
-            // Total items = (1 if calculation) + (filteredApps OR 1 if fallback)
-            const listLength = (calculation ? 1 : 0) + (isSearchFallback && !calculation ? 1 : filteredApps.length);
+            const listLength = isAliasMode 
+                ? filteredAliases.length 
+                : (calculation ? 1 : 0) + (detectedColor ? 1 : 0) + filteredApps.length + (isSearchFallback && !calculation ? 1 : 0);
+
             const maxIndex = Math.max(0, listLength - 1);
 
             if (e.key === "ArrowDown") {
@@ -117,22 +139,26 @@ export default function App() {
 
     const handleExecute = async () => {
         const appWindow = getCurrentWindow();
-        if(detectedColor && selectedIndex == 0) {
+        
+        if (isAliasMode) {
+            const selected = filteredAliases[selectedIndex];
+            if (selected) {
+                await invoke("search_web", { query: selected[1] });
+            }
+        } else if (detectedColor && selectedIndex === 0) {
             await navigator.clipboard.writeText(detectedColor);
         } else if (calculation && selectedIndex === 0) {
             await navigator.clipboard.writeText(calculation);
         } else if (isSearchFallback && !calculation) {
             await invoke("search_web", { query });
         } else {
-            const appIndex = calculation ? selectedIndex - 1 : selectedIndex;
+            const appIndex = (calculation || detectedColor) ? selectedIndex - 1 : selectedIndex;
             const selectedApp = filteredApps[appIndex];
             if (selectedApp) await invoke("launch_app", { path: selectedApp.path });
         }
 
         setQuery("");
-        setTimeout(() => {
-            appWindow.hide();
-        }, 10);
+        setTimeout(() => appWindow.hide(), 10);
     };
 
     // Timer
@@ -161,66 +187,72 @@ export default function App() {
                         autoFocus 
                         value={query} 
                         onChange={(e) => setQuery(e.target.value)}
-                        placeholder="Search apps or math..."
-                        className="w-full bg-transparent outline-none text-white text-base placeholder-gray-500"
+                        placeholder="Search apps, math, or type @ for aliases..."
+                        className={`w-full bg-transparent outline-none text-base placeholder-gray-500 ${query.startsWith('@') ? 'text-blue-400 font-bold' : 'text-white'}`}
                     />
                     <p className="absolute right-3 text-gray-500/50 font-mono">
                         {time}
                     </p>
                 </div>
 
-                <div ref={scrollContainerRef} className="max-h-[320px] overflow-y-auto custom-scrollbar pr-1">
+                <div ref={scrollContainerRef} className="max-h-80 overflow-y-auto custom-scrollbar pr-1">
                     {isLoading ? (
-                        <motion.div
-                            initial={{ opacity: 0 }}
-                            animate={{ opacity: 1 }}
-                            exit={{ opacity: 0 }}
-                        >
-                            <LoadingState />
-                        </motion.div>
+                        <LoadingState />
                     ) : (
                         <>
-                        {detectedColor && (
-                            <ColorResult 
-                                color={detectedColor} 
-                                isActive={selectedIndex === 0} 
-                            />
-                        )}
+                            {isAliasMode && filteredAliases.map(([key, url], index) => (
+                                <ResultItem
+                                    key={key}
+                                    name={`@${key}`}
+                                    type={url}
+                                    isActive={selectedIndex === index}
+                                    onMouseEnter={() => setSelectedIndex(index)}
+                                    onClick={handleExecute}
+                                />
+                            ))}
 
-                        {calculation && (
-                            <CalculatorResult 
-                                result={calculation} 
-                                isActive={selectedIndex === 0} 
-                                onMouseEnter={() => setSelectedIndex(0)} 
-                            />
-                        )}
+                            {!isAliasMode && (
+                                <>
+                                    {detectedColor && (
+                                        <ColorResult color={detectedColor} isActive={selectedIndex === 0} />
+                                    )}
 
-                        {filteredApps.map((item, index) => {
-                            const visualIndex = calculation ? index + 1 : index;
-                            return (
-                            <ResultItem
-                                key={item.path}
-                                name={item.name}
-                                type="Application"
-                                isActive={selectedIndex === visualIndex}
-                                onMouseEnter={() => setSelectedIndex(visualIndex)}
-                                onClick={handleExecute}
-                            />
-                            );
-                        })}
+                                    {calculation && (
+                                        <CalculatorResult 
+                                            result={calculation} 
+                                            isActive={selectedIndex === 0} 
+                                            onMouseEnter={() => setSelectedIndex(0)} 
+                                        />
+                                    )}
 
-                        {isSearchFallback && !(calculation || detectedColor) && (
-                            <ResultItem
-                                name={`Browse for "${query}"`} 
-                                type="Browser" 
-                                isActive={selectedIndex === 0} 
-                                onMouseEnter={() => setTimeout(() => setSelectedIndex(0), 100)} 
-                                onClick={handleExecute}
-                            />
-                        )}
+                                    {filteredApps.map((item, index) => {
+                                        const visualIndex = (calculation || detectedColor) ? index + 1 : index;
+                                        return (
+                                            <ResultItem
+                                                key={item.path}
+                                                name={item.name}
+                                                type="Application"
+                                                isActive={selectedIndex === visualIndex}
+                                                onMouseEnter={() => setSelectedIndex(visualIndex)}
+                                                onClick={handleExecute}
+                                            />
+                                        );
+                                    })}
+
+                                    {isSearchFallback && !(calculation || detectedColor) && (
+                                        <ResultItem
+                                            name={`Browse for "${query}"`} 
+                                            type="Browser" 
+                                            isActive={selectedIndex === 0} 
+                                            onMouseEnter={() => setSelectedIndex(0)} 
+                                            onClick={handleExecute}
+                                        />
+                                    )}
+                                </>
+                            )}
                         </>
                     )}
-                    </div>
+                </div>
 
                 <Footer results={filteredApps.length} />
             </motion.div>
