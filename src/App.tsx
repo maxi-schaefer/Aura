@@ -19,7 +19,8 @@ export default function App() {
     const [filteredApps, setFilteredApps] = useState<any[]>([]);
     const [calculation, setCalculation] = useState<string | null>(null);
     const [detectedColor, setDetectedColor] = useState<string | null>(null);
-    
+    const [time, setTime] = useState("");
+
     const inputRef = useRef<HTMLInputElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
@@ -134,19 +135,38 @@ export default function App() {
         }, 10);
     };
 
+    // Timer
+    useEffect(() => {
+        const updateTime = () => {
+            const now = new Date();
+            const formatted = now.toLocaleTimeString([], {
+                hour: "2-digit",
+                minute: "2-digit",
+            });
+            setTime(formatted);
+        };
+
+        updateTime(); // run immediately
+        const interval = setInterval(updateTime, 1000);
+
+        return () => clearInterval(interval);
+    }, []);
+
     return (
         <div ref={containerRef} className="bg-transparent overflow-hidden">
             <motion.div className="glass p-4 shadow-2xl flex flex-col">
-                <div className="flex-none">
+                <div className="relative flex items-center mb-4 border-b border-white/5 pb-2 pr-15">
                     <input
                         ref={inputRef}
                         autoFocus 
                         value={query} 
                         onChange={(e) => setQuery(e.target.value)}
                         placeholder="Search apps or math..."
-                        className="w-full bg-transparent outline-none text-white text-base placeholder-gray-500 pb-2"
+                        className="w-full bg-transparent outline-none text-white text-base placeholder-gray-500"
                     />
-                    <div className="h-px bg-white/10 my-3" />
+                    <p className="absolute right-3 text-gray-500/50 font-mono">
+                        {time}
+                    </p>
                 </div>
 
                 <div ref={scrollContainerRef} className="max-h-[320px] overflow-y-auto custom-scrollbar pr-1">
