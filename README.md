@@ -14,7 +14,7 @@ A modern, fast, and versatile application launcher built with Tauri. Launch apps
 
 ## Screenshots 🖼️
 
-![Launcher Screenshot](assets/screenshot.png)  
+![Launcher Screenshot](assets/demo.gif)  
 *Clean and intuitive interface for all your tasks.*
 
 ## Installation 💻
