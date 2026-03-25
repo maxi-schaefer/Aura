@@ -21,6 +21,7 @@ export default function App() {
     const [calculation, setCalculation] = useState<string | null>(null);
     const [detectedColor, setDetectedColor] = useState<string | null>(null);
     
+    const inputRef = useRef<HTMLInputElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const isSearchFallback = query.length > 0 && filteredApps.length === 0;
@@ -105,6 +106,15 @@ export default function App() {
         }
     }, [isLoading, filteredApps, calculation, isSearchFallback]);
 
+    // 8. Handle Auto Focus
+    useEffect(() => {
+        const focusInput = () => {
+            inputRef.current?.focus();
+        };
+
+        setTimeout(focusInput, 50);
+    }, []);
+
     const handleExecute = async () => {
         const appWindow = getCurrentWindow();
         if(detectedColor && selectedIndex == 0) {
@@ -118,8 +128,11 @@ export default function App() {
             const selectedApp = filteredApps[appIndex];
             if (selectedApp) await invoke("launch_app", { path: selectedApp.path });
         }
+
         setQuery("");
-        await appWindow.hide();
+        setTimeout(() => {
+            appWindow.hide();
+        }, 10);
     };
 
     return (
@@ -127,6 +140,7 @@ export default function App() {
             <motion.div className="glass p-4 shadow-2xl flex flex-col">
                 <div className="flex-none">
                     <input
+                        ref={inputRef}
                         autoFocus 
                         value={query} 
                         onChange={(e) => setQuery(e.target.value)}

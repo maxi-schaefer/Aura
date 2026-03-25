@@ -60,6 +60,10 @@ async fn get_installed_apps() -> Vec<AppItem> {
         for p in paths { scan_linux_desktop_files(std::path::Path::new(p), &mut apps); }
     }
 
+    // Sort and remove duplicates based on name
+    apps.sort_by(|a, b| a.name.to_lowercase().cmp(&b.name.to_lowercase()));
+    apps.dedup_by(|a, b| a.name.to_lowercase() == b.name.to_lowercase());
+
     apps
 }
 
@@ -72,10 +76,20 @@ fn scan_dir_recursive(dir: &Path, apps: &mut Vec<AppItem>) {
                 scan_dir_recursive(&path, apps);
             } else if path.extension().and_then(|s| s.to_str()) == Some("lnk") {
                 let name = path.file_stem().unwrap().to_string_lossy().into_owned();
-                apps.push(AppItem {
-                    name,
-                    path: path.to_string_lossy().into_owned(),
-                });
+                
+                // --- FILTER LOGIC ---
+                let name_low = name.to_lowercase();
+                let is_trash = name_low.contains("visit") || 
+                               name_low.contains("website") || 
+                               name_low.contains("documentation") ||
+                               name_low.contains("help online");
+
+                if !is_trash {
+                    apps.push(AppItem {
+                        name,
+                        path: path.to_string_lossy().into_owned(),
+                    });
+                }
             }
         }
     }
