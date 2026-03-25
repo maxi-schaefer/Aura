@@ -6,6 +6,7 @@ use std::path::Path;
 use serde::Serialize;
 use tauri::{Emitter, Manager, WindowEvent, command, menu::{Menu, MenuItem}, tray::TrayIconBuilder};
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
+use tauri::{WebviewUrl, WebviewWindowBuilder};
 
 #[cfg(target_os = "windows")]
 use window_vibrancy::apply_acrylic;
@@ -82,6 +83,7 @@ fn scan_dir_recursive(dir: &Path, apps: &mut Vec<AppItem>) {
                 let is_trash = name_low.contains("visit") || 
                                name_low.contains("website") || 
                                name_low.contains("documentation") ||
+                               name_low.contains("handbuch") ||
                                name_low.contains("help online");
 
                 if !is_trash {
@@ -94,6 +96,7 @@ fn scan_dir_recursive(dir: &Path, apps: &mut Vec<AppItem>) {
         }
     }
 }
+
 
 fn scan_linux_desktop_files(dir: &std::path::Path, apps: &mut Vec<AppItem>) {
     if let Ok(entries) = std::fs::read_dir(dir) {
@@ -116,6 +119,10 @@ fn launch_app(path: String) {
 pub fn run() {
     tauri::Builder::default()
         .plugin(tauri_plugin_global_shortcut::Builder::new().build())
+        .plugin(tauri_plugin_autostart::init(
+            tauri_plugin_autostart::MacosLauncher::LaunchAgent, 
+            Some(vec!["--minimized"]) // Optional args
+        ))
         .invoke_handler(tauri::generate_handler![get_installed_apps, launch_app, search_web])
         .setup(|app| {
             let window = app.get_webview_window("main").unwrap();
@@ -130,15 +137,43 @@ pub fn run() {
             apply_vibrancy(&window, NSVisualEffectMaterial::UnderWindowBackground, None, None).expect("Unsupported");
 
             // --- System Tray ---
-            let quit_i = MenuItem::with_id(app, "quit", "Quit", true, None::<&str>)?;
-            let menu = Menu::with_items(app, &[&quit_i])?;
+            let settings_i = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
+            let quit_i = MenuItem::with_id(app, "quit", "Quit Aura", true, None::<&str>)?;
+            let menu = Menu::with_items(app, &[&settings_i, &quit_i])?;
             
             let _tray = TrayIconBuilder::new()
                 .icon(app.default_window_icon().unwrap().clone())
                 .menu(&menu)
-                .on_menu_event(|app, event| {
-                    if event.id.as_ref() == "quit" {
-                        app.exit(0);
+                .on_menu_event(move |app, event| {
+                    match event.id.as_ref() {
+                        "settings" => {
+                            // Check if window already exists
+                            if let Some(win) = app.get_webview_window("settings") {
+                                let _ = win.set_focus();
+                            } else {
+                                let settings_win = WebviewWindowBuilder::new(app, "settings", WebviewUrl::App("settings.html".into()))
+                                    .title("Aura Settings")
+                                    .inner_size(700.0, 550.0)
+                                    .resizable(false)
+                                    .transparent(true)
+                                    .decorations(false)
+                                    .build()
+                                    .unwrap();
+                                
+                                #[cfg(target_os = "windows")]
+                                apply_acrylic(&settings_win, Some((0, 0, 0, 175))).expect("Unsupported");
+
+                                #[cfg(target_os = "macos")]
+                                use window_vibrancy::{apply_vibrancy, NSVisualEffectMaterial};
+                                #[cfg(target_os = "macos")]
+                                apply_vibrancy(&settings_win, NSVisualEffectMaterial::UnderWindowBackground, None, None).expect("Unsupported");
+
+                            }
+                        }
+                        "quit" => {
+                            app.exit(0);
+                        }
+                        _ => {}
                     }
                 })
                 .build(app)?;

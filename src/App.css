@@ -5,6 +5,18 @@
   --secondary: #eb34a8;
 }
 
+#root, html, body {
+  background: transparent !important;
+}
+
+body {
+}
+
+* {
+  -webkit-font-smoothing: antialiased;
+  -moz-osx-font-smoothing: grayscale;
+}
+
 body {
   overflow: hidden;
   user-select: none; 
@@ -50,6 +62,24 @@ kbd {
 .custom-scrollbar::-webkit-scrollbar-thumb {
   background: rgba(255, 255, 255, 0.1);
   border-radius: 10px;
+}
+
+@keyframes gradient-flow {
+  0% { background-position: 0% 50%; }
+  50% { background-position: 100% 50%; }
+  100% { background-position: 0% 50%; }
+}
+
+.gradient-text-animated {
+  background: linear-gradient(-45deg, var(--primary), var(--secondary), #3b82f6, var(--primary));
+  background-size: 300% 300%;
+  
+  -webkit-background-clip: text;
+  background-clip: text;
+  -webkit-text-fill-color: transparent;
+  display: inline-block;
+  
+  animation: gradient-flow 4s ease infinite;
 }
 
 .gradient-text {

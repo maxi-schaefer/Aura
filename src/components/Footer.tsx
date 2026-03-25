@@ -14,7 +14,7 @@ export default function Footer({ results }: { results: number }) {
             <div className="flex items-center gap-3">
                 <span className="text-gray-400">Open ↵</span>
                 <div className="w-px h-4 bg-white/5"/>
-                <span className="gradient-text">Aura v{version}</span>
+                <span className="gradient-text-animated">Aura v{version}</span>
             </div>
         </div>
     )

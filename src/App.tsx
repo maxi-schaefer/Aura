@@ -8,7 +8,6 @@ import { CalculatorResult } from "./components/CalculatorResult";
 import { getCurrentWindow, LogicalSize } from '@tauri-apps/api/window';
 import { calculateExpression, detectColor, scrollToActive } from "./lib/utils";
 import { LoadingState } from "./components/LoadingState";
-import { Image } from "@tauri-apps/api/image";
 import { ColorResult } from "./components/ColorResult";
 import Footer from "./components/Footer";
 
@@ -195,7 +194,7 @@ export default function App() {
                                 name={`Browse for "${query}"`} 
                                 type="Browser" 
                                 isActive={selectedIndex === 0} 
-                                onMouseEnter={() => setSelectedIndex(0)} 
+                                onMouseEnter={() => setTimeout(() => setSelectedIndex(0), 100)} 
                                 onClick={handleExecute}
                             />
                         )}
