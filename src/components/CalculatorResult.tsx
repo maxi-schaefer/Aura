@@ -7,7 +7,7 @@ interface CalculatorProps {
 export const CalculatorResult = ({ result, isActive, onMouseEnter }: CalculatorProps) => (
     <div 
         onMouseEnter={onMouseEnter}
-        className={`flex items-center justify-between px-3 py-2 rounded-lg transition-all my-2 ${isActive ? "bg-white/5 border border-white/10" : ""}`}
+        className={`flex items-center justify-between px-3 py-2 rounded-lg transition-all my-2 ${isActive ? "bg-gray-500/5 border border-white/10" : ""}`}
     >
         <div className="flex items-center gap-2">
             <div className="text-xl gradient-text">＝</div>

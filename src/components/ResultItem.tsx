@@ -17,7 +17,7 @@ export const ResultItem = ({ name, type, isActive, onMouseEnter, onClick }: Resu
         {isActive && (
             <motion.div
                 layoutId="active-pill"
-                className="absolute inset-0 bg-white/5 border border-white/10 rounded-lg"
+                className="absolute inset-0 bg-gray-500/5 border border-white/10 rounded-lg"
                 transition={{ type: "spring", stiffness: 500, damping: 40 }}
             />
         )}

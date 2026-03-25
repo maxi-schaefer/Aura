@@ -1,5 +1,5 @@
 export const ColorResult = ({ color, isActive }: { color: string; isActive: boolean }) => (
-    <div className={`flex items-center gap-3 px-3 py-2 rounded-lg my-2 ${isActive ? "bg-white/5 border border-white/10" : ""}`}>
+    <div className={`flex items-center gap-3 px-3 py-2 rounded-lg my-2 ${isActive ? "bg-gray-500/5 border border-white/10" : ""}`}>
         <div 
             className="w-10 h-10 inset-0 rounded-md border border-white/20 shadow-inner" 
             style={{ backgroundColor: color }} 
