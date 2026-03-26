@@ -2,9 +2,11 @@ import { useMemo, useState, useEffect } from 'react';
 import { matchSorter } from "match-sorter";
 import { calculateExpression, detectColor } from "../lib/utils";
 import { COMMAND_MAP } from "../lib/command";
+import { invoke } from '@tauri-apps/api/core';
 
 export function useSearchLogic(query: string, allApps: any[], aliases: Record<string, string>) {
     const [commandResult, setCommandResult] = useState<string | null>(null);
+    const [fileResults, setFileResults] = useState<any[]>([]);
 
     const calculation = useMemo(() => calculateExpression(query), [query]);
     const detectedColor = useMemo(() => detectColor(query), [query]);
@@ -26,6 +28,17 @@ export function useSearchLogic(query: string, allApps: any[], aliases: Record<st
         return Object.keys(COMMAND_MAP).find(cmd => cmd.startsWith(part)) || "";
     }, [query]);
 
+    useEffect(() => {
+        if (query.startsWith("/")) {
+            const fileQuery = query.slice(1);
+            invoke("search_files", { query: fileQuery }).then((res: any) => {
+                setFileResults(res);
+            });
+        } else {
+            setFileResults([]);
+        }
+    }, [query]);
+
     // Handle Async Commands
     useEffect(() => {
         if (query.startsWith(">")) {
@@ -38,5 +51,5 @@ export function useSearchLogic(query: string, allApps: any[], aliases: Record<st
         } else { setCommandResult(null); }
     }, [query]);
 
-    return { calculation, detectedColor, filteredApps, filteredAliases, suggestion, commandResult };
+    return { calculation, detectedColor, filteredApps, filteredAliases, suggestion, commandResult, fileResults };
 }

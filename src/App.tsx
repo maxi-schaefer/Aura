@@ -29,13 +29,15 @@ export default function App() {
         filteredApps, 
         filteredAliases, 
         suggestion,
-        commandResult
+        commandResult,
+        fileResults
     } = useSearchLogic(query, allApps, aliases);
 
     const isAliasMode = query.startsWith("@");
+    const isFileMode = query.startsWith("/");
     const isSearchFallback = query.length > 0 && filteredApps.length === 0;
 
-    useWindowShadow(containerRef, [filteredApps, calculation, commandResult, isLoading]);
+    useWindowShadow(containerRef, [filteredApps, calculation, commandResult, isLoading, fileResults]);
 
     // Initial Data Fetch
     useEffect(() => {
@@ -58,6 +60,59 @@ export default function App() {
         }
     }, [selectedIndex]);
 
+    const getListLength = () => {
+        if (isAliasMode) return filteredAliases.length;
+        if (query.startsWith(">")) return 1;
+        
+        let length = 0;
+        if (calculation || detectedColor) length += 1;
+        if (isFileMode) {
+            length += (fileResults?.length || 0);
+        } else {
+            length += filteredApps.length;
+            if (filteredApps.length === 0 && query.length > 0 && !calculation) length += 1;
+        }
+        return length;
+    };
+
+    const handleExecute = async () => {
+        const appWindow = getCurrentWindow();
+        const hasSpecial = !!(calculation || detectedColor);
+        
+        if (isAliasMode) {
+            const selected = filteredAliases[selectedIndex];
+            if (selected) await invoke("search_web", { query: selected[1] });
+        } 
+        else if (isFileMode) {
+            // Offset by 1 if there's a calculation/color result
+            const fileIndex = hasSpecial ? selectedIndex - 1 : selectedIndex;
+            const selectedFile = fileResults?.[fileIndex];
+            if (selectedFile) await invoke("launch_app", { path: selectedFile.path });
+        } 
+        else if (query.startsWith(">") && commandResult) {
+            if (typeof commandResult === "string") {
+                await navigator.clipboard.writeText(commandResult);
+            }
+        } 
+        else if (hasSpecial && selectedIndex === 0) {
+            await navigator.clipboard.writeText((detectedColor || calculation)!);
+        } 
+        else if (isSearchFallback && !calculation) {
+            await invoke("search_web", { query });
+        } 
+        else {
+            // Standard App Launch logic
+            const appIndex = hasSpecial ? selectedIndex - 1 : selectedIndex;
+            const selectedApp = filteredApps[appIndex];
+            if (selectedApp) await invoke("launch_app", { path: selectedApp.path });
+        }
+
+        setQuery("");
+        appWindow.hide();
+    };
+
+    const listLength = getListLength();
+
     // Keyboard Navigation
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
@@ -77,10 +132,11 @@ export default function App() {
                 setQuery(`>${suggestion} `);
                 return;
             }
-
-            const listLength = isAliasMode 
-                ? filteredAliases.length 
-                : (calculation ? 1 : 0) + (detectedColor ? 1 : 0) + filteredApps.length + (isSearchFallback && !calculation ? 1 : 0);
+            
+            if (e.key === "Alt") {
+                e.preventDefault();
+                return;
+            }
 
             const maxIndex = Math.max(0, listLength - 1);
 
@@ -92,12 +148,11 @@ export default function App() {
                 e.preventDefault();
                 setSelectedIndex(prev => (prev > 0 ? prev - 1 : prev));
             }
-            if (e.key === 'Alt') e.preventDefault();
         };
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [selectedIndex, filteredApps, calculation, isSearchFallback, query, suggestion, filteredAliases]);
+    }, [selectedIndex, listLength, query, suggestion, handleExecute]);
 
     // Clock
     useEffect(() => {
@@ -106,30 +161,6 @@ export default function App() {
         }, 1000);
         return () => clearInterval(interval);
     }, []);
-
-    const handleExecute = async () => {
-        const appWindow = getCurrentWindow();
-        
-        if (isAliasMode) {
-            const selected = filteredAliases[selectedIndex];
-            if (selected) await invoke("search_web", { query: selected[1] });
-        } else if (query.startsWith(">") && commandResult) {
-            if (typeof commandResult === "string") {
-                await navigator.clipboard.writeText(commandResult);
-            }
-        } else if ((detectedColor || calculation) && selectedIndex === 0) {
-            await navigator.clipboard.writeText((detectedColor || calculation)!);
-        } else if (isSearchFallback && !calculation) {
-            await invoke("search_web", { query });
-        } else {
-            const appIndex = (calculation || detectedColor) ? selectedIndex - 1 : selectedIndex;
-            const selectedApp = filteredApps[appIndex];
-            if (selectedApp) await invoke("launch_app", { path: selectedApp.path });
-        }
-
-        setQuery("");
-        appWindow.hide();
-    };
 
     return (
         <div ref={containerRef} className="bg-transparent overflow-hidden">
@@ -159,6 +190,7 @@ export default function App() {
                         placeholder="Search apps, math, or type @ for aliases..."
                         className={`w-full bg-transparent outline-none text-base ${
                             query.startsWith('@') ? 'text-blue-400 font-bold' : 
+                            query.startsWith('/') ? 'text-blue-400 font-medium' :
                             query.startsWith('>') ? 'text-blue-100 font-mono' : 'text-white'
                         }`}
                     />
@@ -179,15 +211,12 @@ export default function App() {
                             commandResult={commandResult}
                             onExecute={handleExecute}
                             setSelectedIndex={setSelectedIndex}
+                            fileResults={fileResults}
                         />
                     )}
                 </div>
 
-                <Footer selectedIndex={selectedIndex} query={query} results={
-                    query.startsWith('>') ? 1 :
-                    query.startsWith('@') ? filteredAliases.length :
-                    (calculation || detectedColor ? 1 : 0) + (filteredApps.length || (query ? 1 : 0))
-                } />
+                <Footer selectedIndex={selectedIndex} query={query} results={listLength} />
             </motion.div>
         </div>
     );
