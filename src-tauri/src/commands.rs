@@ -61,8 +61,9 @@ pub async fn search_files(query: String) -> Vec<FileItem> {
 
 #[command]
 pub fn search_web(app: AppHandle, query: String) {
-    let aliases = get_aliases(app);
+    let aliases = get_aliases(app.clone());
     let trimmed = query.trim();
+    let config = get_config(app.clone());
 
     let destination = if trimmed.starts_with('@') {
         let alias_key = trimmed[1..].to_lowercase();
@@ -70,13 +71,13 @@ pub fn search_web(app: AppHandle, query: String) {
         if let Some(url) = aliases.get(&alias_key) {
             url.clone()
         } else {
-            format!("https://www.google.com/search?q={}", query.replace(' ', "+"))
+            format!("{}{}", config.search_engine, query.replace(' ', "+"))
         }
     } 
     else if (query.contains('.') && !query.contains(' ')) || query.starts_with("http") {
         if query.starts_with("http") { query } else { format!("https://{}", query) }
     } else {
-        format!("https://www.google.com/search?q={}", query.replace(' ', "+"))
+        format!("{}{}", config.search_engine, query.replace(' ', "+"))
     };
 
     let _ = open::that(destination);
@@ -108,4 +109,32 @@ pub fn save_aliases(app: AppHandle, aliases: HashMap<String, String>) {
     let _ = fs::create_dir_all(&config_dir);
     let path = config_dir.join("aliases.json");
     let _ = fs::write(path, serde_json::to_string_pretty(&aliases).unwrap());
+}
+
+// --- Settings Module ---
+#[derive(serde::Serialize, serde::Deserialize)]
+pub struct Config {
+    pub search_engine: String,
+}
+
+#[command]
+pub fn get_config(app: AppHandle) -> Config {
+    let path = app.path().app_config_dir().unwrap().join("config.json");
+    fs::read_to_string(path).map(|c| serde_json::from_str(&c).unwrap_or(default_config()))
+    .unwrap_or_else(|_| default_config())
+}
+
+#[command]
+pub fn save_config(app: AppHandle, config: Config) -> Result<(), String> {
+    let config_dir = app.path().app_config_dir().map_err(|e| e.to_string())?;
+    let _ = fs::create_dir_all(&config_dir);
+    let path = config_dir.join("config.json");
+    
+    let json = serde_json::to_string_pretty(&config).map_err(|e| e.to_string())?;
+    fs::write(path, json).map_err(|e| e.to_string())?;
+    Ok(())
+}
+
+fn default_config() -> Config {
+    Config { search_engine: "https://google.com/search?q=".into() }
 }

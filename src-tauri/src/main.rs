@@ -18,7 +18,9 @@ pub fn run() {
             commands::search_web,
             commands::get_aliases,
             commands::save_aliases,
-            commands::search_files
+            commands::search_files,
+            commands::get_config,
+            commands::save_config
         ])
         .setup(|app| {
             setup::init(app)?;

@@ -2,10 +2,12 @@ import { useEffect, useState } from "react";
 import { enable, disable, isEnabled } from "@tauri-apps/plugin-autostart";
 import { motion, AnimatePresence } from "framer-motion";
 import { getVersion } from "@tauri-apps/api/app";
-import { Settings as SettingsIcon, Layout, Zap, Info, Shield, FolderClosed } from "lucide-react";
+import { Settings as SettingsIcon, Layout, Zap, Info, Shield, FolderClosed, Search, Check } from "lucide-react";
 import "./App.css"
 import AliasSettings from "./components/settings/Aliases";
 import About from "./components/settings/About";
+import { invoke } from "@tauri-apps/api/core";
+import SearchSettings from "./components/settings/Search";
 
 export default function Settings() {
     const [activeTab, setActiveTab] = useState("General");
@@ -107,13 +109,7 @@ export default function Settings() {
                                     </div>
                                 </section>
 
-                                <section>
-                                    <h2 className="text-[11px] uppercase tracking-[0.2em] text-gray-500 mb-4">Search</h2>
-                                    <div className="p-5 bg-white/3 rounded-2xl border border-white/10 opacity-50 cursor-not-allowed">
-                                        <p className="text-sm font-semibold">Preferred Search Engine</p>
-                                        <p className="text-xs text-gray-600">Google (Default)</p>
-                                    </div>
-                                </section>
+                                <SearchSettings />
                             </div>
                         )}
 
