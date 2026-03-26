@@ -4,10 +4,59 @@ use serde::Serialize;
 use tauri::{AppHandle, Manager, command};
 use crate::scanner;
 
+use walkdir::WalkDir;
+use std::path::PathBuf;
+
 #[derive(Serialize, Clone)]
 pub struct AppItem {
     pub name: String,
     pub path: String,
+}
+
+#[derive(Serialize, Clone)]
+pub struct FileItem {
+    pub name: String,
+    pub path: String,
+    pub is_dir: bool,
+}
+
+#[command]
+pub async fn search_files(query: String) -> Vec<FileItem> {
+    if query.is_empty() { return Vec::new(); }
+    
+    // Define search locations (Home directory)
+    let home = dirs::home_dir().unwrap_or(PathBuf::from("/"));
+    let search_paths = vec![
+        home.join("Pictures"),
+        home.join("Music"),
+        home.join("Videos"),
+        home.join("Documents"),
+        home.join("Desktop"),
+        home.join("Downloads"),
+    ];
+
+    let mut results = Vec::new();
+    let query_l = query.to_lowercase();
+
+    for path in search_paths {
+        for entry in WalkDir::new(path)
+            .max_depth(3) // Keep it fast
+            .into_iter()
+            .filter_map(|e| e.ok()) 
+        {
+            let name = entry.file_name().to_string_lossy().to_string();
+            if name.to_lowercase().contains(&query_l) {
+                results.push(FileItem {
+                    name,
+                    path: entry.path().to_string_lossy().to_string(),
+                    is_dir: entry.path().is_dir(),
+                });
+            }
+            if results.len() > 15 { break; } // Cap results for UI snappiness
+        }
+        if results.len() > 15 { break; }
+    }
+    results
 }
 
 #[command]
