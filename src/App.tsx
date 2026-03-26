@@ -61,6 +61,12 @@ export default function App() {
     // Keyboard Navigation
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
+            if (e.key === "Escape") {
+                e.preventDefault();
+                setQuery("");
+                return;
+            }
+            
             if (e.key === "Enter") {
                 handleExecute();
                 return;
@@ -134,10 +140,14 @@ export default function App() {
                             <span className="text-transparent whitespace-pre">
                                 {query.startsWith(">") ? ">" : ""}{query.slice(1)}
                             </span>
-                            <span className="text-white/20 flex items-center">
+                            <motion.span 
+                                initial={{ opacity: 0, scale: 0.8 }}
+                                animate={{ opacity: 1, scale: 1 }} 
+                                className="text-white/20 flex items-center"
+                            >
                                 {suggestion.slice(query.slice(1).trimStart().length)}
                                 <span className="ml-2 text-[9px] bg-white/5 px-1.5 py-0.5 rounded border border-white/10 text-white/40 font-sans uppercase">Tab</span>
-                            </span>
+                            </motion.span>
                         </div>
                     )}
 
@@ -173,7 +183,7 @@ export default function App() {
                     )}
                 </div>
 
-                <Footer results={
+                <Footer selectedIndex={selectedIndex} query={query} results={
                     query.startsWith('>') ? 1 :
                     query.startsWith('@') ? filteredAliases.length :
                     (calculation || detectedColor ? 1 : 0) + (filteredApps.length || (query ? 1 : 0))

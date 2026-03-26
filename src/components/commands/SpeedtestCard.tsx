@@ -54,15 +54,15 @@ export const SpeedtestCard = ({ ping, download, upload, stage }: any) => {
           <defs>
             <linearGradient id="grad-down" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#3b82f6" />
-              <stop offset="100%" stopColor="#60a5fa" />
+              <stop offset="100%" stopColor="#a1a1ff" />
             </linearGradient>
             <linearGradient id="grad-up" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#a855f7" />
-              <stop offset="100%" stopColor="#d946ef" />
+              <stop offset="100%" stopColor="#ff2eff" />
             </linearGradient>
             <linearGradient id="grad-ping" x1="0%" y1="0%" x2="100%" y2="0%">
               <stop offset="0%" stopColor="#10b981" />
-              <stop offset="100%" stopColor="#34d399" />
+              <stop offset="100%" stopColor="#23fcad" />
             </linearGradient>
           </defs>
 

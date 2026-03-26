@@ -33,13 +33,13 @@ export const CommandResult = ({ result }: { result: any }) => {
             </div>
           )
         ) : (
-          <div className="space-y-2 mt-2">
+          <div className="space-y-2">
             <span className="text-white/20 font-bold text-[10px] uppercase tracking-widest block mb-3">
               Available Modules
             </span>
             <div className="grid grid-cols-1 gap-1">
               {commands.map((cmd) => (
-                <div key={cmd.cmd} className="flex items-center justify-between p-2 rounded-xl hover:bg-white/[0.03] transition-colors group">
+                <div key={cmd.cmd} className="flex items-center justify-between p-2 rounded-xl hover:bg-white/3 transition-colors group">
                   <span className="text-blue-400 font-bold text-xs">{">"} {cmd.cmd}</span>
                   <span className="text-gray-500 text-[11px] group-hover:text-gray-300 transition-colors">{cmd.description}</span>
                 </div>
