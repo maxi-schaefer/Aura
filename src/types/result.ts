@@ -6,6 +6,7 @@ export type Result = {
     type: "app" | "file" | "alias" | "command" | "calc" | "color" | "fallback";
 
     action?: () => void | Promise<any>;
+    render?: (args: string) => any;
 
     // Raycast-style detail view
     view?: React.ReactNode;

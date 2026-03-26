@@ -7,7 +7,7 @@ import { Result } from "../types/result";
 
 const MAX_PER_GROUP = 10;
 
-export function useSearchLogic(query: string, allApps: any[], aliases: Record<string, string>) {
+export function useSearchLogic(activeCommandMode: boolean, query: string, allApps: any[], aliases: Record<string, string>) {
   const [results, setResults] = useState<Result[]>([]);
   const [fileResults, setFileResults] = useState<any[]>([]);
 
@@ -22,6 +22,8 @@ export function useSearchLogic(query: string, allApps: any[], aliases: Record<st
 
   useEffect(() => {
     const build = async () => {
+      if (activeCommandMode) return;
+
       let r: Result[] = [];
 
       // ✅ Calculator
@@ -57,36 +59,24 @@ export function useSearchLogic(query: string, allApps: any[], aliases: Record<st
       );
 
       for (const [cmdKey, command] of matchedCommands.slice(0, MAX_PER_GROUP)) {
-        const preview = command.preview?.(args);
-
-        r.push({
-            id: `command-${cmdKey}`,
-            title: cmdKey,
-            subtitle: preview || command.description,
-            type: "command",
-            group: "Commands",
-            action: async () => {
-                const result = await command.execute(args);
-
-                // If result is UI → show it
-                if (typeof result !== "string") {
-                    setResults([
-                        {
-                            id: "view",
-                            title: cmdKey,
-                            type: "command",
-                            group: "Commands",
-                            view: result,
-                            score: 999
-                        }
-                    ]);
-                } else {
-                    await navigator.clipboard.writeText(result);
-                }
-            },
-            score: 100
-        });
-    }
+          r.push({
+              id: `command-${cmdKey}`,
+              title: command.title || cmdKey, // Use the pretty title
+              subtitle: command.description,
+              type: "command",
+              group: "Commands",
+              render: command.render, 
+              action: async () => {
+                  const result = await command.execute(args);
+                  // If it returns a string, copy it. If it returns JSX, App.tsx handles it.
+                  if (typeof result === "string") {
+                      await navigator.clipboard.writeText(result);
+                  }
+                  return result;
+              },
+              score: 100
+          });
+      }
 
       // ✅ Apps
       const filteredApps = query

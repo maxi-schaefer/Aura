@@ -1,99 +1,128 @@
 import { motion } from "framer-motion";
+import { useEffect, useState } from "react";
 
-export const WeatherCard = ({ temp, city, desc, feelsLike }: any) => {
-  const getWeatherTheme = (description: string) => {
-    const d = description.toLowerCase();
-    if (d.includes("sun") || d.includes("clear")) 
-      return { 
-        icon: "☀️", 
-        accent: "text-orange-400",
-        bg: "from-orange-500/20 via-yellow-500/10 to-transparent",
-        mesh: "bg-gradient-conic from-orange-400/40 via-yellow-400/20 to-orange-400/40"
-      };
-    if (d.includes("cloud")) 
-      return { 
-        icon: "☁️", 
-        accent: "text-blue-300",
-        bg: "from-slate-400/20 via-blue-400/10 to-transparent",
-        mesh: "bg-gradient-conic from-blue-400/30 via-slate-400/20 to-blue-400/30"
-      };
-    // ... add others as needed
-    return { icon: "🌡️", accent: "text-white", bg: "from-white/10", mesh: "bg-white/10" };
+export const WeatherCard = ({ city }: { city: string }) => {
+  const [data, setData] = useState<any>(null);
+
+  // Helper for mini-icons in the forecast row
+  const getMiniIcon = (desc: string) => {
+    const d = desc.toLowerCase();
+    if (d.includes("sun") || d.includes("clear")) return "☀️";
+    if (d.includes("cloud") || d.includes("overcast")) return "☁️";
+    if (d.includes("rain") || d.includes("drizzle")) return "🌧️";
+    if (d.includes("snow")) return "❄️";
+    return "🌡️";
   };
 
-  const theme = getWeatherTheme(desc);
+  const getWeatherTheme = (description: string) => {
+    const d = description.toLowerCase();
+    if (d.includes("sun") || d.includes("clear"))
+      return {
+        icon: "☀️",
+        accent: "text-orange-400",
+        mesh: "bg-gradient-conic from-orange-400/40 via-yellow-400/20 to-orange-400/40",
+      };
+    if (d.includes("cloud") || d.includes("overcast"))
+      return {
+        icon: "☁️",
+        accent: "text-blue-300",
+        mesh: "bg-gradient-conic from-blue-400/30 via-slate-400/20 to-blue-400/30",
+      };
+    if (d.includes("rain") || d.includes("drizzle"))
+      return {
+        icon: "🌧️",
+        accent: "text-blue-500",
+        mesh: "bg-gradient-conic from-blue-500/40 via-indigo-500/20 to-blue-500/40",
+      };
+    return { icon: "🌡️", accent: "text-white", mesh: "bg-white/10" };
+  };
+
+  useEffect(() => {
+    const timer = setTimeout(async () => {
+      try {
+        const res = await fetch(`https://wttr.in/${city}?format=j1`);
+        const json = await res.json();
+        setData(json);
+      } catch (err) {
+        console.error("Weather fetch failed", err);
+      }
+    }, 400);
+
+    return () => clearTimeout(timer);
+  }, [city]);
+
+  if (!data) return <div className="p-4 ml-4 text-white/20 animate-pulse font-medium">Loading forecast for {city}...</div>;
+
+  const current = data.current_condition[0];
+  const theme = getWeatherTheme(current.weatherDesc[0].value);
+  const forecast = data.weather.slice(0, 3); // Get next 3 days
 
   return (
-    <motion.div 
-      initial={{ opacity: 0, scale: 0.9 }}
-      animate={{ opacity: 1, scale: 1 }}
-      className="relative overflow-hidden mt-2 p-6 rounded-[32px] border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.3)] group"
-      style={{ background: 'rgba(255, 255, 255, 0.01)' }}
+    <motion.div
+      initial={{ opacity: 0, y: 10 }}
+      animate={{ opacity: 1, y: 0 }}
+      className="relative overflow-hidden mt-2 mx-4 p-6 rounded-[32px] border border-white/20 shadow-[0_20px_50px_rgba(0,0,0,0.3)] group"
+      style={{ background: "rgba(255, 255, 255, 0.01)" }}
     >
-      {/* 1. THE COLOR MESH (Rotating Background) */}
-      <motion.div 
+      {/* 1. ANIMATED MESH BACKGROUND */}
+      <motion.div
         animate={{ rotate: 360 }}
-        transition={{ duration: 20, repeat: Infinity, ease: "linear" }}
-        className={`absolute -top-[50%] -right-[50%] w-[200%] h-[200%] blur-[80px] opacity-40 ${theme.mesh} pointer-events-none`}
+        transition={{ duration: 25, repeat: Infinity, ease: "linear" }}
+        className={`absolute -top-[50%] -right-[50%] w-[200%] h-[200%] blur-[80px] opacity-30 ${theme.mesh} pointer-events-none`}
       />
 
-      {/* 2. STATIC GLASS REFLECTION */}
-      <div className="absolute inset-0 bg-gradient-to-tr from-white/10 via-transparent to-white/5 opacity-30 pointer-events-none" />
-
-      {/* 3. CONTENT LAYER */}
-      <div className="relative z-10 flex flex-col h-full justify-between">
+      {/* 2. CONTENT */}
+      <div className="relative z-10 flex flex-col gap-6">
+        {/* TOP ROW: City & Main Icon */}
         <div className="flex justify-between items-start">
           <div>
-            <motion.div 
-              initial={{ x: -10, opacity: 0 }}
-              animate={{ x: 0, opacity: 1 }}
-              className="flex items-center gap-2 mb-2"
-            >
-               <span className={`px-2 py-0.5 rounded-full text-[9px] font-black uppercase tracking-tighter bg-white/10 ${theme.accent} border border-white/5`}>
-                 Hyper-Local
-               </span>
-            </motion.div>
-            <h3 className="text-3xl font-black text-white tracking-tighter leading-none">{city}</h3>
-            <p className="text-sm font-medium text-white/60 mt-1 flex items-center gap-2">
-                {desc} <span className="w-1 h-1 rounded-full bg-white/20" /> {temp + 4}° Humidity
+            <div className={`text-[10px] font-black uppercase tracking-widest mb-1 ${theme.accent} opacity-80`}>
+              Current Conditions
+            </div>
+            <h3 className="text-4xl font-black text-white tracking-tighter capitalize">
+              {city || "Berlin"}
+            </h3>
+            <p className="text-sm font-medium text-white/50 mt-1">
+              {current.weatherDesc[0].value} • {current.humidity}% Humidity
             </p>
           </div>
-          
-          <motion.div 
-            whileHover={{ scale: 1.2, rotate: 10 }}
-            className="text-6xl drop-shadow-[0_10px_20px_rgba(0,0,0,0.4)] cursor-default select-none"
-          >
-            {theme.icon}
-          </motion.div>
+          <div className="text-6xl drop-shadow-2xl">{theme.icon}</div>
         </div>
 
-        <div className="flex items-end justify-between mt-10">
-          <div className="relative">
-            {/* Soft Glow behind temp */}
-            <div className={`absolute inset-0 blur-2xl opacity-50 ${theme.accent.replace('text', 'bg')}`} />
-            <span className="relative text-7xl font-black text-white tracking-tighter">
-              {temp}<span className="text-4xl align-top inline-block mt-2 opacity-30">°</span>
+        {/* MIDDLE ROW: Temperature */}
+        <div className="flex items-center justify-between">
+          <div className="flex items-start">
+            <span className="text-8xl font-black text-white tracking-tighter">
+              {current.temp_C}
             </span>
+            <span className="text-4xl font-bold text-white/30 mt-4 ml-1">°C</span>
           </div>
+          
+          <div className="text-right">
+             <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest">Feels Like</p>
+             <p className={`text-2xl font-black ${theme.accent}`}>{current.FeelsLikeC}°</p>
+          </div>
+        </div>
 
-          <div className="flex flex-col items-end gap-2">
-            <div className="flex flex-col items-end leading-tight">
-               <span className="text-[10px] text-white/30 uppercase font-bold tracking-widest">Feels Like</span>
-               <span className={`text-xl font-black ${theme.accent}`}>{feelsLike}°C</span>
+        {/* SEPARATOR */}
+        <div className="h-[1px] w-full bg-white/10" />
+
+        {/* BOTTOM ROW: 3-Day Forecast */}
+        <div className="grid grid-cols-3 gap-4">
+          {forecast.map((day: any, i: number) => (
+            <div key={i} className="flex flex-col items-center gap-1 p-2 rounded-2xl bg-white/5 border border-white/5">
+              <span className="text-[10px] font-bold text-white/40 uppercase">
+                {i === 0 ? "Today" : new Date(day.date).toLocaleDateString('en-US', { weekday: 'short' })}
+              </span>
+              <span className="text-xl">{getMiniIcon(day.hourly[4].weatherDesc[0].value)}</span>
+              <div className="flex gap-2 text-xs font-black">
+                <span className="text-white">{day.maxtempC}°</span>
+                <span className="text-white/30">{day.mintempC}°</span>
+              </div>
             </div>
-            
-            {/* Visual Min/Max Bar */}
-            <div className="w-24 h-1.5 bg-white/5 rounded-full overflow-hidden flex border border-white/5">
-                <div className="h-full w-1/3 bg-blue-400/40" />
-                <div className="h-full w-1/3 bg-orange-400/60" />
-                <div className="h-full w-1/3 bg-red-400/40" />
-            </div>
-          </div>
+          ))}
         </div>
       </div>
-      
-      {/* 4. INTERACTIVE HOVER BORDER */}
-      <div className="absolute inset-0 border-2 border-white/0 group-hover:border-white/10 transition-colors duration-500 rounded-[32px] pointer-events-none" />
     </motion.div>
   );
 };
