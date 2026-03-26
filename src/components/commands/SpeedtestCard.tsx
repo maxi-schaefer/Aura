@@ -84,7 +84,7 @@ export const SpeedtestCard = ({ ping, download, upload, stage }: any) => {
           </span>
           <div className="flex items-center gap-2 opacity-30 mt-1">
              <div className="h-px w-4 bg-white" />
-             <span className="text-[9px] font-black uppercase tracking-[0.3em]">Mbps</span>
+             <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white">Mbit/s</span>
              <div className="h-px w-4 bg-white" />
           </div>
         </div>
@@ -93,7 +93,7 @@ export const SpeedtestCard = ({ ping, download, upload, stage }: any) => {
       {/* Grid: Ultra Minimal Stats */}
       <div className="grid grid-cols-3 gap-8 mt-10 px-4">
         <MinimalStatItem label="Ping" value={Math.round(ping)} unit="ms" color="bg-green-500" />
-        <MinimalStatItem label="Download" value={upload?.toFixed(1)} unit="mb" color="bg-blue-500" />
+        <MinimalStatItem label="Download" value={download?.toFixed(1)} unit="mb" color="bg-blue-500" />
         <MinimalStatItem label="Upload" value={upload?.toFixed(1)} unit="mb" color="bg-purple-500" />
       </div>
     </motion.div>

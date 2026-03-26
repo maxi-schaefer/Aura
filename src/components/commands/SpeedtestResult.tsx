@@ -17,7 +17,7 @@ async function startFullTest(onUpdate: (data: any) => void) {
 
   // 2. DOWNLOAD
   onUpdate({ stage: 'download' });
-  const sizes = [1000000, 5000000, 15000000]; // 1MB, 5MB, 15MB
+  const sizes = [1000000, 5000000, 15000000, 50000000, 200000000]; // 1MB, 5MB, 15MB, 50MB, 200MB
   for (const size of sizes) {
     const start = performance.now();
     const res = await fetch(`${testNode}${size}`, { cache: 'no-cache' });
@@ -29,14 +29,16 @@ async function startFullTest(onUpdate: (data: any) => void) {
 
   // 3. UPLOAD
   onUpdate({ stage: 'upload' });
-  const blob = new Uint8Array(2000000); // 2MB
-  const startUl = performance.now();
-  await fetch("https://speed.cloudflare.com/__up", { method: 'POST', body: blob });
-  const ulDuration = (performance.now() - startUl) / 1000;
-  onUpdate({ 
-    stage: 'complete', 
-    upload: (blob.length * 8) / (ulDuration * 1024 * 1024) 
-  });
+  for (const size of sizes) {
+    const start = performance.now();
+    const blob = new Uint8Array(size);
+    await fetch("https://speed.cloudflare.com/__up", { method: "POST", body: blob });
+    const ulDuration = (performance.now() - start) / 1000;
+    onUpdate({
+      state: 'complete',
+      upload: (blob.length * 8) / (ulDuration * 1024 * 1024)
+    });
+  }
 }
 
 export const SpeedtestResult = () => {

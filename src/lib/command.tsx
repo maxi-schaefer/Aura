@@ -4,6 +4,7 @@ import { WeatherCard } from "../components/commands/WeatherCard";
 export interface Command {
     cmd: string;
     description: string;
+    preview?: (args: string[]) => any;
     execute: (args: string[]) => any | Promise<any>;
 }
 
@@ -34,6 +35,7 @@ export const COMMAND_MAP: Record<string, Command> = {
   },
   weather: {
     cmd: "weather",
+    preview: (args) => `Weather for ${args.join(" ") || "Berlin"}`,
     description: "Get weather for a city: > weather [city]",
     execute: async (args) => {
       const city = args.join(" ") || "Berlin"; // Default city
@@ -63,6 +65,7 @@ export const COMMAND_MAP: Record<string, Command> = {
   password: {
     cmd: "password",
     description: "Generate a secure password: > password [length]",
+    preview: (args) => `Generate password (${args[0] || 12})`,
     execute: (args) => {
       const length = Math.min(Math.max(parseInt(args[0]) || 12, 4), 128);
 

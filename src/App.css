@@ -31,7 +31,7 @@ body {
 
 .glass {
   /* Darker, more opaque background */
-  background: rgba(8, 8, 15, 0.8);
+  background: rgba(3, 3, 5, 0.9);
   backdrop-filter: blur(50px) saturate(150%);
   border: 1px solid rgba(255, 255, 255, 0.1);
   transition: height 0.15s cubic-bezier(0.4, 0, 0.2, 1);

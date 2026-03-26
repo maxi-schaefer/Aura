@@ -27,9 +27,13 @@ export const calculateExpression = (query: string): string | null => {
  */
 export const scrollToActive = (container: HTMLElement | null, index: number) => {
     if (!container) return;
-    const activeItem = container.children[index] as HTMLElement;
+    
+    const activeItem = container.querySelector(`[data-index="${index}"]`) as HTMLElement;
+    
     if (activeItem) {
-        activeItem.scrollIntoView({ block: "nearest" });
+        activeItem.scrollIntoView({ 
+            block: "nearest", 
+        });
     }
 };
 

@@ -23,21 +23,10 @@ export default function App() {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    const { 
-        calculation, 
-        detectedColor, 
-        filteredApps, 
-        filteredAliases, 
-        suggestion,
-        commandResult,
-        fileResults
-    } = useSearchLogic(query, allApps, aliases);
+    const { results } = useSearchLogic(query, allApps, aliases);
+    const selected = results[selectedIndex];
 
-    const isAliasMode = query.startsWith("@");
-    const isFileMode = query.startsWith("/");
-    const isSearchFallback = query.length > 0 && filteredApps.length === 0;
-
-    useWindowShadow(containerRef, [filteredApps, calculation, commandResult, isLoading, fileResults]);
+    useWindowShadow(containerRef, [results, isLoading]);
 
     // Initial Data Fetch
     useEffect(() => {
@@ -60,99 +49,75 @@ export default function App() {
         }
     }, [selectedIndex]);
 
-    const getListLength = () => {
-        if (isAliasMode) return filteredAliases.length;
-        if (query.startsWith(">")) return 1;
-        
-        let length = 0;
-        if (calculation || detectedColor) length += 1;
-        if (isFileMode) {
-            length += (fileResults?.length || 0);
-        } else {
-            length += filteredApps.length;
-            if (filteredApps.length === 0 && query.length > 0 && !calculation) length += 1;
-        }
-        return length;
-    };
+    const handleExecute = async (fromClick = false) => {
+        const selected = results[selectedIndex];
+        if (!selected) return;
 
-    const handleExecute = async () => {
-        const appWindow = getCurrentWindow();
-        const hasSpecial = !!(calculation || detectedColor);
-        
-        if (isAliasMode) {
-            const selected = filteredAliases[selectedIndex];
-            if (selected) await invoke("search_web", { query: selected[1] });
-        } 
-        else if (isFileMode) {
-            // Offset by 1 if there's a calculation/color result
-            const fileIndex = hasSpecial ? selectedIndex - 1 : selectedIndex;
-            const selectedFile = fileResults?.[fileIndex];
-            if (selectedFile) await invoke("launch_app", { path: selectedFile.path });
-        } 
-        else if (query.startsWith(">") && commandResult) {
-            if (typeof commandResult === "string") {
-                await navigator.clipboard.writeText(commandResult);
+        if (selected.type === "command" && selected.action) {
+            await selected.action();
+
+            if (fromClick) {
+                setQuery(selected.title);
             }
-        } 
-        else if (hasSpecial && selectedIndex === 0) {
-            await navigator.clipboard.writeText((detectedColor || calculation)!);
-        } 
-        else if (isSearchFallback && !calculation) {
-            await invoke("search_web", { query });
-        } 
-        else {
-            // Standard App Launch logic
-            const appIndex = hasSpecial ? selectedIndex - 1 : selectedIndex;
-            const selectedApp = filteredApps[appIndex];
-            if (selectedApp) await invoke("launch_app", { path: selectedApp.path });
+        } else if (selected.action) {
+            await selected.action();
+            setQuery("");
+            getCurrentWindow().hide();
         }
-
-        setQuery("");
-        appWindow.hide();
     };
 
-    const listLength = getListLength();
+    useEffect(() => {
+        setSelectedIndex(0);
+        if (scrollContainerRef.current) {
+            scrollContainerRef.current.scrollTop = 0;
+        }
+    }, [query]);
+
+    const listLength = results.length;
 
     // Keyboard Navigation
     useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            if (e.key === "Escape") {
+    const handleKeyDown = (e: KeyboardEvent) => {
+        const maxIndex = Math.max(0, results.length - 1);
+
+        switch (e.key) {
+            case "Escape":
                 e.preventDefault();
                 setQuery("");
-                return;
-            }
-            
-            if (e.key === "Enter") {
+                break;
+
+            case "Enter":
+                e.preventDefault();
                 handleExecute();
-                return;
-            }
+                setTimeout(() => setSelectedIndex(0), 10);
+                break;
 
-            if (e.key === "Tab" && suggestion) {
-                e.preventDefault();
-                setQuery(`>${suggestion} `);
-                return;
-            }
-            
-            if (e.key === "Alt") {
-                e.preventDefault();
-                return;
-            }
-
-            const maxIndex = Math.max(0, listLength - 1);
-
-            if (e.key === "ArrowDown") {
+            case "ArrowDown":
                 e.preventDefault();
                 setSelectedIndex(prev => (prev < maxIndex ? prev + 1 : prev));
-            }
-            if (e.key === "ArrowUp") {
+                break;
+
+            case "ArrowUp":
                 e.preventDefault();
                 setSelectedIndex(prev => (prev > 0 ? prev - 1 : prev));
-            }
-        };
+                break;
 
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [selectedIndex, listLength, query, suggestion, handleExecute]);
+            case "Alt":
+                e.preventDefault();
+                break;
+
+            default:
+                break;
+        }
+    };
+
+    window.addEventListener("keydown", handleKeyDown);
+    return () => window.removeEventListener("keydown", handleKeyDown);
+}, [results, selectedIndex, handleExecute]);
+
+    useEffect(() => {
+        setSelectedIndex(0);
+    }, [query]);
 
     // Clock
     useEffect(() => {
@@ -166,33 +131,13 @@ export default function App() {
         <div ref={containerRef} className="bg-transparent overflow-hidden">
             <motion.div className="glass p-4 shadow-2xl flex flex-col">
                 <div className="relative flex items-center mb-4 border-b border-white/5 pb-2 pr-15">
-                    {suggestion && (
-                        <div className="absolute pointer-events-none text-base font-mono flex items-center h-full">
-                            <span className="text-transparent whitespace-pre">
-                                {query.startsWith(">") ? ">" : ""}{query.slice(1)}
-                            </span>
-                            <motion.span 
-                                initial={{ opacity: 0, scale: 0.8 }}
-                                animate={{ opacity: 1, scale: 1 }} 
-                                className="text-white/20 flex items-center"
-                            >
-                                {suggestion.slice(query.slice(1).trimStart().length)}
-                                <span className="ml-2 text-[9px] bg-white/5 px-1.5 py-0.5 rounded border border-white/10 text-white/40 font-sans uppercase">Tab</span>
-                            </motion.span>
-                        </div>
-                    )}
-
                     <input
                         ref={inputRef}
                         autoFocus
                         value={query} 
                         onChange={(e) => { setQuery(e.target.value); setSelectedIndex(0); }}
-                        placeholder="Search apps, math, or type @ for aliases..."
-                        className={`w-full bg-transparent outline-none text-base ${
-                            query.startsWith('@') ? 'text-blue-400 font-bold' : 
-                            query.startsWith('/') ? 'text-blue-400 font-medium' :
-                            query.startsWith('>') ? 'text-blue-100 font-mono' : 'text-white'
-                        }`}
+                        placeholder="Search anything..."
+                        className="w-full bg-transparent outline-none text-base text-white"
                     />
                     <p className="absolute right-3 text-gray-500/50 font-mono">{time}</p>
                 </div>
@@ -200,18 +145,16 @@ export default function App() {
                 <div ref={scrollContainerRef} className="max-h-120 overflow-y-auto custom-scrollbar pr-1">
                     {isLoading ? (
                         <LoadingState />
+                    ) : selected?.view ? (
+                        <div className="mt-2">
+                            {selected.view}
+                        </div>
                     ) : (
                         <ResultList
-                            query={query}
+                            results={results}
                             selectedIndex={selectedIndex}
-                            filteredApps={filteredApps}
-                            filteredAliases={filteredAliases}
-                            calculation={calculation}
-                            detectedColor={detectedColor}
-                            commandResult={commandResult}
-                            onExecute={handleExecute}
                             setSelectedIndex={setSelectedIndex}
-                            fileResults={fileResults}
+                            onExecute={handleExecute}
                         />
                     )}
                 </div>

@@ -31,7 +31,7 @@ export default function AliasSettings() {
     return (
         <div className="flex flex-col h-full">
             <header className="mb-6">
-                <p className="text-xs text-gray-500 mb-4">
+                <p className="text-xs text-gray-500 mb-2">
                     Create shortcuts for your favorite sites. Type <span className="text-blue-400 font-mono">@alias</span> in the search bar to trigger.
                 </p>
                 
@@ -46,7 +46,7 @@ export default function AliasSettings() {
                             className="bg-transparent w-16 outline-none text-white placeholder:text-gray-600"
                         />
                     </div>
-                    <div className="h-4 w-[1px] bg-white/10 mx-2" />
+                    <div className="h-4 w-px bg-white/10 mx-2" />
                     <input 
                         value={newValue} 
                         onChange={e => setNewValue(e.target.value)}
@@ -63,7 +63,7 @@ export default function AliasSettings() {
             </header>
 
             {/* List Area */}
-            <div className="flex-1 space-y-2 overflow-y-auto pr-2 custom-scrollbar max-h-55">
+            <div className="flex-1 space-y-2 overflow-y-auto custom-scrollbar max-h-55">
                 {Object.entries(aliases).length === 0 ? (
                     <div className="text-center py-12 border-2 border-dashed border-white/5 rounded-3xl">
                         <Globe className="mx-auto mb-2 text-gray-700" size={32} />
@@ -71,12 +71,12 @@ export default function AliasSettings() {
                     </div>
                 ) : (
                     Object.entries(aliases).map(([key, val]) => (
-                        <div key={key} className="group flex items-center justify-between p-4 bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 rounded-2xl transition-all">
+                        <div key={key} className="group flex items-center justify-between py-2 px-4 bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 rounded-2xl transition-all">
                             <div className="flex items-center gap-4">
                                 <div className="px-3 py-1 bg-blue-500/10 border border-blue-500/20 rounded-lg text-blue-400 font-mono text-xs font-bold">
                                     @{key}
                                 </div>
-                                <span className="text-gray-400 text-xs truncate max-w-[250px] font-medium">
+                                <span className="text-gray-400 text-xs truncate font-medium">
                                     {val}
                                 </span>
                             </div>
