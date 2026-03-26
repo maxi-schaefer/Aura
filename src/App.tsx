@@ -3,7 +3,7 @@ import { motion } from "framer-motion";
 import { matchSorter } from "match-sorter";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useRef, useState } from "react";
-import { getCurrentWindow, LogicalSize } from '@tauri-apps/api/window';
+import { getCurrentWindow, LogicalPosition, LogicalSize, primaryMonitor } from '@tauri-apps/api/window';
 import { calculateExpression, detectColor, scrollToActive } from "./lib/utils";
 import { LoadingState } from "./components/LoadingState";
 import Footer from "./components/Footer";
@@ -11,6 +11,7 @@ import { COMMAND_MAP } from "./lib/command";
 import { ResultList } from "./components/ResultList";
 
 export default function App() {
+    const [suggestion, setSuggestion] = useState("");
     const [query, setQuery] = useState("");
     const isAliasMode = query.startsWith("@");
     const [isLoading, setIsLoading] = useState(true);
@@ -76,6 +77,31 @@ export default function App() {
         setSelectedIndex(0);
     }, [query, allApps]);
 
+    // Suggestion Logic
+    useEffect(() => {
+        if (query.startsWith(">")) {
+            // Remove the ">" and any leading/trailing whitespace to get the actual command string
+            const commandPart = query.slice(1).trimStart(); 
+            
+            if (!commandPart) {
+                setSuggestion("");
+                return;
+            }
+
+            const match = Object.keys(COMMAND_MAP).find(cmd => 
+                cmd.startsWith(commandPart.toLowerCase())
+            );
+
+            if (match && match !== commandPart.toLowerCase()) {
+                setSuggestion(match);
+            } else {
+                setSuggestion("");
+            }
+        } else {
+            setSuggestion("");
+        }
+    }, [query]);
+
     // Filtering Logic for Aliases
     useEffect(() => {
         if (query.startsWith("@")) {
@@ -95,6 +121,13 @@ export default function App() {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Enter") {
                 handleExecute();
+                return;
+            }
+
+            if (e.key === "Tab" && suggestion) {
+                e.preventDefault();
+                setQuery(`>${suggestion} `); // Complete and add a space for args
+                setSuggestion("");
                 return;
             }
 
@@ -125,15 +158,41 @@ export default function App() {
 
     // Dynamic Window Resizing
     useEffect(() => {
-        const resize = () => {
+        const updateWindowPosition = async () => {
             if (!containerRef.current) return;
-            requestAnimationFrame(async () => {
-                const height = containerRef.current!.getBoundingClientRect().height;
-                await getCurrentWindow().setSize(new LogicalSize(640, Math.ceil(height)));
-            });
+
+            const monitor = await primaryMonitor();
+            if (!monitor) return;
+
+            const window = getCurrentWindow();
+            const { height } = containerRef.current.getBoundingClientRect();
+
+            const newWidth = 700;
+            const newHeight = Math.ceil(height);
+            await window.setSize(new LogicalSize(newWidth, newHeight));
+
+            const scaleFactor = monitor.scaleFactor;
+            const monitorSize = monitor.size.toLogical(scaleFactor);
+
+            const x = (monitorSize.width / 2) - (newWidth / 2);
+            
+            const y = monitorSize.height * 0.25; 
+
+            await window.setPosition(new LogicalPosition(x, y));
         };
-        resize();
-    }, [filteredApps, calculation, isSearchFallback]);
+
+        const observer = new ResizeObserver(() => {
+            requestAnimationFrame(() => {
+                updateWindowPosition();
+            });
+        });
+
+        if (containerRef.current) {
+            observer.observe(containerRef.current);
+        }
+
+        return () => observer.disconnect();
+    }, [filteredApps, calculation, isSearchFallback, commandResult, isLoading]);
 
     // Resize after successfully loading applications
     useEffect(() => {
@@ -141,7 +200,7 @@ export default function App() {
             const resize = async () => {
             if (!containerRef.current) return;
             const height = containerRef.current.getBoundingClientRect().height;
-            await getCurrentWindow().setSize(new LogicalSize(640, Math.ceil(height)));
+            await getCurrentWindow().setSize(new LogicalSize(700, Math.ceil(height)));
             };
             resize();
         }
@@ -165,8 +224,12 @@ export default function App() {
                 await invoke("search_web", { query: selected[1] });
             }
         } else if (query.startsWith(">") && commandResult) {
-            await navigator.clipboard.writeText(commandResult);
-            setQuery("");
+            if (typeof commandResult === "string") {
+                await navigator.clipboard.writeText(commandResult);
+                setQuery("");
+            } else {
+                return;
+            }
         }else if (detectedColor && selectedIndex === 0) {
             await navigator.clipboard.writeText(detectedColor);
         } else if (calculation && selectedIndex === 0) {
@@ -180,7 +243,7 @@ export default function App() {
         }
 
         setQuery("");
-        setTimeout(() => appWindow.hide(), 10);
+        appWindow.hide();
     };
 
     // Timer
@@ -216,20 +279,47 @@ export default function App() {
         <div ref={containerRef} className="bg-transparent overflow-hidden">
             <motion.div className="glass p-4 shadow-2xl flex flex-col">
                 <div className="relative flex items-center mb-4 border-b border-white/5 pb-2 pr-15">
+                    {/* Suggestions Layer */}
+                    {suggestion && (
+                        <div className="absolute pointer-events-none text-base font-mono flex items-center h-full">
+                            <span className="text-transparent whitespace-pre">
+                                {query.startsWith(">") ? ">" : ""}
+                                {query.slice(1)}
+                            </span>
+                            
+                            {/* The Ghost Text */}
+                            <span className="text-white/20 flex items-center">
+                                {/* Slice the suggestion based on the length of the commandPart only */}
+                                {suggestion.slice(query.slice(1).trimStart().length)}
+                                    <motion.span 
+                                        initial={{ opacity: 0, scale: 0.8 }}
+                                        animate={{ opacity: 1, scale: 1 }}
+                                        className="ml-2 text-[9px] bg-white/5 px-1.5 py-0.5 rounded border border-white/10 text-white/40 font-sans uppercase tracking-tighter"
+                                    >
+                                        Tab
+                                    </motion.span>
+                            </span>
+                        </div>
+                    )}
+
                     <input
                         ref={inputRef}
-                        autoFocus 
+                        autoFocus
                         value={query} 
                         onChange={(e) => setQuery(e.target.value)}
                         placeholder="Search apps, math, or type @ for aliases..."
-                        className={`w-full bg-transparent outline-none text-base placeholder-gray-500 ${query.startsWith('@') ? 'text-blue-400 font-bold' : 'text-white'}`}
+                        className={`w-full bg-transparent outline-none text-base placeholder-gray-500 relative z-10 ${
+                            query.startsWith('@') ? 'text-blue-400 font-bold' : 
+                            query.startsWith('>') ? 'text-blue-100 font-mono' : 'text-white'
+                        }`}
                     />
-                    <p className="absolute right-3 text-gray-500/50 font-mono">
+                    
+                    <p className="absolute right-3 text-gray-500/50 font-mono z-20">
                         {time}
                     </p>
                 </div>
 
-                <div ref={scrollContainerRef} className="max-h-80 overflow-y-auto custom-scrollbar pr-1">
+                <div ref={scrollContainerRef} className="max-h-120 overflow-y-auto custom-scrollbar pr-1">
                     {isLoading ? (
                         <LoadingState />
                     ) : (

@@ -1,3 +1,4 @@
+import { SpeedtestResult } from "../components/commands/SpeedtestResult";
 import { WeatherCard } from "../components/commands/WeatherCard";
 
 export interface Command {
@@ -5,7 +6,6 @@ export interface Command {
     description: string;
     execute: (args: string[]) => any | Promise<any>;
 }
-
 
 export const COMMAND_MAP: Record<string, Command> = {
   b64: {
@@ -51,6 +51,13 @@ export const COMMAND_MAP: Record<string, Command> = {
       } catch (e) {
         return `Failed to fetch weather for ${city}`;
       }
+    }
+  },
+  speedtest: {
+    cmd: "speedtest",
+    description: "Run a full network speed test (Ping, Down, Up)",
+    execute: () => {
+      return <SpeedtestResult />;
     }
   }
 };
