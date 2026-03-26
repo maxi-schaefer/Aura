@@ -3,13 +3,12 @@ import { motion } from "framer-motion";
 import { matchSorter } from "match-sorter";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useRef, useState } from "react";
-import { ResultItem } from "./components/ResultItem";
-import { CalculatorResult } from "./components/CalculatorResult";
 import { getCurrentWindow, LogicalSize } from '@tauri-apps/api/window';
 import { calculateExpression, detectColor, scrollToActive } from "./lib/utils";
 import { LoadingState } from "./components/LoadingState";
-import { ColorResult } from "./components/ColorResult";
 import Footer from "./components/Footer";
+import { COMMAND_MAP } from "./lib/command";
+import { ResultList } from "./components/ResultList";
 
 export default function App() {
     const [query, setQuery] = useState("");
@@ -23,6 +22,7 @@ export default function App() {
     const [calculation, setCalculation] = useState<string | null>(null);
     const [detectedColor, setDetectedColor] = useState<string | null>(null);
     const [time, setTime] = useState("");
+    const [commandResult, setCommandResult] = useState<string | null>(null);
 
     const inputRef = useRef<HTMLInputElement>(null);
     const containerRef = useRef<HTMLDivElement>(null);
@@ -51,6 +51,25 @@ export default function App() {
         setCalculation(calculateExpression(query));
     }, [query]);
 
+    // Command Logic
+    useEffect(() => {
+        if (query.startsWith(">")) {
+            const rawContent = query.slice(1).trim(); // remove ">"
+            const [cmdPrefix, ...args] = rawContent.split(" ");
+            
+            const command = COMMAND_MAP[cmdPrefix];
+            if (command) {
+            const result = command.execute(args);
+            // Handle both Sync and Async results
+            Promise.resolve(result).then(setCommandResult);
+            } else {
+            setCommandResult(null);
+            }
+        } else {
+            setCommandResult(null);
+        }
+    }, [query]);
+
     // Filtering Logic
     useEffect(() => {
         setFilteredApps(query ? matchSorter(allApps, query, { keys: ["name"] }) : allApps);
@@ -71,7 +90,7 @@ export default function App() {
         setSelectedIndex(0);
     }, [query, aliases]);
 
-    // 4. Keyboard Navigation
+    // Keyboard Navigation
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             if (e.key === "Enter") {
@@ -99,12 +118,12 @@ export default function App() {
         return () => window.removeEventListener("keydown", handleKeyDown);
     }, [selectedIndex, filteredApps, calculation, isSearchFallback, query]);
 
-    // 5. Auto-Scroll Logic
+    // Auto-Scroll Logic
     useEffect(() => {
         scrollToActive(scrollContainerRef.current, selectedIndex);
     }, [selectedIndex]);
 
-    // 6. Dynamic Window Resizing
+    // Dynamic Window Resizing
     useEffect(() => {
         const resize = () => {
             if (!containerRef.current) return;
@@ -116,7 +135,7 @@ export default function App() {
         resize();
     }, [filteredApps, calculation, isSearchFallback]);
 
-    // 7. Resize after successfully loading applications
+    // Resize after successfully loading applications
     useEffect(() => {
         if (!isLoading) {
             const resize = async () => {
@@ -128,7 +147,7 @@ export default function App() {
         }
     }, [isLoading, filteredApps, calculation, isSearchFallback]);
 
-    // 8. Handle Auto Focus
+    // Handle Auto Focus
     useEffect(() => {
         const focusInput = () => {
             inputRef.current?.focus();
@@ -145,7 +164,10 @@ export default function App() {
             if (selected) {
                 await invoke("search_web", { query: selected[1] });
             }
-        } else if (detectedColor && selectedIndex === 0) {
+        } else if (query.startsWith(">") && commandResult) {
+            await navigator.clipboard.writeText(commandResult);
+            setQuery("");
+        }else if (detectedColor && selectedIndex === 0) {
             await navigator.clipboard.writeText(detectedColor);
         } else if (calculation && selectedIndex === 0) {
             await navigator.clipboard.writeText(calculation);
@@ -178,6 +200,18 @@ export default function App() {
         return () => clearInterval(interval);
     }, []);
 
+    useEffect(() => {
+        const handleSystemMenu = (e: KeyboardEvent) => {
+            // Prevent the default Alt key behavior (opening the system menu)
+            if (e.key === 'Alt') {
+            e.preventDefault();
+            }
+        };
+
+        window.addEventListener('keydown', handleSystemMenu);
+        return () => window.removeEventListener('keydown', handleSystemMenu);
+    }, []);
+
     return (
         <div ref={containerRef} className="bg-transparent overflow-hidden">
             <motion.div className="glass p-4 shadow-2xl flex flex-col">
@@ -199,62 +233,26 @@ export default function App() {
                     {isLoading ? (
                         <LoadingState />
                     ) : (
-                        <>
-                            {isAliasMode && filteredAliases.map(([key, url], index) => (
-                                <ResultItem
-                                    key={key}
-                                    name={`@${key}`}
-                                    type={url}
-                                    isActive={selectedIndex === index}
-                                    onMouseEnter={() => setSelectedIndex(index)}
-                                    onClick={handleExecute}
-                                />
-                            ))}
-
-                            {!isAliasMode && (
-                                <>
-                                    {detectedColor && (
-                                        <ColorResult color={detectedColor} isActive={selectedIndex === 0} />
-                                    )}
-
-                                    {calculation && (
-                                        <CalculatorResult 
-                                            result={calculation} 
-                                            isActive={selectedIndex === 0} 
-                                            onMouseEnter={() => setSelectedIndex(0)} 
-                                        />
-                                    )}
-
-                                    {filteredApps.map((item, index) => {
-                                        const visualIndex = (calculation || detectedColor) ? index + 1 : index;
-                                        return (
-                                            <ResultItem
-                                                key={item.path}
-                                                name={item.name}
-                                                type="Application"
-                                                isActive={selectedIndex === visualIndex}
-                                                onMouseEnter={() => setSelectedIndex(visualIndex)}
-                                                onClick={handleExecute}
-                                            />
-                                        );
-                                    })}
-
-                                    {isSearchFallback && !(calculation || detectedColor) && (
-                                        <ResultItem
-                                            name={`Browse for "${query}"`} 
-                                            type="Browser" 
-                                            isActive={selectedIndex === 0} 
-                                            onMouseEnter={() => setSelectedIndex(0)} 
-                                            onClick={handleExecute}
-                                        />
-                                    )}
-                                </>
-                            )}
-                        </>
+                        <ResultList
+                            query={query}
+                            selectedIndex={selectedIndex}
+                            filteredApps={filteredApps}
+                            filteredAliases={filteredAliases}
+                            calculation={calculation}
+                            detectedColor={detectedColor}
+                            commandResult={commandResult}
+                            onExecute={handleExecute}
+                            setSelectedIndex={setSelectedIndex}
+                        />
                     )}
                 </div>
 
-                <Footer results={filteredApps.length} />
+                {/* Update Footer Count Logic */}
+                <Footer results={
+                    query.startsWith('>') ? 1 :
+                    query.startsWith('@') ? filteredAliases.length :
+                    (calculation || detectedColor ? 1 : 0) + (filteredApps.length || (query ? 1 : 0))
+                } />
             </motion.div>
         </div>
     );
