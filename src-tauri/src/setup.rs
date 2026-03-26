@@ -13,7 +13,7 @@ fn open_settings(app: &tauri::AppHandle) {
     if let Some(win) = app.get_webview_window("settings") {
         let _ = win.set_focus();
     } else {
-        let settings_win = WebviewWindowBuilder::new(app, "settings", WebviewUrl::App("settings.html".into()))
+        let settings_win = WebviewWindowBuilder::new(app, "settings", WebviewUrl::App("index.html#settings".into()))
             .title("Aura Settings")
             .inner_size(700.0, 550.0)
             .resizable(false)
