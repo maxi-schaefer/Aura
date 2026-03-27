@@ -1,5 +1,6 @@
 import { getVersion } from "@tauri-apps/api/app"
 import { useEffect, useState } from "react";
+import { FooterTimer } from "./footer/FooterTimer";
 
 interface FooterProps {
     results: number;
@@ -9,48 +10,47 @@ interface FooterProps {
 
 export default function Footer({ results, selectedIndex, query }: FooterProps) {
     const [version, setVersion] = useState("");
-    
-    // Logic to determine the primary action label
-    const getActionLabel = () => {
-        if (!query) return "Search";
-        if (query.startsWith(">") || query.includes("password") || query.includes("hex")) return "Execute";
-        if (query.startsWith("@")) return "Expand";
-        return "Open";
-    };
 
     useEffect(() => {
         getVersion().then(setVersion);
     }, []);
 
     return (
-        <div className="flex-none mt-2 pt-3 border-t border-white/3 flex items-center justify-between text-[10px] font-medium tracking-tight">
+        <div className="flex-none mt-2 pt-3 border-t border-white/3 flex items-center justify-between">
             
-            {/* Left Side: Result Count */}
-            <div className="flex items-center gap-3 text-white/20 uppercase tracking-widest font-bold text-[9px]">
-                {results > 0 && (
-                    <div className="flex items-center gap-2">
-                        <span className="text-white/40">{selectedIndex + 1}</span>
-                        <span className="opacity-50">of</span>
-                        <span className="text-white/40">{results}</span>
-                        <span className="ml-1 opacity-50">Results</span>
-                    </div>
-                )}
+            {/* Left Section: Status & Results */}
+            <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-white/20 uppercase tracking-[0.15em] font-black text-[8px]">
+                    {results > 0 && (
+                        <>
+                            <span className="text-white">{selectedIndex + 1}</span>
+                            <span className="opacity-50">/</span>
+                            <span className="text-white/60">{results}</span>
+                        </>
+                    )}
+                </div>
+                
+                {/* The Timer sits quietly here on the left */}
+                <FooterTimer />
             </div>
 
-            <div className="flex items-center gap-5">
-                {/* Primary Action */}
-                <div className="flex items-center gap-2 group cursor-default">
-                    <span className="text-white/50 group-hover:text-white/80 transition-colors capitalize">{getActionLabel()}</span>
-                    <kbd className="min-w-[18px] h-4 flex items-center justify-center rounded bg-white/10 border border-white/20 text-[10px] text-white/70 font-sans">↵</kbd>
+            {/* Right Section: Actions & Meta */}
+            <div className="flex items-center gap-4">
+                <div className="flex items-center gap-2 text-white/30 text-[10px] font-semibold">
+                    <span className="capitalize tracking-tight">
+                        {query ? "Execute" : "Search"}
+                    </span>
+                    <kbd className="h-4 px-1 flex items-center justify-center rounded bg-white/[0.05] border border-white/10 text-[9px] font-sans text-white/40">
+                        ↵
+                    </kbd>
                 </div>
 
                 <div className="w-[1px] h-3 bg-white/5" />
 
-                {/* Version Tag */}
-                <div className="hidden sm:block pl-2 text-white/10 hover:text-white/20 transition-colors cursor-default font-mono">
+                <div className="text-white/[0.06] font-mono text-[9px] tracking-tighter">
                     v{version}
                 </div>
             </div>
         </div>
-    )
+    );
 }

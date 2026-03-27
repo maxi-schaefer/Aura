@@ -66,5 +66,48 @@ export const COMMAND_MAP: Record<string, Command> = {
         
         return { success: true, value: result };
       }
+  },
+  timer: {
+    cmd: "timer",
+    title: "Timer",
+    description: "Set a countdown timer (minutes)",
+    render: (query) => {
+      const mins = parseInt(query) || 0;
+      return (
+        <div className="flex flex-col items-center justify-center p-12 space-y-6">
+          <div className="relative">
+            <div className="absolute inset-0 blur-3xl bg-primary/10 rounded-full" />
+            <div className="relative text-6xl font-extralight tracking-tighter text-white/90 tabular-nums">
+              {mins < 10 ? `0${mins}` : mins}<span className="text-white/20">:</span>00
+            </div>
+          </div>
+          <div className="flex items-center gap-3 px-3 py-1.5 rounded-full bg-white/[0.03] border border-white/[0.05]">
+            <span className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold">
+              {mins > 0 ? "Press Enter to Start" : "Press Enter to Pause/Resume"}
+            </span>
+          </div>
+        </div>
+      );
+    },
+    execute: async (args) => {
+      if (!args || args.length === 0 || args[0] === "") {
+        window.dispatchEvent(new CustomEvent("timer-action", { detail: { type: "toggle" } }));
+        return { success: true }; 
+      }
+
+      const minutes = parseInt(args[0]);
+      if (isNaN(minutes) || minutes <= 0) return { success: false };
+
+      const totalSeconds = minutes * 60;
+      window.dispatchEvent(new CustomEvent("timer-action", { 
+          detail: { 
+            type: "start",
+            endTime: Date.now() + totalSeconds * 1000, 
+            totalSeconds 
+          } 
+      }));
+
+      return { success: true };
+    }
   }
 };
