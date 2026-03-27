@@ -15,7 +15,7 @@ fn open_settings(app: &tauri::AppHandle) {
     } else {
         let settings_win = WebviewWindowBuilder::new(app, "settings", WebviewUrl::App("index.html#settings".into()))
             .title("Aura Settings")
-            .inner_size(700.0, 550.0)
+            .inner_size(720.0, 600.0)
             .resizable(false)
             .transparent(true)
             .decorations(false)
@@ -37,8 +37,8 @@ pub fn init(app: &mut App) -> std::result::Result<(), Box<dyn std::error::Error>
     // Using PredefinedMenuItem for separators and custom styles
     let title_i = MenuItem::with_id(app, "title", "AURA", false, None::<&str>)?;
     let sep = PredefinedMenuItem::separator(app)?;
-    let settings_i = MenuItem::with_id(app, "settings", "⚙  Settings", true, None::<&str>)?;
-    let quit_i = MenuItem::with_id(app, "quit", "❌  Quit Aura", true, None::<&str>)?;
+    let settings_i = MenuItem::with_id(app, "settings", "Settings", true, None::<&str>)?;
+    let quit_i = MenuItem::with_id(app, "quit", "Quit Aura", true, None::<&str>)?;
     
     let tray_menu = Menu::with_items(app, &[
         &title_i, 

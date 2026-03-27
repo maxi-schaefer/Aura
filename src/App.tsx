@@ -53,9 +53,7 @@ export default function App() {
     }, [selectedIndex]);
 
     const handleExecute = useCallback(async () => {
-        // 1. Handle Active Command Mode (e.g., Password/Hex)
         if (activeCommand) {
-            // Use optional chaining or an if-check for .render/.action
             if (activeCommand.action) {
                 const args = query.split(" ");
                 const result = await activeCommand.action(args);
@@ -70,11 +68,9 @@ export default function App() {
 
         // 2. Handle Main List Selection
         const currentSelected = results[selectedIndex];
-        // Check if currentSelected AND its action exist
         if (!currentSelected || !currentSelected.action) return;
 
         if (currentSelected.type === "command") {
-            // TypeScript now knows .action exists because of the check above
             const result = await currentSelected.action();
             
             setActiveCommand(currentSelected);
@@ -112,7 +108,7 @@ export default function App() {
                         setActiveCommand(null);
                     } else {
                         setQuery("");
-                        getCurrentWindow().hide();
+                        query === "" && getCurrentWindow().hide();
                     }
                     break;
 

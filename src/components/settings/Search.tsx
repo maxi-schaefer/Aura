@@ -12,12 +12,12 @@ import braveIcon from "../../assets/engines/brave.png";
 import ecosiaIcon from "../../assets/engines/ecosia.png";
 
 const ENGINES = [
-    { id: "google", name: "Google", url: "https://google.com/search?q=", icon: googleIcon },
-    { id: "duckduckgo", name: "DuckDuckGo", url: "https://duckduckgo.com/?q=", icon: ddgIcon },
     { id: "bing", name: "Bing", url: "https://www.bing.com/search?q=", icon: bingIcon },
-    { id: "yahoo", name: "Yahoo", url: "https://search.yahoo.com/search?p=", icon: yahooIcon },
     { id: "brave", name: "Brave", url: "https://search.brave.com/search?q=", icon: braveIcon },
+    { id: "duckduckgo", name: "DuckDuckGo", url: "https://duckduckgo.com/?q=", icon: ddgIcon },
     { id: "ecosia", name: "Ecosia", url: "https://www.ecosia.org/search?q=", icon: ecosiaIcon },
+    { id: "google", name: "Google", url: "https://google.com/search?q=", icon: googleIcon },
+    { id: "yahoo", name: "Yahoo", url: "https://search.yahoo.com/search?p=", icon: yahooIcon },
 ];
 
 export default function SearchSettings() {
@@ -39,15 +39,12 @@ export default function SearchSettings() {
     return (
         <section className="space-y-3">
             <h2 className="text-[11px] uppercase tracking-[0.2em] text-gray-500 ">Search Engine</h2>
-            <p className="text-xs text-gray-500">
-                Select the default Search Engine you want to use
-            </p>
             
             <div className="relative -mt-2">
                 {/* --- Trigger --- */}
                 <button
                     onClick={() => setIsOpen(!isOpen)}
-                    className="w-full flex items-center justify-between px-4 py-3 bg-white/[0.03] border border-white/10 rounded-xl hover:bg-white/[0.06] hover:border-white/20 transition-all duration-200 group"
+                    className="w-full flex items-center justify-between px-4 py-3 bg-white/3 border border-white/10 rounded-xl hover:bg-white/6 hover:border-white/20 transition-all duration-200 group"
                 >
                     <div className="flex items-center gap-3">
                         <img 
@@ -78,7 +75,7 @@ export default function SearchSettings() {
                                 animate={{ opacity: 1, y: 8, scale: 1 }}
                                 exit={{ opacity: 0, y: 4, scale: 0.98 }}
                                 transition={{ duration: 0.15 }}
-                                className="absolute left-0 right-0 z-20 max-h-48 overflow-y-auto bg-[#0A0A0A]/95 backdrop-blur-2xl border border-white/10 rounded-xl shadow-2xl p-1.5 custom-scrollbar"
+                                className="absolute left-0 right-0 z-20 max-h-55 overflow-y-auto bg-black/40 backdrop-blur-2xl border border-white/10 rounded-xl shadow-2xl p-1.5 custom-scrollbar"
                             >
                                 {ENGINES.map((engine) => (
                                     <button

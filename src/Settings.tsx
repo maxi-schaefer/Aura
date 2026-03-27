@@ -1,17 +1,15 @@
 import { useEffect, useState } from "react";
-import { enable, disable, isEnabled } from "@tauri-apps/plugin-autostart";
 import { motion, AnimatePresence } from "framer-motion";
 import { getVersion } from "@tauri-apps/api/app";
-import { Settings as SettingsIcon, Layout, Zap, Info, Shield, FolderClosed, Search, Check } from "lucide-react";
+import { Settings as SettingsIcon, Layout, Zap, Info, Shield, FolderClosed } from "lucide-react";
 import "./App.css"
 import AliasSettings from "./components/settings/Aliases";
 import About from "./components/settings/About";
-import { invoke } from "@tauri-apps/api/core";
 import SearchSettings from "./components/settings/Search";
+import BehaviorSettings from "./components/settings/Behavior";
 
 export default function Settings() {
     const [activeTab, setActiveTab] = useState("General");
-    const [autoStart, setAutoStart] = useState(false);
     const [version, setVersion] = useState("");
 
     const tabs = [
@@ -25,14 +23,7 @@ export default function Settings() {
 
     useEffect(() => {
         getVersion().then(setVersion);
-        isEnabled().then(setAutoStart);
     }, []);
-
-    const toggleAutostart = async () => {
-        if (autoStart) await disable();
-        else await enable();
-        setAutoStart(await isEnabled());
-    };
 
     return (
         <div className="h-screen w-screen flex glass select-none text-white overflow-hidden font-sans">
@@ -90,25 +81,7 @@ export default function Settings() {
 
                         {activeTab === "General" && (
                             <div className="space-y-6">
-                                <section>
-                                    <h2 className="text-[11px] uppercase tracking-[0.2em] text-gray-500 mb-4">Behavior</h2>
-                                    <div className="flex items-center justify-between p-5 bg-white/3 rounded-2xl border border-white/10">
-                                        <div>
-                                            <p className="text-sm font-semibold">Launch on Startup</p>
-                                            <p className="text-xs text-gray-500">Automatically start Aura when you log in.</p>
-                                        </div>
-                                        <button 
-                                            onClick={toggleAutostart}
-                                            className={`cursor-pointer w-10 h-6 rounded-full relative transition-all duration-500 ${autoStart ? 'bg-blue-600' : 'bg-white/10'}`}
-                                        >
-                                            <motion.div 
-                                                animate={{ x: autoStart ? 18 : 4 }}
-                                                className="absolute top-1 w-4 h-4 bg-white rounded-full shadow-lg" 
-                                            />
-                                        </button>
-                                    </div>
-                                </section>
-
+                                <BehaviorSettings />
                                 <SearchSettings />
                             </div>
                         )}
