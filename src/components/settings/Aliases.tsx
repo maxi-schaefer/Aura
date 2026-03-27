@@ -13,7 +13,9 @@ export default function AliasSettings() {
         invoke<AliasMap>("get_aliases").then(setAliases);
     }, []);
 
-    const addAlias = () => {
+    const addAlias = (e: React.SubmitEvent) => {
+        e.preventDefault();
+
         if (!newKey || !newValue) return;
         const updated = { ...aliases, [newKey.toLowerCase()]: newValue };
         setAliases(updated);
@@ -36,10 +38,11 @@ export default function AliasSettings() {
                 </p>
                 
                 {/* Input Group */}
-                <div className="flex items-center gap-2 p-2 bg-white/5 rounded-2xl border border-white/10 focus-within:border-primary/50 transition-all">
+                <form onSubmit={addAlias} className="flex items-center gap-2 p-2 bg-white/5 rounded-2xl border border-white/10 focus-within:border-primary/50 transition-all">
                     <div className="flex items-center gap-1 pl-3 text-primary font-mono font-bold">
                         <span>@</span>
-                        <input 
+                        <input
+                            required 
                             value={newKey} 
                             onChange={e => setNewKey(e.target.value.replace('@', ''))}
                             placeholder="gh" 
@@ -48,18 +51,18 @@ export default function AliasSettings() {
                     </div>
                     <div className="h-4 w-px bg-white/10 mx-2" />
                     <input 
+                        required
                         value={newValue} 
                         onChange={e => setNewValue(e.target.value)}
                         placeholder="https://github.com" 
                         className="bg-transparent flex-1 outline-none text-sm text-white placeholder:text-gray-600"
                     />
                     <button 
-                        onClick={addAlias}
                         className="cursor-pointer bg-primary hover:bg-primary p-2 rounded-xl transition-colors"
                     >
                         <Plus size={18} />
                     </button>
-                </div>
+                </form>
             </header>
 
             {/* List Area */}

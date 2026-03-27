@@ -21,7 +21,12 @@
         "skipTaskbar": true,
         "center": false,
         "width": 700,
-        "height": 140
+        "height": 140,
+        "windowEffects": {
+          "effects": ["acrylic", "blur", "hudWindow"],
+          "state": "active",
+          "color": [0, 0, 0, 50]
+        }
       }
     ],
     "security": {

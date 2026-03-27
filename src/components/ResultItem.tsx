@@ -8,7 +8,8 @@ import {
   Calculator, 
   Palette, 
   Check,
-  Command
+  Command,
+  ExternalLink
 } from "lucide-react";
 
 const getIcon = (type: string, isDir?: boolean) => {
@@ -19,7 +20,7 @@ const getIcon = (type: string, isDir?: boolean) => {
     case "command": return <Command size={14} />;
     case "calc": return <Calculator size={14} />;
     case "color": return <Palette size={14} />;
-    default: return <FileText size={14} />;
+    default: return <ExternalLink size={14} />;
   }
 };
 
@@ -74,7 +75,7 @@ export const ResultItem = ({ name, type, isActive, subtitle, onMouseEnter, onCli
       <div className="relative z-10 flex items-center gap-3">
         <div 
           className={`p-1.5 rounded-md transition-all duration-200 ${
-            isActive ? "bg-primary/20 text-primary" : "text-white/30"
+            isActive ? "bg-primary/20 text-primary shadow-[0_0_3px_var(--primary)]" : "text-white/30"
           }`}
         >
           {getIcon(type)}

@@ -94,8 +94,5 @@ pub fn init(app: &mut App) -> std::result::Result<(), Box<dyn std::error::Error>
         }
     })?;
 
-    // --- Apply Acrylic ---
-    let _ = apply_acrylic(&window, Some((0, 0, 0, 175)));
-
     Ok(())
 }
