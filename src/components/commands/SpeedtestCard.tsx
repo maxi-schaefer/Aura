@@ -41,7 +41,7 @@ export const SpeedtestCard = ({ ping, download, upload, stage }: any) => {
           <p className="text-[10px] text-white/20 uppercase tracking-[0.3em] font-bold">Spectral Analysis</p>
         </div>
         <div className="flex items-center gap-2">
-          <div className={`h-1 w-1 rounded-full ${stage === 'complete' ? 'bg-green-500 shadow-[0_0_8px_#10b981]' : 'bg-blue-500 animate-pulse'}`} />
+          <div className={`h-1 w-1 rounded-full ${stage === 'complete' ? 'bg-green-500 shadow-[0_0_8px_#10b981]' : 'bg-primary animate-pulse'}`} />
           <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest tabular-nums">
             {stage === 'complete' ? 'Ready' : 'Live'}
           </span>
@@ -93,7 +93,7 @@ export const SpeedtestCard = ({ ping, download, upload, stage }: any) => {
       {/* Grid: Ultra Minimal Stats */}
       <div className="grid grid-cols-3 gap-8 mt-10 px-4">
         <MinimalStatItem label="Ping" value={Math.round(ping)} unit="ms" color="bg-green-500" />
-        <MinimalStatItem label="Download" value={download?.toFixed(1)} unit="mb" color="bg-blue-500" />
+        <MinimalStatItem label="Download" value={download?.toFixed(1)} unit="mb" color="bg-primary" />
         <MinimalStatItem label="Upload" value={upload?.toFixed(1)} unit="mb" color="bg-purple-500" />
       </div>
     </motion.div>

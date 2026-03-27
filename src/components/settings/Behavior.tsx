@@ -24,7 +24,7 @@ export default function BehaviorSettings() {
                 </div>
                 <button 
                     onClick={toggleAutostart}
-                    className={`cursor-pointer w-10 h-6 rounded-full relative transition-all duration-500 ${autoStart ? 'bg-blue-600' : 'bg-white/10'}`}
+                    className={`cursor-pointer w-10 h-6 rounded-full relative transition-all duration-500 ${autoStart ? 'bg-primary' : 'bg-white/10'}`}
                 >
                     <motion.div 
                         animate={{ x: autoStart ? 18 : 4 }}

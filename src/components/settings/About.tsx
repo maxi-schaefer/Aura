@@ -23,7 +23,7 @@ export default function About() {
                 <div className="text-6xl font-black tracking-tighter text-white">
                     AURA
                 </div>
-                <div className="h-0.5 w-full bg-linear-to-r from-transparent via-blue-500 to-transparent mt-2 opacity-50" />
+                <div className="h-0.5 w-full bg-linear-to-r from-transparent via-primary to-transparent mt-2 opacity-50" />
             </motion.div>
 
             {/* Core Info */}
@@ -45,7 +45,7 @@ export default function About() {
                         className="text-[11px] uppercase tracking-widest text-gray-500 hover:text-white transition-colors duration-300 relative group cursor-pointer"
                     >
                         {item.name}
-                        <span className="absolute -bottom-1 left-0 w-0 h-px bg-blue-500 transition-all duration-300 group-hover:w-full" />
+                        <span className="absolute -bottom-1 left-0 w-0 h-px bg-primary transition-all duration-300 group-hover:w-full" />
                     </p>
                 ))}
             </nav>

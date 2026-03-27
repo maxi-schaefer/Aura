@@ -50,12 +50,12 @@ export default function Settings() {
                                 activeTab === tab.id ? 'bg-white/10 text-white shadow-lg' : 'text-gray-500 hover:text-gray-300 hover:bg-white/5'
                             }`}
                         >
-                            <span className={activeTab === tab.id ? 'text-blue-400' : 'group-hover:text-gray-300'}>
+                            <span className={activeTab === tab.id ? 'text-primary' : 'group-hover:text-gray-300'}>
                                 {tab.icon}
                             </span>
                             <span className="text-sm font-medium">{tab.id}</span>
                             {activeTab === tab.id && (
-                                <motion.div layoutId="active-pill" className="ml-auto w-1 h-4 bg-blue-500 rounded-full" />
+                                <motion.div layoutId="active-pill" className="ml-auto w-1 h-4 bg-primary rounded-full" />
                             )}
                         </button>
                     ))}

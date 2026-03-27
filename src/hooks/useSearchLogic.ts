@@ -61,14 +61,16 @@ export function useSearchLogic(activeCommandMode: boolean, query: string, allApp
       for (const [cmdKey, command] of matchedCommands.slice(0, MAX_PER_GROUP)) {
           r.push({
               id: `command-${cmdKey}`,
-              title: command.title || cmdKey, // Use the pretty title
+              title: command.title || cmdKey,
               subtitle: command.description,
               type: "command",
               group: "Commands",
               render: command.render, 
-              action: async () => {
-                  const result = await command.execute(args);
-                  // If it returns a string, copy it. If it returns JSX, App.tsx handles it.
+              action: async (runtimeArgs?: string[]) => {
+                  const finalArgs = runtimeArgs && runtimeArgs.length > 0 ? runtimeArgs : args;
+                  
+                  const result = await command.execute(finalArgs);
+                  
                   if (typeof result === "string") {
                       await navigator.clipboard.writeText(result);
                   }

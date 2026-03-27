@@ -1,7 +1,7 @@
 import "./App.css";
-import { motion } from "framer-motion";
+import { AnimatePresence, motion } from "framer-motion";
 import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useRef, useState, useCallback } from "react";
+import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { getCurrentWindow } from '@tauri-apps/api/window';
 import { scrollToActive } from "./lib/utils";
 import { LoadingState } from "./components/LoadingState";
@@ -9,6 +9,7 @@ import Footer from "./components/Footer";
 import { ResultList } from "./components/ResultList";
 import { useSearchLogic } from "./hooks/useSearchLogic";
 import { useWindowShadow } from "./hooks/useWindowShadow";
+import { playSuccess, playTick } from "./lib/sound";
 
 export default function App() {
     const [query, setQuery] = useState("");
@@ -52,11 +53,20 @@ export default function App() {
         }
     }, [selectedIndex]);
 
+    // Suggestion Logic
+    const suggestion = useMemo(() => {
+        if (!query || results.length === 0 || activeCommand) return "";
+        const topResult = results[0].title;
+        if (topResult.toLowerCase().startsWith(query.toLowerCase())) {
+            return topResult.slice(query.length);
+        }
+        return "";
+    }, [query, results, activeCommand]);
+
     const handleExecute = useCallback(async () => {
         if (activeCommand) {
             if (activeCommand.action) {
-                const args = query.split(" ");
-                const result = await activeCommand.action(args);
+                const result = await activeCommand.action([query]);
                 
                 if (result?.success) {
                     setShowCopied(true);
@@ -93,6 +103,12 @@ export default function App() {
     useEffect(() => {
         const handleKeyDown = (e: KeyboardEvent) => {
             const maxIndex = Math.max(0, results.length - 1);
+
+            if ((e.key === "Tab" || e.key === "ArrowRight") && suggestion && !activeCommand) {
+                e.preventDefault();
+                setQuery(query + suggestion);
+                return;
+            }
 
             // Backspace out of command mode
             if (e.key === "Backspace" && query === "" && activeCommand) {
@@ -135,7 +151,7 @@ export default function App() {
 
         window.addEventListener("keydown", handleKeyDown);
         return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [results, selectedIndex, handleExecute, query, activeCommand]);
+    }, [results, selectedIndex, handleExecute, query, activeCommand, suggestion]);
 
     // Reset selection on query change
     useEffect(() => {
@@ -150,32 +166,81 @@ export default function App() {
         return () => clearInterval(interval);
     }, []);
 
+    // Sounds
+    useEffect(() => {
+        if (!isLoading && results.length > 0) {
+            playTick();
+        }
+    }, [selectedIndex]);
+
+    useEffect(() => {
+        if (showCopied) {
+            playSuccess();
+        }
+    }, [showCopied]);
+
     return (
         <div ref={containerRef} className="bg-transparent overflow-hidden">
             <motion.div className="glass p-4 shadow-2xl flex flex-col">
-                <div className="relative flex items-center mb-4 border-b border-white/5 pb-2 pr-15">
-                    {activeCommand && (
-                        <motion.div 
-                            initial={{ scale: 0.8, opacity: 0 }}
-                            animate={{ scale: 1, opacity: 1 }}
-                            className="flex items-center gap-1.5 mr-2 px-2 py-0.5 rounded bg-blue-500/20 text-blue-400 text-xs font-bold border border-blue-500/20"
-                        >
-                            {activeCommand.title}
-                        </motion.div>
-                    )}
+                <div className="relative flex items-center mb-4 border-b border-white/5 pb-3">
+                    <div className="flex items-center w-full relative">
+                        {/* Command Tag (Breadcrumb) */}
+                        <AnimatePresence mode="wait">
+                            {activeCommand && (
+                            <motion.div
+                                initial={{ opacity: 0, scale: 0.95 }}
+                                animate={{ opacity: 1, scale: 1 }}
+                                exit={{ opacity: 0, scale: 0.95 }}
+                                transition={{ duration: 0.1 }}
+                                className="flex items-center gap-2 mr-3 pl-1 pr-2 py-1 rounded-md bg-primary/10 border border-primary/20"
+                            >
+                                {/* Subtle Icon or Dot for the command */}
+                                <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_var(--primary)]" />
+                                <span className="text-primary text-[11px] uppercase tracking-wider">
+                                    {activeCommand.title}
+                                </span>
+                                {/* Breadcrumb Separator */}
+                                <span className="text-white/10 text-xs font-light">/</span>
+                            </motion.div>
+                            )}
+                        </AnimatePresence>
+
+                        <div className="relative flex-1 flex items-center h-10">
+                            {/* The Invisible Base Input */}
+                            <input
+                            ref={inputRef}
+                            autoFocus
+                            value={query}
+                            onChange={(e) => setQuery(e.target.value)}
+                            placeholder={activeCommand ? "" : "Search apps and commands..."}
+                            className="z-10 w-full bg-transparent outline-none text-[17px] text-white placeholder:text-white/10 font-medium tracking-tight"
+                            />
+
+                            {/* The Ghost Suggestion Text */}
+                            {!activeCommand && query && (
+                            <div className="absolute left-0 text-[17px] font-medium pointer-events-none flex tracking-tight">
+                                <span className="opacity-0">{query}</span>
+                                <span className="text-white/20">{suggestion}</span>
+                            </div>
+                            )}
+                            
+                            {/* Dynamic Placeholder for Command Mode */}
+                            {activeCommand && !query && (
+                            <div className="absolute left-0 text-[17px] font-medium pointer-events-none text-white/10 tracking-tight">
+                                Type arguments...
+                            </div>
+                            )}
+                        </div>
+                    </div>
                     
-                    <input
-                        ref={inputRef}
-                        autoFocus
-                        value={query} 
-                        onChange={(e) => setQuery(e.target.value)}
-                        placeholder={activeCommand ? `Type arguments...` : "Search anything..."}
-                        className="w-full bg-transparent outline-none text-base text-white placeholder:text-white/20"
-                    />
-                    <p className="absolute right-3 text-gray-500/50 font-mono text-xs">{time}</p>
+                    {/* Clock / Time */}
+                    <div className="flex items-center gap-3 ml-4">
+                         <div className="w-px h-4 bg-white/10" />
+                         <p className="text-gray-500/50 font-mono text-[11px] tabular-nums tracking-tighter">{time}</p>
+                    </div>
                 </div>
 
-                <div ref={scrollContainerRef} className="max-h-120 overflow-y-auto custom-scrollbar pr-1">
+                <div ref={scrollContainerRef} className="max-h-120 overflow-y-auto overflow-x-hidden custom-scrollbar pr-1">
                     {isLoading ? (
                         <LoadingState />
                     ) : activeCommand ? (

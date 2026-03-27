@@ -97,7 +97,7 @@ export default function SearchSettings() {
                                         </div>
                                         {selectedUrl === engine.url && (
                                             <motion.div layoutId="active-check" className="mr-2">
-                                                <Check size={14} className="text-blue-500" />
+                                                <Check size={14} className="text-primary" />
                                             </motion.div>
                                         )}
                                     </button>

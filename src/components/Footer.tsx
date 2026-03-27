@@ -23,7 +23,7 @@ export default function Footer({ results, selectedIndex, query }: FooterProps) {
     }, []);
 
     return (
-        <div className="flex-none mt-2 pt-3 border-t border-white/[0.03] flex items-center justify-between text-[10px] font-medium tracking-tight">
+        <div className="flex-none mt-2 pt-3 border-t border-white/3 flex items-center justify-between text-[10px] font-medium tracking-tight">
             
             {/* Left Side: Result Count */}
             <div className="flex items-center gap-3 text-white/20 uppercase tracking-widest font-bold text-[9px]">

@@ -27,7 +27,7 @@ export const ResultList = ({ results, selectedIndex, setSelectedIndex, onExecute
                     <header className="px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] text-white/20 font-bold font-mono">
                         {group}
                     </header>
-                    <div className="space-y-[2px]">
+                    <div className="space-y-0.5">
                         {entries.map(({ item, globalIndex }) => (
                             <ResultItem
                                 globalIndex={globalIndex}

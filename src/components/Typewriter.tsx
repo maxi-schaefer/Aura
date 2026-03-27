@@ -22,7 +22,7 @@ export default function Typewriter({ text }: { text: string }) {
       <motion.span
         animate={{ opacity: [0, 1, 0] }}
         transition={{ repeat: Infinity, duration: 0.8 }}
-        className="inline-block w-1.5 h-4 ml-1 bg-blue-500 align-middle"
+        className="inline-block w-1.5 h-4 ml-1 bg-primary align-middle"
       />
     </span>
   );

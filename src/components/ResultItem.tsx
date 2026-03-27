@@ -7,8 +7,8 @@ import {
   Globe, 
   Calculator, 
   Palette, 
-  Terminal,
-  Check
+  Check,
+  Command
 } from "lucide-react";
 
 const getIcon = (type: string, isDir?: boolean) => {
@@ -16,7 +16,7 @@ const getIcon = (type: string, isDir?: boolean) => {
     case "app": return <AppWindow size={14} />;
     case "file": return isDir ? <Folder size={14} /> : <FileText size={14} />;
     case "alias": return <Globe size={14} />;
-    case "command": return <Terminal size={14} />;
+    case "command": return <Command size={14} />;
     case "calc": return <Calculator size={14} />;
     case "color": return <Palette size={14} />;
     default: return <FileText size={14} />;
@@ -48,7 +48,16 @@ export const ResultItem = ({ name, type, isActive, subtitle, onMouseEnter, onCli
   };
 
   return (
-    <div
+    <motion.div
+      animate={{ 
+          x: isActive ? 4 : 0, // Tiny slide to the right
+          scale: isActive ? 1.01 : 1, // Micro-zoom
+        }}
+        transition={{ 
+          type: "spring", 
+          stiffness: 400, 
+          damping: 30 
+        }}
       data-index={globalIndex}
       onMouseEnter={onMouseEnter}
       onClick={handleClick}
@@ -57,7 +66,7 @@ export const ResultItem = ({ name, type, isActive, subtitle, onMouseEnter, onCli
       {isActive && (
         <motion.div
           layoutId="active-pill"
-          className="absolute inset-0 bg-white/5 rounded-md"
+          className="absolute inset-0 bg-white/3 rounded-md"
           transition={{ type: "spring", stiffness: 600, damping: 50 }}
         />
       )}
@@ -65,7 +74,7 @@ export const ResultItem = ({ name, type, isActive, subtitle, onMouseEnter, onCli
       <div className="relative z-10 flex items-center gap-3">
         <div 
           className={`p-1.5 rounded-md transition-all duration-200 ${
-            isActive ? "bg-blue-500/20 text-blue-400" : "text-white/30"
+            isActive ? "bg-primary/20 text-primary" : "text-white/30"
           }`}
         >
           {getIcon(type)}
@@ -105,7 +114,7 @@ export const ResultItem = ({ name, type, isActive, subtitle, onMouseEnter, onCli
               animate={{ opacity: 1 }}
               exit={{ opacity: 0 }}
               className={`text-[11px] font-mono uppercase transition-opacity ${
-                isActive ? 'opacity-40 text-blue-400' : 'text-white/20'
+                isActive ? 'opacity-40 text-primary' : 'text-white/20'
               }`}
             >
               {subtitle}
@@ -119,6 +128,6 @@ export const ResultItem = ({ name, type, isActive, subtitle, onMouseEnter, onCli
           ↵
         </span>
       </div>
-    </div>
+    </motion.div>
   );
 };
