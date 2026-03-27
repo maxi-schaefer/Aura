@@ -30,6 +30,7 @@ export const ResultList = ({ results, selectedIndex, setSelectedIndex, onExecute
                     <div className="space-y-0.5">
                         {entries.map(({ item, globalIndex }) => (
                             <ResultItem
+                                id={item.id}
                                 globalIndex={globalIndex}
                                 key={item.id}
                                 name={item.title}

@@ -25,6 +25,7 @@ const getIcon = (type: string, isDir?: boolean) => {
 };
 
 interface ResultItemProps {
+  id: string;
   name: string;
   type: string;
   subtitle: string | undefined;
@@ -34,8 +35,10 @@ interface ResultItemProps {
   globalIndex: number;
 }
 
-export const ResultItem = ({ name, type, isActive, subtitle, onMouseEnter, onClick, globalIndex }: ResultItemProps) => {
+export const ResultItem = ({ id, name, type, isActive, subtitle, onMouseEnter, onClick, globalIndex }: ResultItemProps) => {
   const isColorType = type === "color";
+  const isFile = type === "file";
+  const isDir = isFile && subtitle === "Folder";
   const [copied, setCopied] = useState(false);
 
   const handleClick = () => {
@@ -78,14 +81,21 @@ export const ResultItem = ({ name, type, isActive, subtitle, onMouseEnter, onCli
             isActive ? "bg-primary/20 text-primary shadow-[0_0_3px_var(--primary)]" : "text-white/30"
           }`}
         >
-          {getIcon(type)}
+          {getIcon(type, isDir)}
         </div>
-        
-        <span className={`text-[13px] tracking-tight transition-colors ${
-          isActive ? 'text-white font-medium' : 'text-white/60'
-        }`}>
-          {name}
-        </span>
+          
+        <div className="flex flex-col">
+          <span className={`text-[13px] tracking-tight transition-colors items-center ${
+            isActive ? 'text-white font-medium' : 'text-white/60'
+          }`}>
+            {name}
+          </span>
+          {isFile && (
+            <span className="text-xs text-white/30">
+              {id}
+            </span>
+          )}
+        </div>
       </div>
 
       <div className="relative z-10 flex items-center gap-4">
