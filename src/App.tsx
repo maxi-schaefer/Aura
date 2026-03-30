@@ -84,6 +84,8 @@ export default function App() {
         const handler = (e: KeyboardEvent) => {
             const max = Math.max(0, results.length - 1);
 
+            inputRef.current?.focus();
+
             if ((e.key === "Tab" || e.key === "ArrowRight") && suggestion && !activeCommand) {
                 e.preventDefault();
                 setQuery((q) => q + suggestion);
@@ -194,7 +196,7 @@ export default function App() {
 
                         {/* Suggestion + Tab hint */}
                         {!activeCommand && query && (
-                            <div className="absolute left-1 ml-10 text-lg font-light pointer-events-none flex items-center tracking-tight whitespace-pre">
+                            <div className="absolute pl-10 text-lg font-light pointer-events-none flex items-center tracking-tight whitespace-pre">
                                 <span className="opacity-0 select-none">{query}</span>
                                 <span className="text-white/10">{suggestion}</span>
                                 {suggestion && (
