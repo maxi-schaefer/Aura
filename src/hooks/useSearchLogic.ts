@@ -5,7 +5,7 @@ import { COMMAND_MAP } from "../lib/command";
 import { invoke } from '@tauri-apps/api/core';
 import { Result } from "../types/result";
 
-const MAX_PER_GROUP = 10;
+const MAX_PER_GROUP = 30;
 
 export function useSearchLogic(activeCommandMode: boolean, query: string, allApps: any[], aliases: Record<string, string>) {
   const [results, setResults] = useState<Result[]>([]);

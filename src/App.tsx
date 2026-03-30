@@ -2,7 +2,7 @@ import "./App.css";
 import { AnimatePresence, motion } from "framer-motion";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { getCurrentWindow } from '@tauri-apps/api/window';
+import { getCurrentWindow } from "@tauri-apps/api/window";
 import { LoadingState } from "./components/LoadingState";
 import Footer from "./components/Footer";
 import { ResultList } from "./components/ResultList";
@@ -13,110 +13,83 @@ import { playSuccess, playTick } from "./lib/sound";
 export default function App() {
     const [query, setQuery] = useState("");
     const [allApps, setAllApps] = useState<any[]>([]);
-    const [aliases, setAliases] = useState<{ [key: string]: string }>({});
+    const [aliases, setAliases] = useState<Record<string, string>>({});
     const [activeCommand, setActiveCommand] = useState<any | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [time, setTime] = useState("");
-    
-    // UI State for the "Copied" animation
     const [showCopied, setShowCopied] = useState(false);
 
-    // Refs
     const containerRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
-    // If activeCommand is set, we pass true to pause background file searching
-    const { results } = useSearchLogic(activeCommand !== null, query, allApps, aliases);
+    const { results } = useSearchLogic(!!activeCommand, query, allApps, aliases);
     useWindowShadow(containerRef, [results, isLoading]);
 
-    // Initial Data Fetch
     useEffect(() => {
-        const init = async () => {
+        (async () => {
             const [apps, aliasMap] = await Promise.all([
                 invoke("get_installed_apps"),
                 invoke("get_aliases")
             ]);
             setAllApps(apps as any[]);
-            setAliases(aliasMap as { [key: string]: string });
+            setAliases(aliasMap as Record<string, string>);
             setTimeout(() => setIsLoading(false), 300);
-        };
-        init();
+        })();
     }, []);
 
-    // Scroll to active item
     useEffect(() => {
-    if (!isLoading) {
-        const activeElement = scrollContainerRef.current?.querySelector('[data-active="true"]');
-        if (activeElement) {
-        activeElement.scrollIntoView({
-            block: 'nearest',
-            behavior: 'auto'
-        });
-        }
-    }
+        if (isLoading) return;
+        const el = scrollContainerRef.current?.querySelector('[data-active="true"]');
+        el?.scrollIntoView({ block: "nearest" });
     }, [selectedIndex, results, isLoading]);
 
-    // Suggestion Logic
     const suggestion = useMemo(() => {
-        if (!query || results.length === 0 || activeCommand) return "";
-        const topResult = results[0].title;
-        if (topResult.toLowerCase().startsWith(query.toLowerCase())) {
-            return topResult.slice(query.length);
-        }
-        return "";
+        if (!query || !results.length || activeCommand) return "";
+        const t = results[0].title;
+        return t.toLowerCase().startsWith(query.toLowerCase()) ? t.slice(query.length) : "";
     }, [query, results, activeCommand]);
+
+    const triggerCopied = useCallback(() => {
+        setShowCopied(true);
+        setTimeout(() => setShowCopied(false), 2000);
+    }, []);
 
     const handleExecute = useCallback(async () => {
         if (activeCommand) {
-            if (activeCommand.action) {
-                const result = await activeCommand.action([query]);
-                
-                if (result?.success) {
-                    setShowCopied(true);
-                    setTimeout(() => setShowCopied(false), 2000);
-                }
-            }
+            const result = await activeCommand.action?.([query]);
+            if (result?.success) triggerCopied();
             return;
         }
 
-        // 2. Handle Main List Selection
-        const currentSelected = results[selectedIndex];
-        if (!currentSelected || !currentSelected.action) return;
+        const current = results[selectedIndex];
+        if (!current?.action) return;
 
-        if (currentSelected.type === "command") {
-            const result = await currentSelected.action();
-            
-            setActiveCommand(currentSelected);
-            setQuery(""); 
-            
-            if (result?.success) {
-                setShowCopied(true);
-                setTimeout(() => setShowCopied(false), 2000);
-            }
+        if (current.type === "command") {
+            const result = await current.action();
+            setActiveCommand(current);
+            setQuery("");
+            if (result?.success) triggerCopied();
             return;
         }
 
-        // 3. Standard App/File execution
-        await currentSelected.action();
+        await current.action();
         setQuery("");
         getCurrentWindow().hide();
-    }, [results, selectedIndex, activeCommand, query]);
+    }, [results, selectedIndex, activeCommand, query, triggerCopied]);
 
-    // Keyboard Navigation
     useEffect(() => {
-        const handleKeyDown = (e: KeyboardEvent) => {
-            const maxIndex = Math.max(0, results.length - 1);
+        const handler = (e: KeyboardEvent) => {
+            const max = Math.max(0, results.length - 1);
 
             if ((e.key === "Tab" || e.key === "ArrowRight") && suggestion && !activeCommand) {
                 e.preventDefault();
-                setQuery(query + suggestion);
+                setQuery((q) => q + suggestion);
                 return;
             }
 
-            // Backspace out of command mode
-            if (e.key === "Backspace" && query === "" && activeCommand) {
+            if (e.key === "Backspace" && !query && activeCommand) {
                 setActiveCommand(null);
                 setQuery(activeCommand.title.toLowerCase());
                 return;
@@ -125,123 +98,110 @@ export default function App() {
             switch (e.key) {
                 case "Escape":
                     e.preventDefault();
-                    if (activeCommand) {
-                        setActiveCommand(null);
-                    } else {
+                    if (activeCommand) setActiveCommand(null);
+                    else {
+                        if (!query) getCurrentWindow().hide();
                         setQuery("");
-                        query === "" && getCurrentWindow().hide();
                     }
                     break;
-
                 case "Enter":
                     e.preventDefault();
                     handleExecute();
                     break;
-
                 case "ArrowDown":
                     e.preventDefault();
-                    setSelectedIndex(prev => (prev < maxIndex ? prev + 1 : prev));
+                    setSelectedIndex((i) => (i < max ? i + 1 : i));
                     break;
-
                 case "ArrowUp":
                     e.preventDefault();
-                    setSelectedIndex(prev => (prev > 0 ? prev - 1 : prev));
+                    setSelectedIndex((i) => (i > 0 ? i - 1 : i));
                     break;
-
                 case "Alt":
                     e.preventDefault();
                     break;
             }
         };
 
-        window.addEventListener("keydown", handleKeyDown);
-        return () => window.removeEventListener("keydown", handleKeyDown);
-    }, [results, selectedIndex, handleExecute, query, activeCommand, suggestion]);
+        window.addEventListener("keydown", handler);
+        return () => window.removeEventListener("keydown", handler);
+    }, [results, suggestion, activeCommand, query, handleExecute]);
 
-    // Reset selection on query change
-    useEffect(() => {
-        setSelectedIndex(0);
-    }, [query]);
+    useEffect(() => setSelectedIndex(0), [query]);
 
-    // Clock
     useEffect(() => {
-        const interval = setInterval(() => {
+        const i = setInterval(() => {
             setTime(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
         }, 1000);
-        return () => clearInterval(interval);
+        return () => clearInterval(i);
     }, []);
 
-    // Sounds
     useEffect(() => {
-        if (!isLoading && results.length > 0) {
-            playTick();
-        }
+        if (!isLoading && results.length) playTick();
     }, [selectedIndex]);
 
     useEffect(() => {
-        if (showCopied) {
-            playSuccess();
-        }
+        if (showCopied) playSuccess();
     }, [showCopied]);
 
     return (
         <div ref={containerRef} className="bg-transparent overflow-hidden antialiased select-none">
             <motion.div className="glass flex flex-col overflow-hidden">
-                {/* Search Header */}
-                <header className="relative flex items-center px-4 py-3 border-b border-white/[0.04]">
+                <header className="relative flex items-center px-4 py-3 border-b border-white/4">
                     <AnimatePresence mode="popLayout">
                         {activeCommand && (
                             <motion.div
-                                initial={{ opacity: 0, scale: 0.9 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.9 }}
-                                className="flex items-center gap-2 mr-3 px-2 py-0.5 rounded bg-white/5 border border-white/10"
+                                initial={{ opacity: 0, x: -8 }}
+                                animate={{ opacity: 1, x: 0 }}
+                                exit={{ opacity: 0, x: -8 }}
+                                transition={{ duration: 0.15, ease: "easeOut" }}
+                                className="flex items-center gap-2 mr-3 px-2 py-1 rounded bg-white/4"
                             >
-                                <span className="text-[10px] font-bold text-white/40 uppercase tracking-tighter">
+                                <span className="text-[10px] font-medium text-white/30 uppercase tracking-[0.12em]">
                                     {activeCommand.title}
                                 </span>
+                                <span className="text-[9px] text-white/10 font-mono select-none">/</span>
                             </motion.div>
                         )}
                     </AnimatePresence>
 
-                    <div className="relative flex-1 flex items-center">
+                    <div className="relative flex-1 flex items-center h-8">
                         <input
                             ref={inputRef}
                             autoFocus
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder="Search..."
-                            className="w-full bg-transparent outline-none text-lg text-white/90 placeholder:text-white/10 font-light tracking-tight h-8"
+                            className="z-10 w-full bg-transparent outline-none text-lg text-white/90 placeholder:text-white/10 font-light tracking-tight"
                         />
-                        
+
                         {!activeCommand && query && (
-                            <div className="absolute left-0 text-lg font-light pointer-events-none flex tracking-tight">
-                                <span className="opacity-0">{query}</span>
+                            <div className="absolute left-0 text-lg font-light pointer-events-none flex items-center tracking-tight whitespace-pre">
+                                <span className="opacity-0 select-none">{query}</span>
                                 <span className="text-white/10">{suggestion}</span>
+                                {suggestion && (
+                                    <motion.div
+                                        initial={{ opacity: 0, x: -5 }}
+                                        animate={{ opacity: 1, x: 0 }}
+                                        className="ml-3 flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm bg-white/3 border border-white/8 shadow-sm"
+                                    >
+                                        <span className="text-[10px] font-medium text-white/20 tracking-wide uppercase">Tab</span>
+                                    </motion.div>
+                                )}
                             </div>
                         )}
                     </div>
-                    
-                    {/* Minimalist Clock */}
-                    <div className="ml-4 tabular-nums text-[11px] text-white/20 font-medium">
-                        {time}
-                    </div>
+
+                    <div className="ml-4 tabular-nums text-[11px] text-white/20 font-medium">{time}</div>
                 </header>
 
-                {/* Content Area */}
-                <main 
-                    ref={scrollContainerRef} 
-                    className="max-h-110 overflow-y-auto custom-scrollbar p-2"
-                >
+                <main ref={scrollContainerRef} className="max-h-110 overflow-y-auto custom-scrollbar p-2">
                     {isLoading ? (
                         <LoadingState />
                     ) : activeCommand ? (
-                        <motion.div 
-                            initial={{ opacity: 0, y: 4 }} 
-                            animate={{ opacity: 1, y: 0 }} 
-                            className="p-2"
-                        >
-                            {activeCommand.render ? activeCommand.render(query, showCopied) : activeCommand.view}
+                        <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="p-2">
+                            {activeCommand.render
+                                ? activeCommand.render(query, showCopied)
+                                : activeCommand.view}
                         </motion.div>
                     ) : (
                         <ResultList
@@ -253,11 +213,10 @@ export default function App() {
                     )}
                 </main>
 
-                <Footer 
-                    selectedIndex={selectedIndex} 
-                    query={query} 
-                    results={results.length} 
-                    selectedType={results[selectedIndex]?.type || ""} 
+                <Footer
+                    selectedIndex={selectedIndex}
+                    results={results.length}
+                    selectedType={results[selectedIndex]?.type || ""}
                 />
             </motion.div>
         </div>

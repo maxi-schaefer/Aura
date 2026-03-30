@@ -6,7 +6,6 @@ import { motion, AnimatePresence } from "framer-motion";
 interface FooterProps {
     results: number;
     selectedIndex: number;
-    query: string;
     selectedType: string;
 }
 
@@ -21,7 +20,7 @@ const getTypeLabel = (type: string) => {
     return labels[type.toLowerCase()] || "No Result";
 }
 
-export default function Footer({ results, selectedIndex, query, selectedType }: FooterProps) {
+export default function Footer({ results, selectedIndex, selectedType }: FooterProps) {
     const [version, setVersion] = useState("");
 
     useEffect(() => {
@@ -39,7 +38,7 @@ export default function Footer({ results, selectedIndex, query, selectedType }: 
                     <span className="text-[10px] font-medium text-white/20">{results}</span>
                 </div>
 
-                <div className="w-[1px] h-2.5 bg-white/[0.06]" />
+                <div className="w-px h-2.5 bg-white/6" />
                 
                 <FooterTimer />
             </div>
@@ -59,7 +58,7 @@ export default function Footer({ results, selectedIndex, query, selectedType }: 
                         </span>
                         
                         <div className="flex items-center gap-0.5 group">
-                            <kbd className="min-w-[18px] h-4.5 px-1 flex items-center justify-center rounded-[3px] bg-white/[0.08] border-b border-white/[0.12] text-[10px] text-white/60 font-sans shadow-sm group-hover:bg-white/[0.12] transition-colors">
+                            <kbd className="min-w-4.5 h-4.5 px-1 flex items-center justify-center rounded-[3px] bg-white/8 border-b border-white/12 text-[10px] text-white/60 font-sans shadow-sm group-hover:bg-white/12 transition-colors">
                                 ↵
                             </kbd>
                             <span className="text-[10px] text-white/20 font-medium ml-1">Enter</span>
@@ -67,11 +66,11 @@ export default function Footer({ results, selectedIndex, query, selectedType }: 
                     </motion.div>
                 </AnimatePresence>
 
-                <div className="w-[1px] h-2.5 bg-white/[0.06]" />
+                <div className="w-px h-2.5 bg-white/6" />
 
                 {/* Optional: Secondary Action hint (Raycast Style) */}
                 <div className="flex items-center gap-1 opacity-40 hover:opacity-100 transition-opacity cursor-pointer">
-                    <span className="text-[9px] font-mono text-white/5 tracking-tighter hover:text-white/20 transition-colors cursor-default">
+                    <span className="text-[9px] font-mono tracking-tighter text-white/20 transition-colors cursor-default">
                         v{version}
                     </span>
                 </div>

@@ -1,8 +1,7 @@
-import { motion, AnimatePresence } from "framer-motion";
-import { useState } from "react";
+import { motion } from "framer-motion";
 import { 
   AppWindow, FileText, Folder, Globe, Calculator, 
-  Palette, Check, Command, ExternalLink, ChevronRight 
+  Palette,Command, ExternalLink 
 } from "lucide-react";
 
 const getIcon = (type: string, isDir?: boolean) => {
@@ -24,8 +23,9 @@ const Kbd = ({ children }: { children: React.ReactNode }) => (
   </kbd>
 );
 
-export const ResultItem = ({ id, name, type, isActive, subtitle, onMouseEnter, onClick, globalIndex, icon }: any) => {
+export const ResultItem = ({ id, name, type, isActive, subtitle, onMouseEnter, onClick, icon }: any) => {
     const isFile = type === "file";
+    const isDir = isFile && subtitle === "Folder";
 
     return (
         <motion.div
@@ -47,7 +47,7 @@ export const ResultItem = ({ id, name, type, isActive, subtitle, onMouseEnter, o
                     {icon ? (
                         <img src={icon} alt="" className="size-5 rounded object-contain" />
                     ) : (
-                        getIcon(type)
+                        getIcon(type, isDir)
                     )}
                 </div>
                 

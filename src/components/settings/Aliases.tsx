@@ -74,7 +74,7 @@ export default function AliasSettings() {
                     </div>
                 ) : (
                     Object.entries(aliases).map(([key, val]) => (
-                        <div key={key} className="group flex items-center justify-between py-2 px-4 bg-white/[0.02] hover:bg-white/[0.04] border border-white/5 rounded-2xl transition-all">
+                        <div key={key} className="group flex items-center justify-between py-2 px-4 bg-white/2 hover:bg-white/4 border border-white/5 rounded-2xl transition-all">
                             <div className="flex items-center gap-4">
                                 <div className="px-3 py-1 bg-primary/10 border border-primary/20 rounded-lg text-primary font-mono text-xs font-bold">
                                     @{key}

@@ -20,7 +20,7 @@ pub fn run() {
             commands::save_aliases,
             commands::search_files,
             commands::get_config,
-            commands::save_config
+            commands::save_config,
         ])
         .setup(|app| {
             setup::init(app)?;

@@ -1,4 +1,5 @@
 import { HexCard } from "../components/commands/HexCard";
+import { NowPlayingCard } from "../components/commands/NowPlayingCard";
 import { PasswordCard } from "../components/commands/PasswordCard";
 import { SpeedtestResult } from "../components/commands/SpeedtestResult";
 import { TimerCard } from "../components/commands/TimerCard";
@@ -19,7 +20,7 @@ export const COMMAND_MAP: Record<string, Command> = {
     title: "Weather",
     description: "Check weather for a city",
     render: (query) => <WeatherCard city={query} />,
-    execute: async (args) => args.join(" ") || "Berlin"
+    execute: async (args) => args.join(" ") || ""
   },
   speedtest: {
     cmd: "speedtest",
@@ -95,5 +96,14 @@ export const COMMAND_MAP: Record<string, Command> = {
 
       return { success: true };
     }
-  }
+  },
+  nowplaying: {
+    cmd: "nowplaying",
+    title: "Now Playing",
+    description: "View current system media info",
+    render: () => <NowPlayingCard />,
+    execute: async () => {
+        return { success: true };
+    }
+  },
 };
