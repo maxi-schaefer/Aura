@@ -22,21 +22,6 @@ export const calculateExpression = (query: string): string | null => {
     return null;
 };
 
-/**
- * Simple helper to scroll an element into view within its parent
- */
-export const scrollToActive = (container: HTMLElement | null, index: number) => {
-    if (!container) return;
-    
-    const activeItem = container.querySelector(`[data-index="${index}"]`) as HTMLElement;
-    
-    if (activeItem) {
-        activeItem.scrollIntoView({ 
-            block: "nearest", 
-        });
-    }
-};
-
 
 export const detectColor = (query: string): string | null => {
     const hexRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;

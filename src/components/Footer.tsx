@@ -1,14 +1,27 @@
 import { getVersion } from "@tauri-apps/api/app"
 import { useEffect, useState } from "react";
 import { FooterTimer } from "./footer/FooterTimer";
+import { motion, AnimatePresence } from "framer-motion";
 
 interface FooterProps {
     results: number;
     selectedIndex: number;
     query: string;
+    selectedType: string;
 }
 
-export default function Footer({ results, selectedIndex, query }: FooterProps) {
+const getTypeLabel = (type: string) => {
+    const labels: Record<string, string> = {
+        app: "Open Application",
+        command: "Run Command",
+        alias: "Open Alias",
+        fallback: "Search Web",
+        file: "Open File"
+    };
+    return labels[type.toLowerCase()] || "No Result";
+}
+
+export default function Footer({ results, selectedIndex, query, selectedType }: FooterProps) {
     const [version, setVersion] = useState("");
 
     useEffect(() => {
@@ -16,41 +29,53 @@ export default function Footer({ results, selectedIndex, query }: FooterProps) {
     }, []);
 
     return (
-        <div className="flex-none mt-2 pt-3 border-t border-white/3 flex items-center justify-between">
+        <footer className="flex-none px-4 mt-2 py-2 border-t border-white/4 bg-white/1 flex items-center justify-between min-h-9">
             
-            {/* Left Section: Status & Results */}
-            <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-white/20 uppercase tracking-[0.15em] font-black text-[8px]">
-                    {results > 0 && (
-                        <>
-                            <span className="text-white">{selectedIndex + 1}</span>
-                            <span className="opacity-50">/</span>
-                            <span className="text-white/60">{results}</span>
-                        </>
-                    )}
+            {/* Left: Metadata & Version */}
+            <div className="flex items-center gap-3">
+                <div className="flex items-center gap-1.5 tabular-nums">
+                    <span className="text-[10px] font-medium text-white/40">{selectedIndex + 1}</span>
+                    <span className="text-[10px] text-white/10">/</span>
+                    <span className="text-[10px] font-medium text-white/20">{results}</span>
                 </div>
+
+                <div className="w-[1px] h-2.5 bg-white/[0.06]" />
                 
-                {/* The Timer sits quietly here on the left */}
                 <FooterTimer />
             </div>
 
-            {/* Right Section: Actions & Meta */}
-            <div className="flex items-center gap-4">
-                <div className="flex items-center gap-2 text-white/30 text-[10px] font-semibold">
-                    <span className="capitalize tracking-tight">
-                        {query ? "Execute" : "Search"}
+            {/* Right: The "Action Pill" */}
+            <div className="flex items-center gap-3">
+                <AnimatePresence mode="wait">
+                    <motion.div 
+                        key={selectedType}
+                        initial={{ opacity: 0, y: 2 }}
+                        animate={{ opacity: 1, y: 0 }}
+                        exit={{ opacity: 0, y: -2 }}
+                        className="flex items-center gap-2"
+                    >
+                        <span className="text-[11px] font-medium text-white/50 tracking-tight">
+                            {getTypeLabel(selectedType)}
+                        </span>
+                        
+                        <div className="flex items-center gap-0.5 group">
+                            <kbd className="min-w-[18px] h-4.5 px-1 flex items-center justify-center rounded-[3px] bg-white/[0.08] border-b border-white/[0.12] text-[10px] text-white/60 font-sans shadow-sm group-hover:bg-white/[0.12] transition-colors">
+                                ↵
+                            </kbd>
+                            <span className="text-[10px] text-white/20 font-medium ml-1">Enter</span>
+                        </div>
+                    </motion.div>
+                </AnimatePresence>
+
+                <div className="w-[1px] h-2.5 bg-white/[0.06]" />
+
+                {/* Optional: Secondary Action hint (Raycast Style) */}
+                <div className="flex items-center gap-1 opacity-40 hover:opacity-100 transition-opacity cursor-pointer">
+                    <span className="text-[9px] font-mono text-white/5 tracking-tighter hover:text-white/20 transition-colors cursor-default">
+                        v{version}
                     </span>
-                    <kbd className="h-4 px-1 flex items-center justify-center rounded bg-white/[0.05] border border-white/10 text-[9px] font-sans text-white/40">
-                        ↵
-                    </kbd>
-                </div>
-
-                <div className="w-[1px] h-3 bg-white/5" />
-
-                <div className="text-white/[0.06] font-mono text-[9px] tracking-tighter">
-                    v{version}
                 </div>
             </div>
-        </div>
+        </footer>
     );
 }

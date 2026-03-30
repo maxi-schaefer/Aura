@@ -1,71 +1,124 @@
-import { useEffect, useState } from "react";
+import { useEffect, useState, useCallback } from "react";
+import { motion, AnimatePresence } from "framer-motion";
+import { playTimerDone } from "../../lib/sound";
 
-// components/FooterTimer.tsx
+interface TimerState {
+  endTime: number;
+  total: number;
+  remaining: number;
+  isPaused: boolean;
+}
+
 export function FooterTimer() {
-  const [timerData, setTimerData] = useState<{ endTime: number; total: number; remaining: number; isPaused: boolean } | null>(null);
-  const [display, setDisplay] = useState("");
-  const [progress, setProgress] = useState(1);
+  const [timerData, setTimerData] = useState<TimerState | null>(null);
+  
+  // Memoized format for performance
+  const formatDisplay = (ms: number) => {
+    const totalSecs = Math.ceil(ms / 1000);
+    const m = Math.floor(totalSecs / 60);
+    const s = totalSecs % 60;
+    return `${m}:${s.toString().padStart(2, "0")}`;
+  };
+
+  const handleAction = useCallback((e: any) => {
+    const { type, totalSeconds } = e.detail;
+
+    if (type === "start") {
+      const ms = totalSeconds * 1000;
+      setTimerData({
+        endTime: Date.now() + ms,
+        total: ms,
+        remaining: ms,
+        isPaused: false
+      });
+    } else if (type === "toggle") {
+      setTimerData((prev) => {
+        if (!prev) return null;
+        if (prev.isPaused) {
+          // Resuming
+          return { ...prev, isPaused: false, endTime: Date.now() + prev.remaining };
+        } else {
+          // Pausing
+          return { ...prev, isPaused: true, remaining: prev.endTime - Date.now() };
+        }
+      });
+    }
+  }, []);
 
   useEffect(() => {
-    const handleAction = (e: any) => {
-      const { type, endTime, totalSeconds } = e.detail;
-
-      if (type === "start") {
-        setTimerData({ endTime, total: totalSeconds * 1000, remaining: totalSeconds * 1000, isPaused: false });
-      } else if (type === "toggle" && timerData) {
-        if (timerData.isPaused) {
-          setTimerData({ ...timerData, isPaused: false, endTime: Date.now() + timerData.remaining });
-        } else {
-          setTimerData({ ...timerData, isPaused: true, remaining: timerData.endTime - Date.now() });
-        }
-      }
-    };
-
     window.addEventListener("timer-action", handleAction);
     
     const interval = setInterval(() => {
-      if (!timerData || timerData.isPaused) return;
+      setTimerData((prev) => {
+        if (!prev || prev.isPaused) return prev;
 
-      const diff = timerData.endTime - Date.now();
+        const diff = prev.endTime - Date.now();
 
-      if (diff <= 0) {
-        setTimerData(null);
-        new Notification("Aura", { body: "Timer finished" });
-      } else {
-        const m = Math.floor(diff / 60000);
-        const s = Math.floor((diff % 60000) / 1000);
-        setDisplay(`${m}:${s.toString().padStart(2, "0")}`);
-        setProgress(diff / timerData.total);
-      }
+        if (diff <= 0) {
+          playTimerDone();
+          new Notification("Aura", { body: "Operation Complete" });
+          return null;
+        }
+
+        return { ...prev, remaining: diff };
+      });
     }, 100);
 
     return () => {
       window.removeEventListener("timer-action", handleAction);
       clearInterval(interval);
     };
-  }, [timerData]);
+  }, [handleAction]);
 
   if (!timerData) return null;
 
+  const progress = timerData.remaining / timerData.total;
+  const circumference = 2 * Math.PI * 5; // r=5
+
   return (
-    <div className={`flex items-center gap-2.5 px-2.5 py-1 rounded-full bg-white/3 border border-white/6 transition-opacity duration-500 ${timerData.isPaused ? 'opacity-50' : 'opacity-100'}`}>
-      <div className="relative w-3 h-3">
-        <svg className="w-full h-full -rotate-90">
-          <circle cx="6" cy="6" r="5" fill="none" stroke="currentColor" strokeWidth="1.5" className="text-white/5" />
-          <circle
-            cx="6" cy="6" r="5" fill="none"
-            stroke="var(--primary)"
-            strokeWidth="1.5"
-            strokeDasharray={31.4}
-            strokeDashoffset={31.4 * (1 - progress)}
-            strokeLinecap="round"
-            className={`transition-all duration-300 ${timerData.isPaused ? '' : 'shadow-[0_0_8px_var(--primary)]'}`}
-          />
-        </svg>
-      </div>
-      <span className={`font-mono text-[10px] font-bold tabular-nums tracking-tight ${timerData.isPaused ? 'text-white/40' : 'text-primary/90'}`}>
-        {timerData.isPaused ? "PAUSED" : display}
-      </span>
-    </div>
+    <AnimatePresence>
+      <motion.div
+        initial={{ opacity: 0, scale: 0.9, y: 10 }}
+        animate={{ opacity: 1, scale: 1, y: 0 }}
+        exit={{ opacity: 0, scale: 0.9, y: 10 }}
+        className={`flex items-center gap-2.5 px-3 py-1.5 rounded-full bg-white/3 border border-white/6 backdrop-blur-md transition-all duration-500 ${
+          timerData.isPaused ? 'border-white/5 opacity-50' : 'border-blue-500/20'
+        }`}
+      >
+        {/* Spectral Progress Ring */}
+        <div className="relative w-3.5 h-3.5">
+          <svg className="w-full h-full -rotate-90 overflow-visible">
+            <defs>
+              <linearGradient id="timer-grad" x1="0%" y1="0%" x2="100%" y2="0%">
+                <stop offset="0%" stopColor="var(--primary)" />
+                <stop offset="100%" stopColor="var(--secondary)" />
+              </linearGradient>
+            </defs>
+            <circle 
+              cx="7" cy="7" r="5" 
+              fill="none" stroke="currentColor" 
+              strokeWidth="1.5" className="text-white/5" 
+            />
+            <motion.circle
+              cx="7" cy="7" r="5"
+              fill="none"
+              stroke="url(#timer-grad)"
+              strokeWidth="1.8"
+              strokeDasharray={circumference}
+              animate={{ strokeDashoffset: circumference * (1 - progress) }}
+              strokeLinecap="round"
+              className={timerData.isPaused ? '' : 'drop-shadow-[0_0_3px_var(--primary)]'}
+            />
+          </svg>
+        </div>
+
+        {/* Minimalist Tabular Text */}
+        <span className={`font-mono text-[9px] font-black uppercase tracking-widest tabular-nums ${
+          timerData.isPaused ? 'text-white/20' : 'text-primary/90'
+        }`}>
+          {timerData.isPaused ? "Paused" : formatDisplay(timerData.remaining)}
+        </span>
+      </motion.div>
+    </AnimatePresence>
   );
 }

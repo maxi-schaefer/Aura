@@ -3,7 +3,6 @@ import { AnimatePresence, motion } from "framer-motion";
 import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { getCurrentWindow } from '@tauri-apps/api/window';
-import { scrollToActive } from "./lib/utils";
 import { LoadingState } from "./components/LoadingState";
 import Footer from "./components/Footer";
 import { ResultList } from "./components/ResultList";
@@ -48,10 +47,16 @@ export default function App() {
 
     // Scroll to active item
     useEffect(() => {
-        if (scrollContainerRef.current) {
-            scrollToActive(scrollContainerRef.current, selectedIndex);
+    if (!isLoading) {
+        const activeElement = scrollContainerRef.current?.querySelector('[data-active="true"]');
+        if (activeElement) {
+        activeElement.scrollIntoView({
+            block: 'nearest',
+            behavior: 'auto'
+        });
         }
-    }, [selectedIndex]);
+    }
+    }, [selectedIndex, results, isLoading]);
 
     // Suggestion Logic
     const suggestion = useMemo(() => {
@@ -180,74 +185,64 @@ export default function App() {
     }, [showCopied]);
 
     return (
-        <div ref={containerRef} className="bg-transparent overflow-hidden">
-            <motion.div className="glass p-4 shadow-2xl flex flex-col">
-                <div className="relative flex items-center mb-4 border-b border-white/5 pb-3">
-                    <div className="flex items-center w-full relative">
-                        {/* Command Tag (Breadcrumb) */}
-                        <AnimatePresence mode="wait">
-                            {activeCommand && (
+        <div ref={containerRef} className="bg-transparent overflow-hidden antialiased select-none">
+            <motion.div className="glass flex flex-col overflow-hidden">
+                {/* Search Header */}
+                <header className="relative flex items-center px-4 py-3 border-b border-white/[0.04]">
+                    <AnimatePresence mode="popLayout">
+                        {activeCommand && (
                             <motion.div
-                                initial={{ opacity: 0, scale: 0.95 }}
+                                initial={{ opacity: 0, scale: 0.9 }}
                                 animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.95 }}
-                                transition={{ duration: 0.1 }}
-                                className="flex items-center gap-2 mr-3 pl-1 pr-2 py-1 rounded-md bg-primary/10 border border-primary/20"
+                                exit={{ opacity: 0, scale: 0.9 }}
+                                className="flex items-center gap-2 mr-3 px-2 py-0.5 rounded bg-white/5 border border-white/10"
                             >
-                                {/* Subtle Icon or Dot for the command */}
-                                <div className="w-1.5 h-1.5 rounded-full bg-primary shadow-[0_0_8px_var(--primary)]" />
-                                <span className="text-primary text-[11px] uppercase tracking-wider">
+                                <span className="text-[10px] font-bold text-white/40 uppercase tracking-tighter">
                                     {activeCommand.title}
                                 </span>
-                                {/* Breadcrumb Separator */}
-                                <span className="text-white/10 text-xs font-light">/</span>
                             </motion.div>
-                            )}
-                        </AnimatePresence>
+                        )}
+                    </AnimatePresence>
 
-                        <div className="relative flex-1 flex items-center h-10">
-                            {/* The Invisible Base Input */}
-                            <input
+                    <div className="relative flex-1 flex items-center">
+                        <input
                             ref={inputRef}
                             autoFocus
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            placeholder={activeCommand ? "" : "Search apps and commands..."}
-                            className="z-10 w-full bg-transparent outline-none text-[17px] text-white placeholder:text-white/10 font-medium tracking-tight"
-                            />
-
-                            {/* The Ghost Suggestion Text */}
-                            {!activeCommand && query && (
-                            <div className="absolute left-0 text-[17px] font-medium pointer-events-none flex tracking-tight">
+                            placeholder="Search..."
+                            className="w-full bg-transparent outline-none text-lg text-white/90 placeholder:text-white/10 font-light tracking-tight h-8"
+                        />
+                        
+                        {!activeCommand && query && (
+                            <div className="absolute left-0 text-lg font-light pointer-events-none flex tracking-tight">
                                 <span className="opacity-0">{query}</span>
-                                <span className="text-white/20">{suggestion}</span>
+                                <span className="text-white/10">{suggestion}</span>
                             </div>
-                            )}
-                            
-                            {/* Dynamic Placeholder for Command Mode */}
-                            {activeCommand && !query && (
-                            <div className="absolute left-0 text-[17px] font-medium pointer-events-none text-white/10 tracking-tight">
-                                Type arguments...
-                            </div>
-                            )}
-                        </div>
+                        )}
                     </div>
                     
-                    {/* Clock / Time */}
-                    <div className="flex items-center gap-3 ml-4">
-                         <div className="w-px h-4 bg-white/10" />
-                         <p className="text-gray-500/50 font-mono text-[11px] tabular-nums tracking-tighter">{time}</p>
+                    {/* Minimalist Clock */}
+                    <div className="ml-4 tabular-nums text-[11px] text-white/20 font-medium">
+                        {time}
                     </div>
-                </div>
+                </header>
 
-                <div ref={scrollContainerRef} className="max-h-120 overflow-y-auto overflow-x-hidden custom-scrollbar pr-1">
+                {/* Content Area */}
+                <main 
+                    ref={scrollContainerRef} 
+                    className="max-h-110 overflow-y-auto custom-scrollbar p-2"
+                >
                     {isLoading ? (
                         <LoadingState />
                     ) : activeCommand ? (
-                        <div className="mt-2">
-                            {/* We pass the query and the showCopied state to the render function */}
+                        <motion.div 
+                            initial={{ opacity: 0, y: 4 }} 
+                            animate={{ opacity: 1, y: 0 }} 
+                            className="p-2"
+                        >
                             {activeCommand.render ? activeCommand.render(query, showCopied) : activeCommand.view}
-                        </div>
+                        </motion.div>
                     ) : (
                         <ResultList
                             results={results}
@@ -256,9 +251,14 @@ export default function App() {
                             onExecute={handleExecute}
                         />
                     )}
-                </div>
+                </main>
 
-                <Footer selectedIndex={selectedIndex} query={query} results={results.length} />
+                <Footer 
+                    selectedIndex={selectedIndex} 
+                    query={query} 
+                    results={results.length} 
+                    selectedType={results[selectedIndex]?.type || ""} 
+                />
             </motion.div>
         </div>
     );

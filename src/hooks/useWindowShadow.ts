@@ -10,11 +10,11 @@ export function useWindowShadow(containerRef: RefObject<HTMLDivElement | null>, 
 
             const { height } = containerRef.current.getBoundingClientRect();
             const win = getCurrentWindow();
-            const logicalSize = new LogicalSize(700, Math.ceil(height));
+            const logicalSize = new LogicalSize(1000, Math.ceil(height));
             
             await win.setSize(logicalSize);
             const monitorSize = monitor.size.toLogical(monitor.scaleFactor);
-            const x = (monitorSize.width / 2) - 350;
+            const x = (monitorSize.width / 2) - 500;
             const y = monitorSize.height * 0.25;
             await win.setPosition(new LogicalPosition(x, y));
         };

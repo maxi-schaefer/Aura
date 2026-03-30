@@ -8,9 +8,9 @@ export type Result = {
     action?: () => void | Promise<any>;
     render?: (args: string) => any;
 
-    // Raycast-style detail view
     view?: React.ReactNode;
     width?: number;
+    icon?: string;
 
     score: number;
     group: string;

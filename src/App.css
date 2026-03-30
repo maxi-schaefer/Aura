@@ -3,18 +3,16 @@
 @theme {
   --color-primary: var(--primary);
   --color-secondary: var(--secondary);
+  --glass-bg: rgba(8, 8, 8, 0.75);
 }
 
 :root {
-  --primary: #ff2828;
+  --primary: #88d3f2;
   --secondary: #eb34a8;
 }
 
 #root, html, body {
   background: transparent !important;
-}
-
-body {
 }
 
 * {
@@ -25,7 +23,6 @@ body {
 body {
   overflow: hidden;
   user-select: none; 
-  /* Raycast uses a very dark, near-black background */
   background: transparent;
 }
 
@@ -35,12 +32,21 @@ body {
 }
 
 .glass {
-  /* Darker, more opaque background */
-  background: rgba(3, 3, 5, 0.75);
-  backdrop-filter: blur(50px) saturate(150%);
-  border: 1px solid rgba(255, 255, 255, 0.1);
-  transition: height 0.15s cubic-bezier(0.4, 0, 0.2, 1);
+  background: var(--glass-bg);
+  backdrop-filter: blur(32px) saturate(200%);
+  border: 1px solid rgba(255, 255, 255, 0.1); /* Ultra-thin border */
+  box-shadow: 
+    0 30px 60px -12px rgba(0, 0, 0, 0.5),
+    0 0 0 0.5px rgba(0, 0, 0, 0.2);
   border-radius: 8px;
+}
+
+input {
+  caret-color: var(--primary); /* Glowing cursor */
+}
+
+.custom-scrollbar::-webkit-scrollbar-thumb {
+  background: rgba(255, 255, 255, 0.05);
 }
 
 /* Raycast Input Style */

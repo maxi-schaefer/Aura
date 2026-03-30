@@ -39,6 +39,7 @@ export const ResultList = ({ results, selectedIndex, setSelectedIndex, onExecute
                                 isActive={selectedIndex === globalIndex}
                                 onMouseEnter={() => setSelectedIndex(globalIndex)}
                                 onClick={onExecute}
+                                icon={item.icon}
                             />
                         ))}
                     </div>

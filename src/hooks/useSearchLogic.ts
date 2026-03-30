@@ -93,6 +93,7 @@ export function useSearchLogic(activeCommandMode: boolean, query: string, allApp
             action: async () => {
                 await invoke("launch_app", { path: app.path });
             },
+            icon: app.icon,
             score: 50 - index,
             group: "Applications"
         })));

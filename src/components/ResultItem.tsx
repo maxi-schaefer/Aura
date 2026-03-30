@@ -1,144 +1,77 @@
 import { motion, AnimatePresence } from "framer-motion";
 import { useState } from "react";
 import { 
-  AppWindow, 
-  FileText, 
-  Folder, 
-  Globe, 
-  Calculator, 
-  Palette, 
-  Check,
-  Command,
-  ExternalLink
+  AppWindow, FileText, Folder, Globe, Calculator, 
+  Palette, Check, Command, ExternalLink, ChevronRight 
 } from "lucide-react";
 
 const getIcon = (type: string, isDir?: boolean) => {
+  const iconProps = { size: 16, strokeWidth: 2 };
   switch (type) {
-    case "app": return <AppWindow size={14} />;
-    case "file": return isDir ? <Folder size={14} /> : <FileText size={14} />;
-    case "alias": return <Globe size={14} />;
-    case "command": return <Command size={14} />;
-    case "calc": return <Calculator size={14} />;
-    case "color": return <Palette size={14} />;
-    default: return <ExternalLink size={14} />;
+    case "app": return <Command {...iconProps} />;
+    case "file": return isDir ? <Folder {...iconProps} /> : <FileText {...iconProps} />;
+    case "alias": return <Globe {...iconProps} />;
+    case "command": return <AppWindow {...iconProps} />;
+    case "calc": return <Calculator {...iconProps} />;
+    case "color": return <Palette {...iconProps} />;
+    default: return <ExternalLink {...iconProps} />;
   }
 };
 
-interface ResultItemProps {
-  id: string;
-  name: string;
-  type: string;
-  subtitle: string | undefined;
-  isActive: boolean;
-  onMouseEnter: () => void;
-  onClick: (fromClick?: boolean) => void;
-  globalIndex: number;
-}
+const Kbd = ({ children }: { children: React.ReactNode }) => (
+  <kbd className="min-w-4.5 h-4.5 flex items-center justify-center px-1 rounded-[3px] bg-white/10 border-b border-white/20 text-[10px] font-medium text-white/50 font-sans shadow-sm">
+    {children}
+  </kbd>
+);
 
-export const ResultItem = ({ id, name, type, isActive, subtitle, onMouseEnter, onClick, globalIndex }: ResultItemProps) => {
-  const isColorType = type === "color";
-  const isFile = type === "file";
-  const isDir = isFile && subtitle === "Folder";
-  const [copied, setCopied] = useState(false);
+export const ResultItem = ({ id, name, type, isActive, subtitle, onMouseEnter, onClick, globalIndex, icon }: any) => {
+    const isFile = type === "file";
 
-  const handleClick = () => {
-    onClick(true);
-    
-    // Trigger "Copied" toast animation for clipboard actions
-    if (type === "color" || type === "calc" || type === "command") {
-      setCopied(true);
-      setTimeout(() => setCopied(false), 1500);
-    }
-  };
-
-  return (
-    <motion.div
-      animate={{ 
-          x: isActive ? 4 : 0, // Tiny slide to the right
-          scale: isActive ? 1.01 : 1, // Micro-zoom
-        }}
-        transition={{ 
-          type: "spring", 
-          stiffness: 400, 
-          damping: 30 
-        }}
-      data-index={globalIndex}
-      onMouseEnter={onMouseEnter}
-      onClick={handleClick}
-      className="relative flex items-center justify-between px-3 py-2 cursor-pointer transition-colors duration-150"
-    >
-      {isActive && (
+    return (
         <motion.div
-          layoutId="active-pill"
-          className="absolute inset-0 bg-white/3 rounded-md"
-          transition={{ type: "spring", stiffness: 600, damping: 50 }}
-        />
-      )}
-
-      <div className="relative z-10 flex items-center gap-3">
-        <div 
-          className={`p-1.5 rounded-md transition-all duration-200 ${
-            isActive ? "bg-primary/20 text-primary shadow-[0_0_3px_var(--primary)]" : "text-white/30"
-          }`}
+            data-active={isActive}
+            onMouseEnter={onMouseEnter}
+            onClick={() => onClick(true)}
+            className="relative flex items-center justify-between px-3 py-2 cursor-pointer rounded-md transition-all"
         >
-          {getIcon(type, isDir)}
-        </div>
-          
-        <div className="flex flex-col">
-          <span className={`text-[13px] tracking-tight transition-colors items-center ${
-            isActive ? 'text-white font-medium' : 'text-white/60'
-          }`}>
-            {name}
-          </span>
-          {isFile && (
-            <span className="text-xs text-white/30">
-              {id}
-            </span>
-          )}
-        </div>
-      </div>
+            {isActive && (
+                <motion.div
+                    layoutId="active-pill"
+                    className="absolute inset-0 bg-white/5 rounded-md"
+                    transition={{ type: "spring", stiffness: 400, damping: 30 }}
+                />
+            )}
 
-      <div className="relative z-10 flex items-center gap-4">
-        {isColorType && (
-          <div 
-            className="w-4 h-4 rounded-full border border-white/20 shadow-inner" 
-            style={{ backgroundColor: name }} 
-          />
-        )}
+            <div className="relative z-10 flex items-center gap-3">
+                <div className={`transition-all duration-200  ${isActive ? 'opacity-100 text-primary' : 'opacity-40 text-white'}`}>
+                    {icon ? (
+                        <img src={icon} alt="" className="size-5 rounded object-contain" />
+                    ) : (
+                        getIcon(type)
+                    )}
+                </div>
+                
+                <span className={`text-[13px] tracking-tight transition-colors ${
+                    isActive ? 'text-white' : 'text-white/60'
+                }`}>
+                    {name}
+                    {isFile && <span className="text-[11px] text-white/30 ml-1">({id})</span>}
+                </span>
+            </div>
 
-        <AnimatePresence mode="wait">
-          {copied ? (
-            <motion.span
-              key="copied"
-              initial={{ opacity: 0, y: 5 }}
-              animate={{ opacity: 1, y: 0 }}
-              exit={{ opacity: 0, y: -5 }}
-              className="text-[11px] font-sans font-medium text-emerald-400 flex items-center gap-1"
-            >
-              <Check size={12} strokeWidth={3} />
-              Copied!
-            </motion.span>
-          ) : (
-            <motion.span
-              key="subtitle"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              exit={{ opacity: 0 }}
-              className={`text-[11px] font-mono uppercase transition-opacity ${
-                isActive ? 'opacity-40 text-primary' : 'text-white/20'
-              }`}
-            >
-              {subtitle}
-            </motion.span>
-          )}
-        </AnimatePresence>
-        
-        <span className={`text-[10px] text-white/20 font-mono transition-opacity ${
-          isActive ? 'opacity-100' : 'opacity-0'
-        }`}>
-          ↵
-        </span>
-      </div>
-    </motion.div>
-  );
+            <div className="relative z-10 flex items-center gap-4">
+                <span className={`text-[11px] font-medium transition-opacity ${
+                    isActive ? 'text-white/40' : 'text-white/10'
+                }`}>
+                    {subtitle}
+                </span>
+                
+                {isActive && (
+                    <div className="flex items-center opacity-20">
+                         <Kbd>↵</Kbd>
+                    </div>
+                )}
+            </div>
+        </motion.div>
+    );
 };
