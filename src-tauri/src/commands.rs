@@ -11,6 +11,7 @@ use std::path::PathBuf;
 pub struct AppItem {
     pub name: String,
     pub path: String,
+    pub icon: Option<String>,
 }
 
 #[derive(Serialize, Clone)]

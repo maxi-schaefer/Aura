@@ -1,5 +1,20 @@
-use std::path::Path;
+use std::{io::Cursor, path::Path};
 use crate::commands::AppItem;
+use base64::{Engine, engine::general_purpose};
+use file_icon_provider::get_file_icon;
+use image::{DynamicImage, ImageFormat};
+
+fn get_base64_icon(path: &str) -> Option<String> {
+    let icon_data = get_file_icon(path, 64).ok()?;
+
+    let img = image::RgbaImage:: from_raw(icon_data.width, icon_data.height, icon_data.pixels).map(DynamicImage::ImageRgba8)?;
+
+    let mut image_data: Vec<u8> = Vec::new();
+    img.write_to(&mut Cursor::new(&mut image_data), ImageFormat::Png).ok()?;
+
+    let res_base64 = general_purpose::STANDARD.encode(image_data);
+    Some(format!("data:image/png;base64,{}", res_base64))
+}
 
 pub fn get_apps() -> Vec<AppItem> {
     let mut apps = Vec::new();
@@ -51,7 +66,7 @@ fn scan_dir_recursive(dir: &Path, apps: &mut Vec<AppItem>) {
                     .iter().any(|&word| name_low.contains(word));
 
                 if !is_trash {
-                    apps.push(AppItem { name, path: path.to_string_lossy().into_owned() });
+                    apps.push(AppItem { name, path: path.to_string_lossy().into_owned(), icon: get_base64_icon(path.to_str().unwrap_or_default()) });
                 }
             }
         }
