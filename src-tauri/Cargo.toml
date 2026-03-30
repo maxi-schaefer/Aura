@@ -23,7 +23,8 @@ base64 = "0.22"
 windows = { version = "0.62.2", features = [
     "Media_Control",
     "Storage_Streams",
-    "Graphics_Imaging",
+    "Foundation", 
+    "Win32_Foundation",
 ] }
 tauri-plugin-autostart = "2.5.1"
 tauri-plugin-shell = "2.3.5"

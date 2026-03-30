@@ -21,6 +21,8 @@ pub fn run() {
             commands::search_files,
             commands::get_config,
             commands::save_config,
+            commands::get_now_playing,
+            commands::media_command
         ])
         .setup(|app| {
             setup::init(app)?;
