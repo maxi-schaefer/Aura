@@ -3,7 +3,7 @@
 @theme {
   --color-primary: var(--primary);
   --color-secondary: var(--secondary);
-  --glass-bg: rgba(8, 8, 8, 0.75);
+  --glass-bg: rgba(0, 0, 0, 0.6);
 }
 
 :root {
@@ -33,7 +33,6 @@ body {
 
 .glass {
   background: var(--glass-bg);
-  backdrop-filter: blur(32px) saturate(200%);
   border: 1px solid rgba(255, 255, 255, 0.1); /* Ultra-thin border */
   box-shadow: 
     0 30px 60px -12px rgba(0, 0, 0, 0.5),

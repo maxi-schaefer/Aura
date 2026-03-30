@@ -3,13 +3,20 @@ import { motion } from "framer-motion";
 import { playTimerDone } from "../../lib/sound";
 
 interface TimerCardProps {
-    initialMinutes: number;
+    initialSeconds: number;
 }
 
-export const TimerCard = ({ initialMinutes }: TimerCardProps) => {
-    const [timeLeft, setTimeLeft] = useState(initialMinutes * 60);
-    const [isActive, setIsActive] = useState(initialMinutes > 0);
+export const TimerCard = ({ initialSeconds }: TimerCardProps) => {
+    const [timeLeft, setTimeLeft] = useState(initialSeconds);
+    const [isActive, setIsActive] = useState(false); // Default to false so it doesn't start while typing
     const [isComplete, setIsComplete] = useState(false);
+
+    // 🔹 SYNC: Update time when user types in the search bar
+    useEffect(() => {
+        setTimeLeft(initialSeconds);
+        setIsComplete(false);
+        // Optional: setIsActive(false); // Uncomment if you want typing to pause the countdown
+    }, [initialSeconds]);
 
     useEffect(() => {
         let interval: number | undefined;
@@ -39,8 +46,13 @@ export const TimerCard = ({ initialMinutes }: TimerCardProps) => {
     }, []);
 
     const formatTime = (seconds: number) => {
-        const m = Math.floor(seconds / 60);
+        const h = Math.floor(seconds / 3600);
+        const m = Math.floor((seconds % 3600) / 60);
         const s = seconds % 60;
+        
+        if (h > 0) {
+            return `${h}:${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
+        }
         return `${m.toString().padStart(2, "0")}:${s.toString().padStart(2, "0")}`;
     };
 
@@ -48,12 +60,21 @@ export const TimerCard = ({ initialMinutes }: TimerCardProps) => {
         <div className="flex flex-col items-center justify-center p-12 space-y-6 font-sans">
             <div className="relative">
                 <motion.div
-                    animate={isActive ? { opacity: [0.1, 0.2, 0.1], scale: [1, 1.1, 1] } : { opacity: 0.1 }}
-                    transition={{ duration: 2, repeat: Infinity }}
-                    className={`absolute inset-0 blur-3xl rounded-full transition-colors duration-1000 ${
-                        isComplete ? "bg-green-500/20" : "bg-primary/20"
-                    }`}
-                />
+                    // Use layoutId or key if you want a subtle pop animation on change
+                    key={initialSeconds} 
+                    initial={{ opacity: 0, scale: 0.95 }}
+                    animate={{ opacity: 1, scale: 1 }}
+                    className="absolute inset-0 flex items-center justify-center"
+                >
+                    <motion.div
+                        animate={isActive ? { opacity: [0.1, 0.2, 0.1], scale: [1, 1.1, 1] } : { opacity: 0.1 }}
+                        transition={{ duration: 2, repeat: Infinity }}
+                        className={`absolute inset-0 blur-3xl rounded-full transition-colors duration-1000 ${
+                            isComplete ? "bg-green-500/20" : "bg-primary/20"
+                        }`}
+                    />
+                </motion.div>
+
                 <div className={`relative text-6xl font-extralight tracking-tighter tabular-nums transition-colors duration-500 ${
                     isComplete ? "text-green-400" : "text-white/90"
                 }`}>

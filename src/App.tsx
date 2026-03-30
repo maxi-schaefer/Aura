@@ -9,6 +9,7 @@ import { ResultList } from "./components/ResultList";
 import { useSearchLogic } from "./hooks/useSearchLogic";
 import { useWindowShadow } from "./hooks/useWindowShadow";
 import { playSuccess, playTick } from "./lib/sound";
+import icon from "./assets/icon.png";
 
 export default function App() {
     const [query, setQuery] = useState("");
@@ -25,7 +26,7 @@ export default function App() {
     const inputRef = useRef<HTMLInputElement>(null);
 
     const { results } = useSearchLogic(!!activeCommand, query, allApps, aliases);
-    useWindowShadow(containerRef, [results, isLoading]);
+    useWindowShadow(containerRef, [results, isLoading, activeCommand, query]);
 
     useEffect(() => {
         (async () => {
@@ -42,7 +43,7 @@ export default function App() {
     useEffect(() => {
         if (isLoading) return;
         const el = scrollContainerRef.current?.querySelector('[data-active="true"]');
-        el?.scrollIntoView({ block: "nearest" });
+        el?.scrollIntoView({ block: "nearest", behavior: "smooth", inline: "nearest" });
     }, [selectedIndex, results, isLoading]);
 
     const suggestion = useMemo(() => {
@@ -98,8 +99,10 @@ export default function App() {
             switch (e.key) {
                 case "Escape":
                     e.preventDefault();
-                    if (activeCommand) setActiveCommand(null);
-                    else {
+                    if (activeCommand) {
+                        setActiveCommand(null);
+                        setQuery("");
+                    } else {
                         if (!query) getCurrentWindow().hide();
                         setQuery("");
                     }
@@ -109,10 +112,14 @@ export default function App() {
                     handleExecute();
                     break;
                 case "ArrowDown":
+                    if (activeCommand) break;
+                    
                     e.preventDefault();
                     setSelectedIndex((i) => (i < max ? i + 1 : i));
                     break;
-                case "ArrowUp":
+                    case "ArrowUp":
+                    if (activeCommand) break;
+
                     e.preventDefault();
                     setSelectedIndex((i) => (i > 0 ? i - 1 : i));
                     break;
@@ -144,7 +151,10 @@ export default function App() {
     }, [showCopied]);
 
     return (
-        <div ref={containerRef} className="bg-transparent overflow-hidden antialiased select-none">
+        <div 
+            ref={containerRef} 
+            className="bg-transparent overflow-hidden antialiased select-none transition-[width,height] duration-300 ease-out"
+        >
             <motion.div className="glass flex flex-col overflow-hidden">
                 <header className="relative flex items-center px-4 py-3 border-b border-white/4">
                     <AnimatePresence mode="popLayout">
@@ -165,17 +175,26 @@ export default function App() {
                     </AnimatePresence>
 
                     <div className="relative flex-1 flex items-center h-8">
+                        {/* Icon */}
+                        <img
+                            src={icon}
+                            alt="icon"
+                            className="absolute left-1 w-5 h-5 pointer-events-none"
+                        />
+
+                        {/* Input */}
                         <input
                             ref={inputRef}
                             autoFocus
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
                             placeholder="Search..."
-                            className="z-10 w-full bg-transparent outline-none text-lg text-white/90 placeholder:text-white/10 font-light tracking-tight"
+                            className="z-10 w-full bg-transparent outline-none text-lg text-white/90 placeholder:text-white/10 font-light tracking-tight pl-10"
                         />
 
+                        {/* Suggestion + Tab hint */}
                         {!activeCommand && query && (
-                            <div className="absolute left-0 text-lg font-light pointer-events-none flex items-center tracking-tight whitespace-pre">
+                            <div className="absolute left-1 ml-10 text-lg font-light pointer-events-none flex items-center tracking-tight whitespace-pre">
                                 <span className="opacity-0 select-none">{query}</span>
                                 <span className="text-white/10">{suggestion}</span>
                                 {suggestion && (
@@ -194,7 +213,7 @@ export default function App() {
                     <div className="ml-4 tabular-nums text-[11px] text-white/20 font-medium">{time}</div>
                 </header>
 
-                <main ref={scrollContainerRef} className="max-h-110 overflow-y-auto custom-scrollbar p-2">
+                <main ref={scrollContainerRef} className="max-h-130 overflow-y-auto custom-scrollbar p-2">
                     {isLoading ? (
                         <LoadingState />
                     ) : activeCommand ? (

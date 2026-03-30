@@ -55,7 +55,7 @@ export function useSearchLogic(activeCommandMode: boolean, query: string, allApp
       // ✅ Commands (NO PREFIX anymore)
       const [inputCmd, ...args] = query.toLowerCase().split(" ");
       const matchedCommands = Object.entries(COMMAND_MAP).filter(([key]) =>
-          key.startsWith(inputCmd)
+          key.includes(inputCmd)
       );
 
       for (const [cmdKey, command] of matchedCommands.slice(0, MAX_PER_GROUP)) {
@@ -104,6 +104,7 @@ export function useSearchLogic(activeCommandMode: boolean, query: string, allApp
             title: file.name,
             subtitle: file.is_dir ? "Folder" : "File",
             type: "file" as const,
+            icon: file.icon,
             action: async () => {
                 await invoke("launch_app", { path: file.path });
             },
