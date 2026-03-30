@@ -20,7 +20,7 @@
         "visible": false,
         "skipTaskbar": true,
         "center": false,
-        "width": 700,
+        "width": 800,
         "height": 140,
         "windowEffects": {
           "effects": ["acrylic", "blur", "hudWindow"],
