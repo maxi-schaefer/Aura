@@ -13,16 +13,17 @@ pub fn run() {
             Some(vec!["--minimized"])
         ))
         .invoke_handler(tauri::generate_handler![
-            commands::get_installed_apps, 
-            commands::launch_app, 
-            commands::search_web,
-            commands::get_aliases,
-            commands::save_aliases,
-            commands::search_files,
-            commands::get_config,
-            commands::save_config,
-            commands::get_now_playing,
-            commands::media_command
+            commands::network::scan_neighborhood,
+            commands::media::get_now_playing,
+            commands::media::media_command,
+            commands::system::search_files,
+            commands::system::search_web,
+            commands::system::get_installed_apps,
+            commands::system::launch_app,
+            commands::system::get_aliases,
+            commands::system::save_aliases,
+            commands::system::get_config,
+            commands::system::save_config,
         ])
         .setup(|app| {
             setup::init(app)?;

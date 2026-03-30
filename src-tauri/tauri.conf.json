@@ -23,9 +23,9 @@
         "width": 800,
         "height": 140,
         "windowEffects": {
-          "effects": ["acrylic", "blur", "hudWindow"],
+          "effects": ["acrylic", "popover", "blur", "hudWindow"],
           "state": "active",
-          "color": [0, 0, 0, 50]
+          "color": [0, 0, 0, 70]
         }
       }
     ],

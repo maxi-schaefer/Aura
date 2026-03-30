@@ -1,10 +1,10 @@
 use std::{io::Cursor, path::Path};
-use crate::commands::AppItem;
+use crate::commands::system::AppItem;
 use base64::{Engine, engine::general_purpose};
 use file_icon_provider::get_file_icon;
 use image::{DynamicImage, ImageFormat};
 
-fn get_base64_icon(path: &str) -> Option<String> {
+pub fn get_base64_icon(path: &str) -> Option<String> {
     let icon_data = get_file_icon(path, 64).ok()?;
 
     let img = image::RgbaImage:: from_raw(icon_data.width, icon_data.height, icon_data.pixels).map(DynamicImage::ImageRgba8)?;
