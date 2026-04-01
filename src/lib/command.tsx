@@ -17,80 +17,83 @@ export interface Command {
 }
 
 export const COMMAND_MAP: Record<string, Command> = {
-  settings: {
-    cmd: "settings",
-    title: "Settings",
-    description: "Configure shortcuts, appearance, and extensions",
-    render: () => <SettingsView />,
-    execute: () => ({ success: true }),
-  },
-  install: {
-    cmd: "install",
-    title: "Winget",
-    description: "Search and install Windows packages",
-    render: (query) => <WingetManager query={query} />,
-    execute: async (args) => {
-        // If user hits enter on the command itself, we just enter the view
-        return { success: true };
-    }
-  },
-  weather: {
-    cmd: "weather",
-    title: "Weather",
-    description: "Check weather for a city",
-    render: (query) => <WeatherCard city={query} />,
-    execute: async (args) => args.join(" ") || ""
-  },
-  speedtest: {
-    cmd: "speedtest",
-    title: "Speedtest",
-    description: "Run a network speed test",
-    render: () => <SpeedtestResult />,
-    execute: () => <SpeedtestResult />,
-  },
-  timer: {
-    cmd: "timer",
-    title: "Timer",
-    description: "Set countdown (e.g., 1h 10m, 30s)",
-    render: (query) => {
-      const totalSeconds = parseTimerString(query);
-      return <TimerCard initialSeconds={totalSeconds} />;
+    settings: {
+        cmd: "settings",
+        title: "Settings",
+        description: "Configure application preferences and customize your experience.",
+        render: () => <SettingsView />,
+        execute: () => ({ success: true }),
     },
-    execute: async (args) => {
-      if (!args || args.length === 0 || args[0] === "") {
-        window.dispatchEvent(new CustomEvent("timer-action", { detail: { type: "toggle" } }));
-        return { success: true }; 
-      }
 
-      const fullString = args.join("");
-      const totalSeconds = parseTimerString(fullString);
+    install: {
+        cmd: "install",
+        title: "Winget",
+        description: "Search, install, and manage Windows packages using Winget.",
+        render: (query) => <WingetManager query={query} />,
+        execute: async (args) => { return { success: true }; }
+    },
 
-      if (totalSeconds <= 0) return { success: false };
+    weather: {
+        cmd: "weather",
+        title: "Weather",
+        description: "View current weather conditions and forecasts for any location.",
+        render: (query) => <WeatherCard city={query} />,
+        execute: async (args) => args.join(" ") || ""
+    },
 
-      window.dispatchEvent(new CustomEvent("timer-action", { 
-          detail: { 
-            type: "start",
-            totalSeconds 
-          } 
-      }));
+    speedtest: {
+        cmd: "speedtest",
+        title: "Speedtest",
+        description: "Measure network performance, including latency, download, and upload speeds.",
+        render: () => <SpeedtestResult />,
+        execute: () => <SpeedtestResult />,
+    },
 
-      return { success: true };
-    }
-  },
-  nowplaying: {
-    cmd: "nowplaying",
-    title: "Now Playing",
-    description: "View current system media info",
-    render: () => <NowPlayingCard />,
-    execute: async () => {
-        return { success: true };
-    }
-  },
-  wifi: {
-    cmd: "wifi",
-    title: "Wifi Heatmap",
-    description: "Map nearby WiFi congestion",
-    render: () => <WifiScanner />,
-    execute: () => { return { success: true } }
-  },
+    timer: {
+        cmd: "timer",
+        title: "Timer",
+        description: "Start, pause, or manage countdown timers using natural time inputs.",
+        render: (query) => {
+            const totalSeconds = parseTimerString(query);
+            return <TimerCard initialSeconds={totalSeconds} />;
+        },
+        execute: async (args) => {
+            if (!args || args.length === 0 || args[0] === "") {
+                window.dispatchEvent(new CustomEvent("timer-action", { detail: { type: "toggle" } }));
+                return { success: true }; 
+            }
+
+            const fullString = args.join("");
+            const totalSeconds = parseTimerString(fullString);
+
+            if (totalSeconds <= 0) return { success: false };
+
+            window.dispatchEvent(new CustomEvent("timer-action", { 
+                detail: { 
+                    type: "start",
+                    totalSeconds 
+                } 
+            }));
+
+            return { success: true };
+        }
+    },
+
+    nowplaying: {
+        cmd: "nowplaying",
+        title: "Now Playing",
+        description: "Display the media currently playing on your system.",
+        render: () => <NowPlayingCard />,
+        execute: async () => {
+            return { success: true };
+        }
+    },
+
+    wifi: {
+        cmd: "wifi",
+        title: "WiFi Heatmap",
+        description: "Scan nearby WiFi networks and visualize signal strength and congestion.",
+        render: () => <WifiScanner />,
+        execute: () => { return { success: true } }
+    },
 };

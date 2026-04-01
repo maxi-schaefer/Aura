@@ -27,6 +27,8 @@ pub fn run() {
             commands::system::install_package,
             commands::system::search_winget,
             commands::system::get_installed_winget,
+            commands::system::uninstall_package,
+            commands::system::get_winget_updates,
         ])
         .setup(|app| {
             setup::init(app)?;

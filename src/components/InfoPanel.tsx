@@ -41,7 +41,7 @@ export const InfoPanel = ({ item }: { item: any }) => {
             className="flex flex-col w-full h-full bg-white/[0.01] select-none"
         >
             {/* 1. Hero Section */}
-            <div className="p-8 flex flex-col items-center text-center shrink-0 border-b border-white/5 bg-gradient-to-b from-white/[0.03] to-transparent">
+            <div className="p-8 flex flex-col items-center text-center shrink-0 border-b border-white/5 bg-linear-to-b from-white/3 to-transparent">
                 <div className="relative group mb-5">
                     <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500" />
                     {item.icon ? (
@@ -116,7 +116,7 @@ export const InfoPanel = ({ item }: { item: any }) => {
                         </div>
                         <div className="p-3 rounded-lg bg-white/5 border border-white/5">
                             <p className="text-[11px] text-white/50 leading-relaxed font-medium italic">
-                                {item.type === "alias" ? item.subtitle : "Execute this internal automation to perform system-level tasks."}
+                                {item.subtitle}
                             </p>
                         </div>
                     </div>

@@ -4,7 +4,7 @@ use tauri::{AppHandle, command, Manager};
 use rayon::prelude::*;
 use walkdir::WalkDir;
 use crate::scanner;
-
+use rayon::prelude::*;
 use std::process::Command as StdCommand;
 
 #[derive(Serialize, Clone)]
@@ -24,33 +24,59 @@ pub struct FileItem { pub name: String, pub path: String, pub is_dir: bool, pub 
 #[derive(Serialize, Deserialize)]
 pub struct Config { pub search_engine: String }
 
+fn parse_winget_parallel(stdout: String) -> Vec<WingetPackage> {
+    let lines: Vec<String> = stdout.lines().skip(2).map(|s| s.to_string()).collect();
+    
+    lines.par_iter() // This handles the "Parallel Search" factor
+        .filter_map(|line| {
+            let parts: Vec<&str> = line.split_whitespace().collect();
+            if parts.len() >= 3 {
+                Some(WingetPackage {
+                    name: parts[0].to_string(),
+                    id: parts[1].to_string(),
+                    version: parts[2].to_string(),
+                    source: parts.get(3).unwrap_or(&"winget").to_string(),
+                })
+            } else {
+                None
+            }
+        })
+        .collect()
+}
+
 #[command]
 pub async fn search_winget(query: String) -> Result<Vec<WingetPackage>, String> {
     if query.len() < 2 { return Ok(vec![]); }
 
-    // Using the CLI is more reliable across different Windows versions than raw COM/WinRT
     let output = StdCommand::new("winget")
         .args(["search", &query, "--accept-source-agreements"])
         .output()
         .map_err(|e| e.to_string())?;
 
-    let stdout = String::from_utf8_lossy(&output.stdout);
-    let mut packages = Vec::new();
+    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+    Ok(parse_winget_parallel(stdout))
+}
 
-    // Basic parser for winget table output
-    // Note: In a production app, you'd use --format json if available in the preview
-    for line in stdout.lines().skip(2) { // Skip headers
-        let parts: Vec<&str> = line.split_whitespace().collect();
-        if parts.len() >= 3 {
-            packages.push(WingetPackage {
-                name: parts[0].to_string(),
-                id: parts[1].to_string(),
-                version: parts[2].to_string(),
-                source: parts.get(3).unwrap_or(&"winget").to_string(),
-            });
-        }
-    }
-    Ok(packages)
+#[command]
+pub async fn get_installed_winget() -> Result<Vec<WingetPackage>, String> {
+    let output = StdCommand::new("winget")
+        .args(["list", "--accept-source-agreements"])
+        .output()
+        .map_err(|e| e.to_string())?;
+
+    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+    Ok(parse_winget_parallel(stdout))
+}
+
+#[command]
+pub async fn get_winget_updates() -> Result<Vec<WingetPackage>, String> {
+    let output = StdCommand::new("winget")
+        .args(["upgrade", "--accept-source-agreements"])
+        .output()
+        .map_err(|e| e.to_string())?;
+
+    let stdout = String::from_utf8_lossy(&output.stdout).to_string();
+    Ok(parse_winget_parallel(stdout))
 }
 
 #[command]
@@ -61,17 +87,18 @@ pub async fn install_package(id: String) -> Result<(), String> {
         .map_err(|e| e.to_string())?;
 
     if status.success() { Ok(()) } 
-    else { Err("Installation failed".into()) }
+    else { Err("Operation failed".into()) }
 }
 
 #[command]
-pub async fn get_installed_winget() -> Result<Vec<WingetPackage>, String> {
-    let output = StdCommand::new("winget")
-        .args(["list", "--accept-source-agreements"])
-        .output()
+pub async fn uninstall_package(id: String) -> Result<(), String> {
+    let status = StdCommand::new("winget")
+        .args(["uninstall", "--id", &id, "--silent", "--accept-source-agreements"])
+        .status()
         .map_err(|e| e.to_string())?;
 
-    Ok(parse_winget_output(String::from_utf8_lossy(&output.stdout).to_string()))
+    if status.success() { Ok(()) } 
+    else { Err("Uninstallation failed".into()) }
 }
 
 // Shared parser to keep things DRY and fast
