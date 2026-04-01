@@ -4,10 +4,10 @@ use tauri::{AppHandle, command, Manager};
 use rayon::prelude::*;
 use walkdir::WalkDir;
 use crate::scanner;
-use rayon::prelude::*;
+use tauri_plugin_dialog::DialogExt;
 use std::process::Command as StdCommand;
 
-#[derive(Serialize, Clone)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WingetPackage {
     pub name: String,
     pub id: String,
@@ -42,6 +42,40 @@ fn parse_winget_parallel(stdout: String) -> Vec<WingetPackage> {
             }
         })
         .collect()
+}
+
+#[command]
+pub async fn export_winget_setup(app: tauri::AppHandle, packages: Vec<WingetPackage>) -> Result<(), String> {
+    // FIX 2: Corrected Tauri v2 dialog syntax
+    let file_path = app.dialog()
+        .file()
+        .set_file_name("winget_setup.json")
+        .blocking_save_file(); // Use blocking for simpler async command flow
+
+    if let Some(path) = file_path {
+        // We can use path.path because blocking_save_file returns a FilePath object in v2
+        let path_str = path.to_string();
+        let json = serde_json::to_string_pretty(&packages).map_err(|e| e.to_string())?;
+        std::fs::write(path_str, json).map_err(|e| e.to_string())?;
+    }
+    Ok(())
+}
+
+#[command]
+pub async fn import_winget_setup(app: tauri::AppHandle) -> Result<Vec<WingetPackage>, String> {
+    // FIX 3: Corrected Tauri v2 dialog syntax
+    let file_path = app.dialog()
+        .file()
+        .add_filter("JSON", &["json"])
+        .blocking_pick_file();
+
+    if let Some(path) = file_path {
+        let path_str = path.to_string();
+        let contents = std::fs::read_to_string(path_str).map_err(|e| e.to_string())?;
+        let packages: Vec<WingetPackage> = serde_json::from_str(&contents).map_err(|e| e.to_string())?;
+        return Ok(packages);
+    }
+    Err("No file selected".into())
 }
 
 #[command]
