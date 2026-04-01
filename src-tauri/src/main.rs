@@ -24,6 +24,9 @@ pub fn run() {
             commands::system::save_aliases,
             commands::system::get_config,
             commands::system::save_config,
+            commands::system::install_package,
+            commands::system::search_winget,
+            commands::system::get_installed_winget,
         ])
         .setup(|app| {
             setup::init(app)?;

@@ -81,7 +81,7 @@ export default function Footer({ results, selectedIndex, selectedType, isInfoOpe
                             </span>
                             <div className="flex items-center bg-white/10 rounded-sm p-0.5 px-1 border border-white/5 shadow-inner group-active:scale-95 transition-transform">
                                 <span className="text-[10px] text-white/70">↵</span>
-                                <span className="text-[8px] ml-1 text-white/30  uppercase tracking-tighter font-sans">Enter</span>
+                                <span className="text-[8px] ml-1 text-white/30 uppercase tracking-tighter font-sans">Enter</span>
                             </div>
                         </div>
                     </motion.div>

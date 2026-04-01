@@ -4,6 +4,7 @@ import { SpeedtestResult } from "../components/commands/SpeedtestResult";
 import { TimerCard } from "../components/commands/TimerCard";
 import { WeatherCard } from "../components/commands/WeatherCard";
 import { WifiScanner } from "../components/commands/WifiScanner";
+import { WingetManager } from "../components/commands/WingetManager";
 import { parseTimerString } from "./utils";
 
 export interface Command {
@@ -22,6 +23,16 @@ export const COMMAND_MAP: Record<string, Command> = {
     description: "Configure shortcuts, appearance, and extensions",
     render: () => <SettingsView />,
     execute: () => ({ success: true }),
+  },
+  install: {
+    cmd: "install",
+    title: "Winget",
+    description: "Search and install Windows packages",
+    render: (query) => <WingetManager query={query} />,
+    execute: async (args) => {
+        // If user hits enter on the command itself, we just enter the view
+        return { success: true };
+    }
   },
   weather: {
     cmd: "weather",
