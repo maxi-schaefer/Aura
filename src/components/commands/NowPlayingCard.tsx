@@ -18,7 +18,6 @@ export const NowPlayingCard = () => {
     const [media, setMedia] = useState<MediaInfo | null>(null);
     const [loading, setLoading] = useState(true);
     const [accent, setAccent] = useState("rgb(139,92,246)"); // fallback purple
-    const [rotate, setRotate] = useState({ x: 0, y: 0 });
         
     const fetchMedia = async () => {
         try {

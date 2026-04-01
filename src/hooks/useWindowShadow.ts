@@ -1,7 +1,11 @@
 import { useEffect, RefObject } from 'react';
 import { getCurrentWindow, LogicalPosition, LogicalSize, primaryMonitor } from '@tauri-apps/api/window';
 
-export function useWindowShadow(containerRef: RefObject<HTMLDivElement | null>, dependencies: any[]) {
+export function useWindowShadow(
+    containerRef: RefObject<HTMLDivElement | null>, 
+    isExpanded: boolean, // Add this
+    dependencies: any[]
+) {
     useEffect(() => {
         const update = async () => {
             if (!containerRef.current) return;
@@ -10,11 +14,15 @@ export function useWindowShadow(containerRef: RefObject<HTMLDivElement | null>, 
 
             const { height } = containerRef.current.getBoundingClientRect();
             const win = getCurrentWindow();
-            const logicalSize = new LogicalSize(1000, Math.ceil(height));
+            
+            // Toggle width between 650 (default) and 1000 (expanded)
+            const targetWidth = isExpanded ? 1250 : 1000; 
+            const logicalSize = new LogicalSize(targetWidth, Math.ceil(height));
             
             await win.setSize(logicalSize);
+            
             const monitorSize = monitor.size.toLogical(monitor.scaleFactor);
-            const x = (monitorSize.width / 2) - 500;
+            const x = (monitorSize.width / 2) - (targetWidth / 2);
             const y = monitorSize.height * 0.25;
             await win.setPosition(new LogicalPosition(x, y));
         };
@@ -22,5 +30,5 @@ export function useWindowShadow(containerRef: RefObject<HTMLDivElement | null>, 
         const observer = new ResizeObserver(() => requestAnimationFrame(update));
         if (containerRef.current) observer.observe(containerRef.current);
         return () => observer.disconnect();
-    }, dependencies);
+    }, [isExpanded, ...dependencies]); // Watch isExpanded
 }

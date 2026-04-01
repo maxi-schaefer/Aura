@@ -1,7 +1,6 @@
 import { useEffect, useState, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { motion, AnimatePresence } from "framer-motion";
-import { ShieldCheck, MousePointer2, Activity } from "lucide-react";
 
 export const WifiScanner = () => {
     const [beacons, setBeacons] = useState<any[]>([]);

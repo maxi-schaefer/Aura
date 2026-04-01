@@ -1,4 +1,5 @@
 import { NowPlayingCard } from "../components/commands/NowPlayingCard";
+import { SettingsView } from "../components/commands/SettingsView";
 import { SpeedtestResult } from "../components/commands/SpeedtestResult";
 import { TimerCard } from "../components/commands/TimerCard";
 import { WeatherCard } from "../components/commands/WeatherCard";
@@ -15,6 +16,13 @@ export interface Command {
 }
 
 export const COMMAND_MAP: Record<string, Command> = {
+  settings: {
+    cmd: "settings",
+    title: "Settings",
+    description: "Configure shortcuts, appearance, and extensions",
+    render: () => <SettingsView />,
+    execute: () => ({ success: true }),
+  },
   weather: {
     cmd: "weather",
     title: "Weather",

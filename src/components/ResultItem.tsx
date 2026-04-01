@@ -32,7 +32,7 @@ export const ResultItem = ({ id, name, type, isActive, subtitle, onMouseEnter, o
             data-active={isActive}
             onMouseEnter={onMouseEnter}
             onClick={() => onClick(true)}
-            className="relative flex items-center justify-between px-3 py-2 cursor-pointer rounded-md transition-all"
+            className="relative flex items-center justify-between px-3 py-2 pointer-events-none rounded-md transition-all"
         >
             {isActive && (
                 <motion.div

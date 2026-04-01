@@ -10,6 +10,7 @@ import { useSearchLogic } from "./hooks/useSearchLogic";
 import { useWindowShadow } from "./hooks/useWindowShadow";
 import { playSuccess, playTick } from "./lib/sound";
 import icon from "./assets/icon.png";
+import { InfoPanel } from "./components/InfoPanel";
 
 export default function App() {
     const [query, setQuery] = useState("");
@@ -20,13 +21,15 @@ export default function App() {
     const [selectedIndex, setSelectedIndex] = useState(0);
     const [time, setTime] = useState("");
     const [showCopied, setShowCopied] = useState(false);
-
+    const [isInfoOpen, setIsInfoOpen] = useState(false);
+    
     const containerRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-
+    
     const { results } = useSearchLogic(!!activeCommand, query, allApps, aliases);
-    useWindowShadow(containerRef, [results, isLoading, activeCommand, query]);
+    const selectedItem = results[selectedIndex];
+    useWindowShadow(containerRef, isInfoOpen, [results, isLoading, activeCommand, query]);
 
     useEffect(() => {
         (async () => {
@@ -86,6 +89,15 @@ export default function App() {
 
             inputRef.current?.focus();
 
+            // Info Panel
+            if(e.ctrlKey && e.key.toLowerCase() === "k") {
+                if (selectedItem) {
+                    e.preventDefault();
+                    setIsInfoOpen((open) => !open);
+                    return;
+                }
+            }
+
             if ((e.key === "Tab" || e.key === "ArrowRight") && suggestion && !activeCommand) {
                 e.preventDefault();
                 setQuery((q) => q + suggestion);
@@ -109,9 +121,9 @@ export default function App() {
                         setQuery("");
                     }
                     break;
-                case "Enter":
-                    e.preventDefault();
-                    handleExecute();
+                    case "Enter":
+                        e.preventDefault();
+                        handleExecute();
                     break;
                 case "ArrowDown":
                     if (activeCommand) break;
@@ -155,9 +167,13 @@ export default function App() {
     return (
         <div 
             ref={containerRef} 
-            className="bg-transparent overflow-hidden antialiased select-none transition-[width,height] duration-300 ease-out"
+            className="bg-transparent overflow-hidden antialiased"
         >
-            <motion.div className="glass flex flex-col overflow-hidden">
+            <motion.div 
+                animate={{ width: isInfoOpen ? 1250 : 1000 }}
+                transition={{ type: "spring", stiffness: 400, damping: 35 }}
+                className="glass flex flex-col overflow-hidden"
+            >
                 <header className="relative flex items-center px-4 py-3 border-b border-white/4">
                     <AnimatePresence mode="popLayout">
                         {activeCommand && (
@@ -214,30 +230,49 @@ export default function App() {
 
                     <div className="ml-4 tabular-nums text-[11px] text-white/20 font-medium">{time}</div>
                 </header>
-
-                <main ref={scrollContainerRef} className="max-h-130 overflow-y-auto custom-scrollbar p-2">
-                    {isLoading ? (
-                        <LoadingState />
-                    ) : activeCommand ? (
-                        <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="p-2">
-                            {activeCommand.render
-                                ? activeCommand.render(query, showCopied)
-                                : activeCommand.view}
-                        </motion.div>
-                    ) : (
-                        <ResultList
-                            results={results}
-                            selectedIndex={selectedIndex}
-                            setSelectedIndex={setSelectedIndex}
-                            onExecute={handleExecute}
-                        />
-                    )}
-                </main>
+                
+                <div className="flex flex-1 overflow-hidden max-h-130">
+                    <main 
+                        ref={scrollContainerRef} 
+                        className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar p-2"
+                    >
+                        {isLoading ? (
+                            <LoadingState />
+                        ) : activeCommand ? (
+                            <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="p-2">
+                                {activeCommand.render ? activeCommand.render(query, showCopied) : activeCommand.view}
+                            </motion.div>
+                        ) : (
+                            <ResultList
+                                results={results}
+                                selectedIndex={selectedIndex}
+                                setSelectedIndex={setSelectedIndex}
+                                onExecute={handleExecute}
+                            />
+                        )}
+                    </main>
+                    
+                    {/* The Info Panel: Slides in from the right */}
+                    <AnimatePresence>
+                        {isInfoOpen && (
+                            <motion.div
+                                initial={{ width: 0, opacity: 0 }}
+                                animate={{ width: 320, opacity: 1 }}
+                                exit={{ width: 0, opacity: 0 }}
+                                transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                                className="border-l border-white/5 overflow-hidden"
+                            >
+                                <InfoPanel item={selectedItem} />
+                            </motion.div>
+                        )}
+                    </AnimatePresence>
+                </div>
 
                 <Footer
                     selectedIndex={selectedIndex}
                     results={results.length}
                     selectedType={results[selectedIndex]?.type || ""}
+                    isInfoOpen={isInfoOpen}
                 />
             </motion.div>
         </div>
