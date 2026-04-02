@@ -4,6 +4,7 @@ import { calculateExpression, detectColor } from "../lib/utils";
 import { COMMAND_MAP } from "../lib/command";
 import { invoke } from '@tauri-apps/api/core';
 import { Result } from "../types/result";
+import { CalculatorView } from "../components/CalculatorView";
 
 const MAX_PER_GROUP = 30;
 
@@ -33,9 +34,17 @@ export function useSearchLogic(activeCommandMode: boolean, query: string, allApp
           title: calculation,
           subtitle: "Calculator",
           type: "calc",
+          score: 1000, // Top priority
+          group: "Calculator",
+          render: (q: string) => (
+            <CalculatorView
+              query={q} 
+              result={calculation} 
+              fromLabel="Input" 
+              toLabel="Result" 
+            />
+          ),
           action: () => navigator.clipboard.writeText(calculation),
-          score: 95,
-          group: "Quick Actions"
         });
       }
 

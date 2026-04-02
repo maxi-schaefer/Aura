@@ -31,6 +31,7 @@ export default function App() {
     const containerRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
+    const lastQuery = useRef("");
 
     const { applyTheme } = useTheme(config, setConfig);
 
@@ -94,6 +95,7 @@ export default function App() {
         if (!current?.action) return;
 
         if (current.type === "command") {
+            lastQuery.current = query;
             const result = await current.action();
             setActiveCommand(current);
             setQuery("");
@@ -132,10 +134,15 @@ export default function App() {
                     e.preventDefault();
                     if (activeCommand) {
                         setActiveCommand(null);
-                        setQuery("");
+                        setQuery(lastQuery.current); // 🔹 Restore "Settings"
+                        setSelectedIndex(0);
                     } else {
-                        if (!query) getCurrentWindow().hide();
-                        setQuery("");
+                        if (!query) {
+                            getCurrentWindow().hide();
+                        } else {
+                            setQuery("");
+                            lastQuery.current = ""; // Reset saved query
+                        }
                     }
                     break;
                 case "Enter":
@@ -231,7 +238,7 @@ export default function App() {
                             autoFocus
                             value={query}
                             onChange={(e) => setQuery(e.target.value)}
-                            placeholder="Search..."
+                            placeholder="Search for apps and commands..."
                             className="z-10 w-full bg-transparent outline-none text-lg text-white/90 placeholder:text-white/10 font-light tracking-tight pl-10"
                         />
 
@@ -255,49 +262,72 @@ export default function App() {
                     <div className="ml-4 tabular-nums text-[11px] text-white/20 font-medium">{time}</div>
                 </header>
                 
-                <div className="flex flex-1 overflow-hidden max-h-130">
-                    <main 
-                        ref={scrollContainerRef} 
-                        className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar p-2"
-                    >
-                        {isLoading ? (
-                            <LoadingState />
-                        ) : activeCommand ? (
-                            <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="p-2">
-                                {activeCommand.render ? activeCommand.render(query, showCopied) : activeCommand.view}
-                            </motion.div>
-                        ) : (
-                            <ResultList
-                                results={results}
-                                selectedIndex={selectedIndex}
-                                setSelectedIndex={setSelectedIndex}
-                                onExecute={handleExecute}
-                            />
-                        )}
-                    </main>
-                    
-                    <AnimatePresence>
-                        {isInfoOpen && (
-                            <motion.div
-                                initial={{ width: 0, opacity: 0 }}
-                                animate={{ width: 320, opacity: 1 }}
-                                exit={{ width: 0, opacity: 0 }}
-                                transition={{ type: "spring", stiffness: 450, damping: 35 }}
-                                className="border-l border-white/5 overflow-hidden"
-                            >
-                                <InfoPanel item={selectedItem} />
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-                </div>
+                <AnimatePresence>
 
-                <Footer
-                    selectedIndex={selectedIndex}
-                    results={results.length}
-                    selectedType={results[selectedIndex]?.type || ""}
-                    isInfoOpen={isInfoOpen}
-                    activeCommand={activeCommand?.id}
-                />
+                    {!(config.window_mode === "compact" && !activeCommand && query.length === 0) && (
+                        <motion.div
+                            initial={{ height: 0, opacity: 0 }}
+                            animate={{ height: "auto", opacity: 1 }}
+                            exit={{ height: 0, opacity: 0 }}
+                            transition={{ duration: 0.2 }}
+                            className="flex flex-col flex-1 overflow-hidden"
+                        >
+                            <div className="flex flex-1 overflow-hidden max-h-130">
+                                <main 
+                                    ref={scrollContainerRef} 
+                                    className="flex-1 overflow-y-auto overflow-x-hidden custom-scrollbar p-2"
+                                >
+                                    {isLoading ? (
+                                        <LoadingState />
+                                    ) : activeCommand ? (
+                                        <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="p-2">
+                                            {activeCommand.render ? activeCommand.render(query, showCopied, config, setConfig) : activeCommand.view}
+                                        </motion.div>
+                                    ) : (
+                                        <>
+                                            {/* 🔹 HERO SECTION: If the top result has a custom renderer and it's a calculator */}
+                                            {results[0]?.type === "calc" && query.length > 0 && (
+                                                <div className="mb-4 p-2">
+                                                {results[0].render?.(query)}
+                                                </div>
+                                            )}
+
+                                            <ResultList
+                                                /* Filter out the calc from the list if it's already shown in Hero */
+                                                results={results[0]?.type === "calc" ? results.slice(1) : results}
+                                                selectedIndex={selectedIndex}
+                                                setSelectedIndex={setSelectedIndex}
+                                                onExecute={handleExecute}
+                                            />
+                                            </>
+                                    )}
+                                </main>
+                                
+                                <AnimatePresence>
+                                    {isInfoOpen && (
+                                        <motion.div
+                                            initial={{ width: 0, opacity: 0 }}
+                                            animate={{ width: 320, opacity: 1 }}
+                                            exit={{ width: 0, opacity: 0 }}
+                                            transition={{ type: "spring", stiffness: 450, damping: 35 }}
+                                            className="border-l border-white/5 overflow-hidden"
+                                        >
+                                            <InfoPanel item={selectedItem} />
+                                        </motion.div>
+                                    )}
+                                </AnimatePresence>
+                            </div>
+
+                            <Footer
+                                selectedIndex={selectedIndex}
+                                results={results.length}
+                                selectedType={results[selectedIndex]?.type || ""}
+                                isInfoOpen={isInfoOpen}
+                                activeCommand={activeCommand?.id}
+                            />
+                        </motion.div>
+                    )}
+                </AnimatePresence>
             </motion.div>
         </div>
     );

@@ -34,6 +34,7 @@ pub struct Config {
     pub username: Option<String>,
     pub first_run_complete: bool,
     pub theme: Option<String>,
+    pub window_mode: Option<String>,
 }
 
 pub fn create_hidden_command(program: &str) -> StdCommand {
@@ -230,8 +231,18 @@ pub fn save_aliases(app: AppHandle, aliases: HashMap<String, String>) {
 
 #[command] pub fn get_config(app: AppHandle) -> Config {
     let path = app.path().app_config_dir().unwrap().join("config.json");
-    fs::read_to_string(path).map(|c| serde_json::from_str(&c).unwrap_or(Config { search_engine:"https://google.com/search?q=".into(),first_run_complete:false, username: None, theme: None }))
-    .unwrap_or(Config { search_engine: "https://google.com/search?q=".into(), first_run_complete: false, username: None, theme: None })
+    let default_config = Config {
+        search_engine: "https://google.com/search?q=".into(),
+        first_run_complete: false,
+        username: None,
+        theme: None,
+        window_mode: Some("compact".into()),
+    };
+
+    fs::read_to_string(path)
+        .ok()
+        .and_then(|c| serde_json::from_str::<Config>(&c).ok())
+        .unwrap_or(default_config)
 }
 
 #[command] pub fn save_config(app: AppHandle, config: Config) -> Result<(), String> {

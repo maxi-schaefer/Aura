@@ -12,6 +12,8 @@ import yahooIcon from "../assets/engines/yahoo.png";
 import braveIcon from "../assets/engines/brave.png";
 import ecosiaIcon from "../assets/engines/ecosia.png";
 import { THEMES, useTheme } from "../hooks/useTheme";
+// 🔹 Import our new selector
+import { WindowModeSelector } from "./commands/SettingsView"; 
 
 const ENGINES = [
     { id: "google", name: "Google", url: "https://google.com/search?q=", icon: googleIcon },
@@ -51,40 +53,38 @@ export default function SetupScreen({ onComplete, config, setConfig }: any) {
     }, [step]);
 
     const handleFinalize = async () => {
-    try {
-        await invoke("save_config", { 
-            config: { 
-                search_engine: selectedEngine.url, 
-                first_run_complete: true, 
-                username,
-                theme: theme || "default"
-            } 
-        });
+        try {
+            await invoke("save_config", { 
+                config: { 
+                    ...config, // 🔹 Preserve window_mode and other items
+                    search_engine: selectedEngine.url, 
+                    first_run_complete: true, 
+                    username,
+                    theme: theme || "default"
+                } 
+            });
 
-        setStep(3);
-
-        setTimeout(() => {
-            setStep(4);
-
-            setTimeout(onComplete, 1500);
-        }, 2000);
-
-    } catch (e) {
-        console.error(e);
-    }
-};
+            setStep(3);
+            setTimeout(() => {
+                setStep(4);
+                setTimeout(onComplete, 1500);
+            }, 2000);
+        } catch (e) {
+            console.error(e);
+        }
+    };
 
     const stepsContent: Record<number, JSX.Element> = {
         [-1]: (
             <motion.div key="intro" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="flex flex-col items-center gap-6">
                 <div className="h-16" />
-                <h1 className="text-xl  text-fg tracking-tight">Welcome to Aura</h1>
+                <h1 className="text-xl text-fg tracking-tight font-medium">Welcome to Aura</h1>
                 <p className="text-sm text-fg/40 text-center max-w-80 leading-relaxed">
                     A minimal, keyboard-first command bar for your workflow.
                 </p>
                 <button
                     onClick={() => setStep(0)}
-                    className="mt-4 px-6 py-2.5 bg-primary text-black text-xs  rounded-md hover:bg-neutral-200 transition-colors cursor-pointer"
+                    className="mt-4 px-8 py-3 bg-white text-black text-xs rounded-full hover:bg-neutral-200 transition-all cursor-pointer active:scale-95 shadow-lg"
                 >
                     Get Started
                 </button>
@@ -94,7 +94,7 @@ export default function SetupScreen({ onComplete, config, setConfig }: any) {
             <motion.div key="name" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="space-y-6">
                 <div className="flex items-center gap-3">
                     <div className="size-6 rounded-md bg-white/5 border border-white/10 flex items-center justify-center text-[10px] text-fg/40 font-mono">1</div>
-                    <h2 className="text-sm  text-fg/90">Personalize your instance</h2>
+                    <h2 className="text-sm text-fg/90">Personalize your instance</h2>
                 </div>
                 <div className="relative group">
                     <input
@@ -104,66 +104,73 @@ export default function SetupScreen({ onComplete, config, setConfig }: any) {
                         onChange={(e) => setUsername(e.target.value)}
                         onKeyDown={(e) => e.key === "Enter" && username.trim() && setStep(1)}
                         placeholder="Enter your name..."
-                        className="w-full bg-white/3 border border-white/10 rounded-lg px-4 py-3 text-base text-fg outline-none focus:border-white/20 focus:bg-white/5 transition-all"
+                        className="w-full bg-white/3 border border-white/10 rounded-xl px-4 py-4 text-base text-fg outline-none focus:border-white/20 focus:bg-white/5 transition-all"
                     />
-                    <div className="absolute right-3 top-1/2 -translate-y-1/2 flex gap-1 opacity-0 group-focus-within:opacity-100 transition-opacity">
-                        <kbd className="px-1.5 py-0.5 rounded border border-white/10 bg-white/5 text-[9px] text-fg/40 font-sans">Enter</kbd>
-                    </div>
                 </div>
+                <button onClick={() => username.trim() && setStep(1)} className="w-full py-3 bg-white/5 border border-white/10 rounded-xl text-xs text-fg hover:bg-white/10 transition-colors">Continue</button>
             </motion.div>
         ),
         1: (
-            <motion.div key="theme" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="space-y-5">
-                 <div className="flex items-center gap-3">
-                    <div className="size-6 rounded-md bg-fg/5 border border-fg/10 flex items-center justify-center text-[10px] text-fg/40 font-mono">2</div>
-                    <h2 className="text-sm text-fg/90">Appearance</h2>
+            <motion.div key="theme" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="space-y-6 max-w-md mx-auto">
+                <div className="flex items-center gap-3">
+                    <div className="size-6 rounded-md bg-white/5 border border-white/10 flex items-center justify-center text-[10px] text-fg/40 font-mono">2</div>
+                    <h2 className="text-sm text-fg/90 font-medium">Appearance & Layout</h2>
                 </div>
-                <div className="grid grid-cols-1 gap-2">
+
+                {/* 🔹 Window Mode Selector Integration */}
+                <div className="rounded-xl border border-white/5 bg-white/2 overflow-hidden">
+                    <WindowModeSelector 
+                        value={config.window_mode || 'expanded'} 
+                        onChange={(mode) => setConfig({ ...config, window_mode: mode })}
+                    />
+                </div>
+
+                {/* 🔹 Modern 2-Column Theme Grid */}
+                <div className="grid grid-cols-2 gap-2">
                     {THEMES.map((t) => (
                         <button
                             key={t.id}
                             onClick={(e) => changeTheme(t.id, e)}
-                            className={`w-full cursor-pointer flex items-center justify-between px-4 py-3 rounded-lg border transition-all ${
-                                theme === t.id ? "bg-fg/10 border-fg/20" : "bg-fg/2 border-fg/5 hover:bg-fg/5"
+                            className={`flex items-center gap-3 px-3 py-3 rounded-xl border transition-all cursor-pointer ${
+                                theme === t.id ? "bg-white/10 border-white/20 shadow-md" : "bg-white/2 border-white/5 hover:bg-white/5"
                             }`}
                         >
-                            <div className={`rounded-full size-3 border-2 border-white/30`} style={{ backgroundColor: t.primary }}/>
-                            <span className={`text-sm ${theme === t.id ? "text-fg" : "text-fg/40"}`}>{t.label}</span>
-                            {theme === t.id && <div className="size-1.5 rounded-full bg-fg shadow-[0_0_8px_var(--fg)]" />}
+                            <div className="size-3 rounded-full shrink-0" style={{ backgroundColor: t.primary }}/>
+                            <span className={`text-[12px] truncate ${theme === t.id ? "text-fg" : "text-fg/40"}`}>{t.label}</span>
                         </button>
                     ))}
                 </div>
-                <button onClick={() => setStep(2)} className="w-full py-3 bg-primary text-bg rounded-lg text-xs cursor-pointer">Continue</button>
+
+                <button 
+                    onClick={() => setStep(2)} 
+                    className="w-full py-3 bg-primary text-black  rounded-xl text-xs cursor-pointer active:scale-[0.98] transition-transform"
+                >
+                    Continue
+                </button>
             </motion.div>
         ),
         2: (
             <motion.div key="config" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="space-y-5">
                 <div className="flex items-center gap-3">
-                    <div className="size-6 rounded-md bg-white/5 border border-white/10 flex items-center justify-center text-[10px] text-fg/40 font-mono">2</div>
-                    <h2 className="text-sm  text-fg/90">Choose Search Engine</h2>
+                    <div className="size-6 rounded-md bg-white/5 border border-white/10 flex items-center justify-center text-[10px] text-fg/40 font-mono">3</div>
+                    <h2 className="text-sm text-fg/90">Search Engine</h2>
                 </div>
 
-                <div className="bg-white/2 border border-white/5 rounded-lg overflow-hidden">
+                <div className="grid grid-cols-2 gap-2">
                     {ENGINES.map((eng) => {
                         const isSelected = selectedEngine.id === eng.id;
                         return (
                             <button
                                 key={eng.id}
                                 onClick={() => setSelectedEngine(eng)}
-                                className={`w-full cursor-pointer flex items-center justify-between px-4 py-3 transition-colors group
-                                    ${isSelected ? "bg-white/10" : "hover:bg-white/5"}
-                                    ${eng.id !== ENGINES[ENGINES.length - 1].id ? "border-b border-white/2" : ""}
+                                className={`flex items-center gap-3 px-4 py-3 rounded-xl border transition-all cursor-pointer
+                                    ${isSelected ? "bg-white/10 border-white/20" : "bg-white/2 border-white/5 hover:bg-white/5"}
                                 `}
                             >
-                                <div className="flex items-center gap-3">
-                                    <img src={eng.icon} className={`size-4 ${isSelected ? "opacity-100" : "opacity-30 group-hover:opacity-60"}`} alt="" />
-                                    <span className={`text-sm ${isSelected ? "text-fg " : "text-fg/40"}`}>
-                                        {eng.name}
-                                    </span>
-                                </div>
-                                {isSelected && (
-                                    <motion.div layoutId="check" className="size-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(255,255,255,0.5)]" />
-                                )}
+                                <img src={eng.icon} className={`size-4 ${isSelected ? "opacity-100" : "opacity-30"}`} alt="" />
+                                <span className={`text-[12px] ${isSelected ? "text-fg " : "text-fg/40"}`}>
+                                    {eng.name}
+                                </span>
                             </button>
                         );
                     })}
@@ -171,7 +178,7 @@ export default function SetupScreen({ onComplete, config, setConfig }: any) {
 
                 <button
                     onClick={handleFinalize}
-                    className="w-full flex items-center justify-center py-3 bg-white/5 cursor-pointer border border-white/10 text-fg rounded-lg hover:bg-white/10 transition-all active:scale-[0.98] text-xs "
+                    className="w-full py-3 bg-white text-black  rounded-xl text-xs active:scale-[0.98] transition-transform"
                 >
                     Finalize Setup
                 </button>
@@ -188,49 +195,26 @@ export default function SetupScreen({ onComplete, config, setConfig }: any) {
                    />
                 </div>
                 <div className="text-center">
-                    <p className="text-sm  text-fg/80">Initializing Aura...</p>
+                    <p className="text-sm text-fg/80">Initializing Aura...</p>
                     <p className="text-[11px] text-fg/30 mt-1">Setting up environment for {username}</p>
                 </div>
             </motion.div>
         ),
         4: (
-            <motion.div
-                key="done"
-                variants={pageVariants}
-                initial="initial"
-                animate="animate"
-                exit="exit"
-                className="flex flex-col items-center py-10 space-y-4"
-            >
+            <motion.div key="done" variants={pageVariants} initial="initial" animate="animate" exit="exit" className="flex flex-col items-center py-10 space-y-4">
                 <motion.div
                     initial={{ scale: 0.6, opacity: 0 }}
                     animate={{ scale: 1, opacity: 1 }}
-                    transition={{ duration: 0.4, ease: "easeOut" }}
-                    className="size-12 rounded-full bg-green-500/10 flex items-center justify-center"
+                    className="size-16 rounded-full bg-green-500/10 flex items-center justify-center"
                 >
-                    <motion.svg
-                        viewBox="0 0 24 24"
-                        className="size-6 text-green-400"
-                        initial={{ pathLength: 0 }}
-                        animate={{ pathLength: 1 }}
-                        transition={{ duration: 0.5, ease: "easeOut" }}
-                    >
-                        <motion.path
-                            d="M5 13l4 4L19 7"
-                            fill="transparent"
-                            stroke="currentColor"
-                            strokeWidth="2"
-                            strokeLinecap="round"
-                            strokeLinejoin="round"
-                        />
-                    </motion.svg>
+                    <svg viewBox="0 0 24 24" className="size-8 text-green-400" fill="none" stroke="currentColor" strokeWidth="2.5" strokeLinecap="round" strokeLinejoin="round">
+                        <path d="M20 6L9 17L4 12" />
+                    </svg>
                 </motion.div>
 
                 <div className="text-center">
-                    <p className="text-sm text-fg/90">You're all set 🎉</p>
-                    <p className="text-[11px] text-fg/40 mt-1">
-                        Welcome, {username}
-                    </p>
+                    <p className="text-lg text-fg/90 font-medium">You're all set 🎉</p>
+                    <p className="text-sm text-fg/40 mt-1">Welcome to the future of your workflow.</p>
                 </div>
             </motion.div>
         ),
@@ -244,21 +228,19 @@ export default function SetupScreen({ onComplete, config, setConfig }: any) {
                     step === -1 ? "flex-col mb-4" : "absolute top-12 left-12"
                 }`}
             >
-                <img src={auraLogo} className={step === -1 ? "size-16" : "size-5 opacity-40"} />
+                <img src={auraLogo} className={step === -1 ? "size-20" : "size-6 opacity-40"} />
                 {step !== -1 && <span className="text-[10px] font-mono text-fg/20 uppercase tracking-widest">Setup</span>}
             </motion.div>
 
-            <div className="w-full max-w-90 z-10">
+            <div className="w-full max-w-100 z-10">
                 <AnimatePresence mode="wait">
                     {stepsContent[step]}
                 </AnimatePresence>
             </div>
 
-            {/* Footer hints */}
             <div className="absolute bottom-6 w-full px-10 flex justify-between items-center opacity-20">
                 <span className="text-[10px] font-mono text-fg tracking-tight italic">v0.2.6</span>
                 <div className="flex gap-4">
-                    <span className="text-[9px] text-fg uppercase tracking-tighter">ESC to Quit</span>
                     <span className="text-[9px] text-fg uppercase tracking-tighter">Enter to Select</span>
                 </div>
             </div>

@@ -18,13 +18,12 @@ const CATEGORIES = [
   { id: "about", label: "About", icon: <Info size={14} /> },
 ];
 
-export const SettingsView = ({ query = "" }: { query?: string }) => {
+export const SettingsView = ({ query = "", config, setConfig }: { query?: string; config: any; setConfig?: (config: any) => void }) => {
   const [activeTab, setActiveTab] = useState("general");
-  const [config, setConfig] = useState<any>(null);
 
   // Load config on mount
   useEffect(() => {
-    invoke("get_config").then((res) => setConfig(res));
+    invoke("get_config").then((res) => setConfig && setConfig(res));
   }, []);
 
   const filteredCategories = useMemo(() => {
@@ -48,11 +47,8 @@ export const SettingsView = ({ query = "" }: { query?: string }) => {
           >
             <div className="flex items-center gap-3">
               {cat.icon}
-              <span className="text-[13px] font-medium">{cat.label}</span>
+              <span className="text-[13px]">{cat.label}</span>
             </div>
-            {activeTab === cat.id && (
-              <motion.div layoutId="active-pill" className="w-1 h-4 bg-white/40 rounded-full" />
-            )}
           </button>
         ))}
       </div>
@@ -170,3 +166,64 @@ export const RangeItem = ({ label, description }: any) => (
       <input type="range" className="accent-white/40 w-32 h-1 bg-white/10 rounded-lg appearance-none cursor-pointer" />
     </div>
 );
+
+export const WindowModeSelector = ({ value, onChange }: { value: 'compact' | 'expanded', onChange: (v: 'compact' | 'expanded') => void }) => {
+  const modes = [
+    { id: 'compact', label: 'Compact', desc: 'Minimal search bar' },
+    { id: 'expanded', label: 'Expanded', desc: 'Full height with results' }
+  ];
+
+  return (
+    <div className="flex flex-col p-4 bg-transparent border-b border-white/5 last:border-0">
+      <div className="mb-4">
+        <div className="text-[13.5px] text-fg/90 font-medium">Window Mode</div>
+        <div className="text-[12px] text-fg/30 mt-0.5">Choose your preferred mode when opening Aura.</div>
+      </div>
+
+      <div className="flex gap-4">
+        {modes.map((mode) => (
+          <div 
+            key={mode.id}
+            onClick={() => onChange(mode.id as any)}
+            className="flex-1 flex flex-col items-center gap-3 cursor-pointer group"
+          >
+            <div className={`relative w-full aspect-video rounded-xl border transition-all duration-300 flex items-center justify-center overflow-hidden
+              ${value === mode.id 
+                ? 'border-white/20 bg-white/5 shadow-[0_0_20px_rgba(255,255,255,0.05)]' 
+                : 'border-white/5 bg-white/2 hover:border-white/10'}`}
+            >
+              {mode.id === 'compact' && (
+                <div className="absolute inset-0 opacity-40 bg-linear-to-br from-primary to-secondary blur-2xl group-hover:opacity-60 transition-opacity" />
+              )}
+              
+              <div className={`relative z-10 w-24 rounded-md border border-white/20 bg-[#111]/80 shadow-2xl p-1.5 transition-transform duration-300 ${value === mode.id ? 'scale-110' : 'group-hover:scale-105'}`}>
+                 <div className="w-full h-3 rounded-sm bg-white/10 mb-1" /> {/* Search bar */}
+                 {mode.id === 'expanded' && (
+                   <div className="space-y-1 mt-2">
+                     <div className="w-full h-1 rounded-full bg-white/5" />
+                     <div className="w-[80%] h-1 rounded-full bg-white/5" />
+                     <div className="w-[60%] h-1 rounded-full bg-white/5" />
+                   </div>
+                 )}
+              </div>
+
+              {/* Selection Indicator */}
+              {value === mode.id && (
+                <motion.div 
+                  layoutId="mode-border"
+                  className="absolute inset-0 border-2 border-white/30 rounded-xl"
+                  transition={{ type: "spring", bounce: 0.2, duration: 0.6 }}
+                />
+              )}
+            </div>
+
+            {/* Label */}
+            <span className={`text-[12px] font-medium transition-colors ${value === mode.id ? 'text-fg' : 'text-fg/40'}`}>
+              {mode.label}
+            </span>
+          </div>
+        ))}
+      </div>
+    </div>
+  );
+};

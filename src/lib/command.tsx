@@ -14,7 +14,7 @@ export interface Command {
     title: string;
     description: string;
     icon?: LucideIcon;
-    render?: (args: string, copied?: boolean) => any;
+    render?: (args: string, copied?: boolean, config?: any, setConfig?: (config: any) => void) => any;
     preview?: (args: string[]) => string;
     execute: (args: string[]) => any | Promise<any>;
 }
@@ -25,7 +25,9 @@ export const COMMAND_MAP: Record<string, Command> = {
         title: "Settings",
         description: "Configure application preferences and customize your experience.",
         icon: Settings,
-        render: (query) => <SettingsView query={query} />,
+        render: (query, showCopied, config, setConfig) => (
+            <SettingsView query={query} config={config} setConfig={setConfig} />
+        ),
         execute: () => ({ success: true }),
     },
 
