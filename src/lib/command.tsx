@@ -30,7 +30,7 @@ export const COMMAND_MAP: Record<string, Command> = {
         title: "Winget",
         description: "Search, install, and manage Windows packages using Winget.",
         render: (query) => <WingetManager query={query} />,
-        execute: async (args) => { return { success: true }; }
+        execute: async () => { return { success: true }; }
     },
 
     weather: {
@@ -91,7 +91,7 @@ export const COMMAND_MAP: Record<string, Command> = {
 
     wifi: {
         cmd: "wifi",
-        title: "WiFi Heatmap",
+        title: "WiFi Explorer",
         description: "Scan nearby WiFi networks and visualize signal strength and congestion.",
         render: () => <WifiScanner />,
         execute: () => { return { success: true } }

@@ -5,10 +5,6 @@ use tauri::{
 };
 use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
 
-#[cfg(any(target_os = "windows", target_os = "macos"))]
-use window_vibrancy::{apply_acrylic, NSVisualEffectMaterial};
-
-// Helper to open settings (extracted since we call it from two places now)
 fn open_settings(app: &tauri::AppHandle) {
     if let Some(win) = app.get_webview_window("settings") {
         let _ = win.set_focus();
@@ -22,11 +18,15 @@ fn open_settings(app: &tauri::AppHandle) {
             .build()
             .unwrap();
 
-        #[cfg(target_os = "windows")]
-        let _ = apply_acrylic(&settings_win, Some((0, 0, 0, 175)));
+        #[cfg(target_os = "windows")] {
+            use window_vibrancy::{apply_acrylic};
+            let _ = apply_acrylic(&settings_win, Some((0, 0, 0, 175)));
+        }
 
-        #[cfg(target_os = "macos")]
-        let _ = apply_vibrancy(&settings_win, NSVisualEffectMaterial::UnderWindowBackground, None, None);
+        #[cfg(target_os = "macos")] {
+            use window_vibrancy::{apply_acrylic, NSVisualEffectMaterial};
+            let _ = apply_vibrancy(&settings_win, NSVisualEffectMaterial::UnderWindowBackground, None, None);
+        }
     }
 }
 

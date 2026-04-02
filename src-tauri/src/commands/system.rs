@@ -135,26 +135,6 @@ pub async fn uninstall_package(id: String) -> Result<(), String> {
     else { Err("Uninstallation failed".into()) }
 }
 
-// Shared parser to keep things DRY and fast
-fn parse_winget_output(stdout: String) -> Vec<WingetPackage> {
-    stdout.lines()
-        .skip(2)
-        .filter_map(|line| {
-            let parts: Vec<&str> = line.split_whitespace().collect();
-            if parts.len() >= 3 {
-                Some(WingetPackage {
-                    name: parts[0].to_string(),
-                    id: parts[1].to_string(),
-                    version: parts[2].to_string(),
-                    source: parts.get(3).unwrap_or(&"winget").to_string(),
-                })
-            } else {
-                None
-            }
-        })
-        .collect()
-}
-
 #[command]
 pub async fn search_files(query: String) -> Vec<FileItem> {
     if query.is_empty() { return Vec::new(); }
