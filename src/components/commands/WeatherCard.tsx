@@ -65,11 +65,11 @@ export const WeatherCard = ({ city }: WeatherCardProps) => {
             return { icon: "☁️", accent: "text-blue-300", mesh: "bg-gradient-conic from-blue-400/30 via-slate-400/20 to-blue-400/30" };
         if (d.includes("rain") || d.includes("drizzle"))
             return { icon: "🌧️", accent: "text-blue-500", mesh: "bg-gradient-conic from-blue-500/40 via-indigo-500/20 to-blue-500/40" };
-        return { icon: "🌡️", accent: "text-white", mesh: "bg-white/10" };
+        return { icon: "🌡️", accent: "text-fg", mesh: "bg-white/10" };
     };
 
     if (error) return <div className="p-4 ml-4 text-red-400 font-medium">Failed to load weather.</div>;
-    if (!data) return <div className="p-4 ml-4 text-white/20 animate-pulse font-medium">Locating weather...</div>;
+    if (!data) return <div className="p-4 ml-4 text-fg/20 animate-pulse font-medium">Locating weather...</div>;
 
     const current = data.current_condition[0];
     const theme = getWeatherTheme(current.weatherDesc[0].value);
@@ -87,19 +87,19 @@ export const WeatherCard = ({ city }: WeatherCardProps) => {
                 <div className="flex justify-between items-start">
                     <div>
                         <div className={`text-[10px] font-black uppercase tracking-widest mb-1 ${theme.accent} opacity-80`}>Current Conditions</div>
-                        <h3 className="text-4xl font-black text-white tracking-tighter capitalize">{cityName}</h3>
-                        <p className="text-sm font-medium text-white/50 mt-1">{current.weatherDesc[0].value} • {current.humidity}% Humidity</p>
+                        <h3 className="text-4xl font-black text-fg tracking-tighter capitalize">{cityName}</h3>
+                        <p className="text-sm font-medium text-fg/50 mt-1">{current.weatherDesc[0].value} • {current.humidity}% Humidity</p>
                     </div>
                     <div className="text-6xl drop-shadow-2xl">{theme.icon}</div>
                 </div>
 
                 <div className="flex items-center justify-between">
                     <div className="flex items-start">
-                        <span className="text-8xl font-black text-white tracking-tighter">{current.temp_C}</span>
-                        <span className="text-4xl font-bold text-white/30 mt-4 ml-1">°C</span>
+                        <span className="text-8xl font-black text-fg tracking-tighter">{current.temp_C}</span>
+                        <span className="text-4xl font-bold text-fg/30 mt-4 ml-1">°C</span>
                     </div>
                     <div className="text-right">
-                        <p className="text-[10px] text-white/30 uppercase font-bold tracking-widest">Feels Like</p>
+                        <p className="text-[10px] text-fg/30 uppercase font-bold tracking-widest">Feels Like</p>
                         <p className={`text-2xl font-black ${theme.accent}`}>{current.FeelsLikeC}°</p>
                     </div>
                 </div>
@@ -109,13 +109,13 @@ export const WeatherCard = ({ city }: WeatherCardProps) => {
                 <div className="grid grid-cols-3 gap-4">
                     {forecast.map((day: any, i: number) => (
                         <div key={i} className="flex flex-col items-center gap-1 p-2 rounded-2xl bg-white/5 border border-white/5">
-                            <span className="text-[10px] font-bold text-white/40 uppercase">
+                            <span className="text-[10px] font-bold text-fg/40 uppercase">
                                 {i === 0 ? "Today" : new Date(day.date).toLocaleDateString("en-US", { weekday: "short" })}
                             </span>
                             <span className="text-xl">{getMiniIcon(day.hourly[4].weatherDesc[0].value)}</span>
                             <div className="flex gap-2 text-xs font-black">
-                                <span className="text-white">{day.maxtempC}°</span>
-                                <span className="text-white/30">{day.mintempC}°</span>
+                                <span className="text-fg">{day.maxtempC}°</span>
+                                <span className="text-fg/30">{day.mintempC}°</span>
                             </div>
                         </div>
                     ))}

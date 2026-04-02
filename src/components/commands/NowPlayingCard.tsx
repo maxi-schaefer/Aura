@@ -91,7 +91,7 @@ export const NowPlayingCard = () => {
         };
     }, [media?.thumbnail]);
 
-    if (loading) return <div className="p-4 ml-4 text-white/20 animate-pulse font-medium">Connecting...</div>;
+    if (loading) return <div className="p-4 ml-4 text-fg/20 animate-pulse font-medium">Connecting...</div>;
 
     const Waveform = ({ playing }: { playing: boolean }) => {
         return (
@@ -170,7 +170,7 @@ export const NowPlayingCard = () => {
                     />
 
                     <div className="flex-1 min-w-0">
-                        <p className="text-[10px] uppercase tracking-[0.25em] text-white/40 font-bold mb-1">
+                        <p className="text-[10px] uppercase tracking-[0.25em] text-fg/40 font-bold mb-1">
                             Now Playing
                         </p>
 
@@ -182,11 +182,11 @@ export const NowPlayingCard = () => {
                                 exit={{ opacity: 0, y: -10, filter: "blur(6px)" }}
                                 transition={{ duration: 0.35 }}
                             >
-                                <h3 className="text-2xl font-bold text-white truncate">
+                                <h3 className="text-2xl font-bold text-fg truncate">
                                 {media?.title}
                                 </h3>
 
-                                <p className="text-sm text-white/60 truncate">
+                                <p className="text-sm text-fg/60 truncate">
                                 {media?.artist}
                                 </p>
                             </motion.div>
@@ -215,7 +215,7 @@ export const NowPlayingCard = () => {
                         />
                     </div>
 
-                    <div className="flex justify-between text-[10px] text-white/40">
+                    <div className="flex justify-between text-[10px] text-fg/40">
                         <span>{formatTime(media?.position || 0)}</span>
                         <span>{formatTime(media?.duration || 0)}</span>
                     </div>
@@ -226,7 +226,7 @@ export const NowPlayingCard = () => {
                     <div className="flex items-center gap-4">
                         <button
                             onClick={() => sendCommand("prev")}
-                            className="cursor-pointer p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/70"
+                            className="cursor-pointer p-2 rounded-full bg-white/5 hover:bg-white/10 text-fg/70"
                         >
                             <SkipBack size={18} />
                         </button>
@@ -234,7 +234,7 @@ export const NowPlayingCard = () => {
                         <motion.button
                             whileTap={{ scale: 0.9 }}
                             onClick={() => sendCommand("play_pause")}
-                            className="cursor-pointer p-4 rounded-full text-white/30 shadow-lg"
+                            className="cursor-pointer p-4 rounded-full text-fg/30 shadow-lg"
                             style={{ background: accent }}
                         >
                             {media?.is_playing ? <Pause size={20} /> : <Play size={20} />}
@@ -242,17 +242,17 @@ export const NowPlayingCard = () => {
 
                         <button
                             onClick={() => sendCommand("next")}
-                            className="cursor-pointer p-2 rounded-full bg-white/5 hover:bg-white/10 text-white/70"
+                            className="cursor-pointer p-2 rounded-full bg-white/5 hover:bg-white/10 text-fg/70"
                         >
                             <SkipForward size={18} />
                         </button>
                     </div>
 
                     <div className="text-right">
-                        <p className="text-[10px] uppercase tracking-widest text-white/30">
+                        <p className="text-[10px] uppercase tracking-widest text-fg/30">
                             Output
                         </p>
-                        <p className="text-sm font-semibold text-white">
+                        <p className="text-sm font-semibold text-fg">
                             {media?.is_playing ? media?.source : "Paused"}
                         </p>
                     </div>

@@ -12,11 +12,14 @@ import { playSuccess, playTick } from "./lib/sound";
 import icon from "./assets/icon.png";
 import { InfoPanel } from "./components/InfoPanel";
 import SetupScreen from "./components/SetupScreen";
+import { useTheme } from "./hooks/useTheme";
 
 export default function App() {
     const [query, setQuery] = useState("");
     const [allApps, setAllApps] = useState<any[]>([]);
     const [aliases, setAliases] = useState<Record<string, string>>({});
+    const [config, setConfig] = useState<any>(null);
+
     const [activeCommand, setActiveCommand] = useState<any | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [selectedIndex, setSelectedIndex] = useState(0);
@@ -29,6 +32,8 @@ export default function App() {
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
 
+    const { applyTheme } = useTheme(config, setConfig);
+
     const { results } = useSearchLogic(!!activeCommand, query, allApps, aliases);
     const selectedItem = results[selectedIndex];
     useWindowShadow(containerRef, isInfoOpen, !!firstRun, [results, isLoading, activeCommand, query]);
@@ -37,20 +42,20 @@ export default function App() {
     useEffect(() => {
         const initializeAura = async () => {
             try {
-                // Fetch everything before showing the UI
-                const [apps, aliasMap, config] = await Promise.all([
+                const [apps, aliasMap, cfg] = await Promise.all([
                     invoke("get_installed_apps"),
                     invoke("get_aliases"),
-                    invoke("get_config") as Promise<any>
+                    invoke("get_config") as Promise<any>,
                 ]);
 
                 setAllApps(apps as any[]);
                 setAliases(aliasMap as Record<string, string>);
-                
-                // Determine if we need the setup flow
-                setFirstRun(config.first_run_complete === false);
+                setConfig(cfg);
 
-                // Exit loading state
+                setFirstRun(cfg.first_run_complete === false);
+
+                applyTheme(cfg.theme || "default");
+
                 setTimeout(() => setIsLoading(false), 300);
             } catch (e) {
                 console.error("Initialization failed", e);
@@ -135,6 +140,9 @@ export default function App() {
                     break;
                 case "Enter":
                     e.preventDefault();
+                    
+                    if (activeCommand) return;
+                    
                     handleExecute();
                     break;
                 case "ArrowDown":
@@ -181,7 +189,7 @@ export default function App() {
     if (firstRun) {
         return (
             <div ref={containerRef} className="bg-transparent overflow-hidden">
-                <SetupScreen onComplete={() => setFirstRun(false)} />
+                <SetupScreen onComplete={() => setFirstRun(false)} config={config} setConfig={setConfig} />
             </div>
         );
     }
@@ -189,7 +197,7 @@ export default function App() {
     return (
         <div 
             ref={containerRef} 
-            className="bg-transparent overflow-hidden antialiased"
+            className="bg-transparent overflow-hidden antialiased" 
         >
             <motion.div 
                 animate={{ width: isInfoOpen ? 1250 : 1000 }}
@@ -291,6 +299,7 @@ export default function App() {
                     results={results.length}
                     selectedType={results[selectedIndex]?.type || ""}
                     isInfoOpen={isInfoOpen}
+                    activeCommand={activeCommand?.id}
                 />
             </motion.div>
         </div>

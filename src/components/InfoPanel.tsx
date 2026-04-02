@@ -12,11 +12,11 @@ const InfoRow = ({ label, value, icon, color }: InfoItemProps) => {
     if (!value) return null;
     return (
         <div className="flex items-center justify-between py-1.5 border-b border-white/2 last:border-0">
-            <span className="text-[11px] text-white/30 font-medium">{label}</span>
+            <span className="text-[11px] text-fg/30 font-medium">{label}</span>
             <div className="flex items-center gap-2 max-w-[65%] overflow-hidden">
-                {icon && <span className="text-white/20 shrink-0">{icon}</span>}
+                {icon && <span className="text-fg/20 shrink-0">{icon}</span>}
                 <span 
-                    className={`text-[11px] truncate font-mono ${color ? color : 'text-white/70'}`}
+                    className={`text-[11px] truncate font-mono ${color ? color : 'text-fg/70'}`}
                 >
                     {value}
                 </span>
@@ -47,17 +47,17 @@ export const InfoPanel = ({ item }: { item: any }) => {
                     {item.icon ? (
                         <img src={item.icon} className="relative size-20 object-contain drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] rounded-xl" alt="" />
                     ) : (
-                        <div className="relative size-20 rounded-2xl bg-white/5 flex items-center justify-center text-white/10 border border-white/10 shadow-inner">
+                        <div className="relative size-20 rounded-2xl bg-white/5 flex items-center justify-center text-fg/10 border border-white/10 shadow-inner">
                             <FileText size={40} strokeWidth={1.5} />
                         </div>
                     )}
                 </div>
                 
-                <h2 className="text-white text-lg font-semibold tracking-tight leading-tight w-full px-4 wrap-break-word">
+                <h2 className="text-fg text-lg font-semibold tracking-tight leading-tight w-full px-4 wrap-break-word">
                     {item.title}
                 </h2>
                 <div className="mt-2 flex items-center gap-2">
-                   <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-white/5 text-white/40 uppercase tracking-widest border border-white/5">
+                   <span className="px-1.5 py-0.5 rounded text-[9px] font-bold bg-white/5 text-fg/40 uppercase tracking-widest border border-white/5">
                         {item.type}
                    </span>
                 </div>
@@ -69,8 +69,8 @@ export const InfoPanel = ({ item }: { item: any }) => {
                 {/* Properties Section */}
                 <div className="space-y-1">
                     <div className="flex items-center gap-2 mb-3">
-                        <Info size={12} className="text-white/20" />
-                        <h3 className="text-[10px] font-bold text-white/20 uppercase tracking-[0.2em]">Properties</h3>
+                        <Info size={12} className="text-fg/20" />
+                        <h3 className="text-[10px] font-bold text-fg/20 uppercase tracking-[0.2em]">Properties</h3>
                     </div>
                     
                     <div className="bg-white/2 border border-white/5 rounded-lg px-3 py-1">
@@ -109,13 +109,13 @@ export const InfoPanel = ({ item }: { item: any }) => {
                 {(item.type === "alias" || item.type === "command") && (
                     <div className="space-y-3">
                          <div className="flex items-center gap-2 mb-3">
-                            <LinkIcon size={12} className="text-white/20" />
-                            <h3 className="text-[10px] font-bold text-white/20 uppercase tracking-[0.2em]">
+                            <LinkIcon size={12} className="text-fg/20" />
+                            <h3 className="text-[10px] font-bold text-fg/20 uppercase tracking-[0.2em]">
                                 {item.type === "alias" ? "Quick Link" : "Description"}
                             </h3>
                         </div>
                         <div className="p-3 rounded-lg bg-white/5 border border-white/5">
-                            <p className="text-[11px] text-white/50 leading-relaxed font-medium italic">
+                            <p className="text-[11px] text-fg/50 leading-relaxed font-medium italic">
                                 {item.subtitle}
                             </p>
                         </div>
@@ -126,19 +126,19 @@ export const InfoPanel = ({ item }: { item: any }) => {
                 <div className="pt-4 border-t border-white/5">
                     <div className="grid grid-cols-2 gap-2">
                         <div className="p-3 rounded-lg bg-white/2 border border-white/5 flex flex-col gap-2">
-                            <span className="text-[9px] font-bold text-white/20 uppercase tracking-tighter">Action</span>
+                            <span className="text-[9px] font-bold text-fg/20 uppercase tracking-tighter">Action</span>
                             <div className="flex items-center justify-between">
-                                <span className="text-[10px] text-white/40">Run</span>
-                                <kbd className="px-1 py-0.5 rounded bg-white/10 text-white/60 text-[9px]">↵</kbd>
+                                <span className="text-[10px] text-fg/40">Run</span>
+                                <kbd className="px-1 py-0.5 rounded bg-white/10 text-fg/60 text-[9px]">↵</kbd>
                             </div>
                         </div>
                         <div className="p-3 rounded-lg bg-white/2 border border-white/5 flex flex-col gap-2">
-                            <span className="text-[9px] font-bold text-white/20 uppercase tracking-tighter">Panel</span>
+                            <span className="text-[9px] font-bold text-fg/20 uppercase tracking-tighter">Panel</span>
                             <div className="flex items-center justify-between">
-                                <span className="text-[10px] text-white/40">Close</span>
+                                <span className="text-[10px] text-fg/40">Close</span>
                                 <div className="flex gap-1">
-                                    <kbd className="px-1 py-0.5 rounded bg-white/10 text-white/60 text-[9px]">^</kbd>
-                                    <kbd className="px-1 py-0.5 rounded bg-white/10 text-white/60 text-[9px]">K</kbd>
+                                    <kbd className="px-1 py-0.5 rounded bg-white/10 text-fg/60 text-[9px]">^</kbd>
+                                    <kbd className="px-1 py-0.5 rounded bg-white/10 text-fg/60 text-[9px]">K</kbd>
                                 </div>
                             </div>
                         </div>

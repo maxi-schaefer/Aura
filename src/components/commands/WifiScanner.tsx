@@ -109,10 +109,10 @@ export const WifiScanner = () => {
   }, [beacons]);
 
   return (
-    <div ref={containerRef} onMouseMove={handleMouseMove} className="relative w-full max-w-7xl mx-auto p-6 text-white font-sans">
+    <div ref={containerRef} onMouseMove={handleMouseMove} className="relative w-full max-w-7xl mx-auto p-6 text-fg font-sans">
       
       {/* BAND HEADERS */}
-      <div className="flex w-full border-b border-white/10 text-[10px] uppercase tracking-widest text-white/50">
+      <div className="flex w-full border-b border-white/10 text-[10px] uppercase tracking-widest text-fg/50">
           <div className="w-[45%] text-center border-r border-white/10 py-1.5 bg-white/5 rounded-tl-xl">2.4 GHz (ISM)</div>
           <div className="w-[10%] text-center border-r border-white/10 py-1.5 bg-blue-500/5">UNII-1</div>
           <div className="w-[10%] text-center border-r border-white/10 py-1.5 bg-blue-400/5">UNII-2A</div>
@@ -290,8 +290,8 @@ export const WifiScanner = () => {
         >
           <div className="flex justify-between items-start mb-3 border-b border-white/10 pb-3">
             <div className="max-w-40">
-              <div className="text-[10px] text-white/40 uppercase font-bold tracking-wider">SSID</div>
-              <div className="text-sm font-bold text-white truncate leading-tight">{hovered.ssid || "Hidden Network"}</div>
+              <div className="text-[10px] text-fg/40 uppercase font-bold tracking-wider">SSID</div>
+              <div className="text-sm font-bold text-fg truncate leading-tight">{hovered.ssid || "Hidden Network"}</div>
             </div>
             <div 
               style={{ backgroundColor: `${bssidColors[hovered.bssid]}20`, color: bssidColors[hovered.bssid], borderColor: `${bssidColors[hovered.bssid]}40` }}
@@ -303,20 +303,20 @@ export const WifiScanner = () => {
           
           <div className="grid grid-cols-2 gap-x-4 gap-y-3 text-[10px]">
             <div>
-              <span className="text-white/30 block uppercase font-medium">BSSID</span>
-              <span className="font-mono text-white/80">{hovered.bssid}</span>
+              <span className="text-fg/30 block uppercase font-medium">BSSID</span>
+              <span className="font-mono text-fg/80">{hovered.bssid}</span>
             </div>
             <div>
-              <span className="text-white/30 block uppercase font-medium">Frequency</span>
-              <span className="text-white/80">{hovered.channel} <span className="text-white/40">({hovered.frequency} MHz)</span></span>
+              <span className="text-fg/30 block uppercase font-medium">Frequency</span>
+              <span className="text-fg/80">{hovered.channel} <span className="text-fg/40">({hovered.frequency} MHz)</span></span>
             </div>
             <div>
-              <span className="text-white/30 block uppercase font-medium">Manufacturer</span>
-              <span className="text-white/80 truncate block">{hovered.vendor || "Unknown"}</span>
+              <span className="text-fg/30 block uppercase font-medium">Manufacturer</span>
+              <span className="text-fg/80 truncate block">{hovered.vendor || "Unknown"}</span>
             </div>
             <div>
-              <span className="text-white/30 block uppercase font-medium">Security</span>
-              <span className="text-white/80">{hovered.security}</span>
+              <span className="text-fg/30 block uppercase font-medium">Security</span>
+              <span className="text-fg/80">{hovered.security}</span>
             </div>
           </div>
 

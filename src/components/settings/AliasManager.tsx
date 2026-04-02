@@ -45,16 +45,16 @@ export const AliasManager = () => {
             value={newKey} 
             onChange={e => setNewKey(e.target.value)}
             placeholder="Shortcut (e.g. gh)" 
-            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-[13px] text-white outline-none focus:border-white/20"
+            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-[13px] text-fg outline-none focus:border-white/20"
           />
           <input 
             value={newVal} 
             onChange={e => setNewVal(e.target.value)}
             placeholder="URL (e.g. github.com)" 
-            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-[13px] text-white outline-none focus:border-white/20"
+            className="flex-1 bg-white/5 border border-white/10 rounded-lg px-3 py-2 text-[13px] text-fg outline-none focus:border-white/20"
           />
 
-          <button type="submit" className="p-2 bg-white/10 hover:bg-white/20 rounded-lg text-white transition-colors cursor-pointer">
+          <button type="submit" className="p-2 bg-white/10 hover:bg-white/20 rounded-lg text-fg transition-colors cursor-pointer">
             <Plus size={18} />
           </button>
         </form>
@@ -65,16 +65,16 @@ export const AliasManager = () => {
           {Object.entries(aliases).map(([key, val]) => (
             <div key={key} className="flex items-center justify-between p-4 bg-transparent hover:bg-white/2 group transition-colors">
               <div className="flex items-center gap-4">
-                <div className="px-2 py-1 rounded bg-white/10 text-[11px] font-bold text-white/70">@{key}</div>
-                <div className="text-[13px] text-white/40 truncate max-w-[200px]">{val}</div>
+                <div className="px-2 py-1 rounded bg-white/10 text-[11px] font-bold text-fg/70">@{key}</div>
+                <div className="text-[13px] text-fg/40 truncate max-w-[200px]">{val}</div>
               </div>
-              <button onClick={() => removeAlias(key)} className="opacity-0 group-hover:opacity-100 p-2 text-white/20 hover:text-red-400 transition-all cursor-pointer">
+              <button onClick={() => removeAlias(key)} className="opacity-0 group-hover:opacity-100 p-2 text-fg/20 hover:text-red-400 transition-all cursor-pointer">
                 <Trash2 size={14} />
               </button>
             </div>
           ))}
           {Object.keys(aliases).length === 0 && (
-            <div className="p-8 text-center text-[12px] text-white/20">No aliases configured yet.</div>
+            <div className="p-8 text-center text-[12px] text-fg/20">No aliases configured yet.</div>
           )}
         </div>
       </Section>

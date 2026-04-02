@@ -76,7 +76,7 @@ export const TimerCard = ({ initialSeconds }: TimerCardProps) => {
                 </motion.div>
 
                 <div className={`relative text-6xl font-extralight tracking-tighter tabular-nums transition-colors duration-500 ${
-                    isComplete ? "text-green-400" : "text-white/90"
+                    isComplete ? "text-green-400" : "text-fg/90"
                 }`}>
                     {formatTime(timeLeft)}
                 </div>
@@ -84,7 +84,7 @@ export const TimerCard = ({ initialSeconds }: TimerCardProps) => {
 
             <motion.div initial={{ opacity: 0 }} animate={{ opacity: 1 }} className="flex items-center gap-3 px-3 py-1.5 rounded-full bg-white/3 border border-white/5">
                 <div className={`h-1 w-1 rounded-full ${isActive ? "bg-primary animate-pulse" : "bg-white/20"}`} />
-                <span className="text-[10px] uppercase tracking-[0.2em] text-white/40 font-bold">
+                <span className="text-[10px] uppercase tracking-[0.2em] text-fg/40 font-bold">
                     {isComplete ? "Sequence Complete" : isActive ? "Countdown Active" : "Paused / Ready"}
                 </span>
             </motion.div>

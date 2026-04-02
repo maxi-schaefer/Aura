@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { Section, ToggleItem } from "../commands/SettingsView"; // Adjust paths as needed
+import { disable, enable, isEnabled } from "@tauri-apps/plugin-autostart";
 
 // Engine Assets
 import googleIcon from "../../assets/engines/google.png";
@@ -8,6 +9,7 @@ import bingIcon from "../../assets/engines/bing.png";
 import yahooIcon from "../../assets/engines/yahoo.png";
 import braveIcon from "../../assets/engines/brave.png";
 import ecosiaIcon from "../../assets/engines/ecosia.png";
+import { useEffect, useState } from "react";
 
 const ENGINES = [
     { id: "bing", name: "Bing", url: "https://www.bing.com/search?q=", icon: bingIcon },
@@ -24,12 +26,21 @@ interface GeneralManagerProps {
 }
 
 export const GeneralManager = ({ config, setConfig }: GeneralManagerProps) => {
+  const [autoStart, setAutoStart] = useState(false);
+
+  useEffect(() => {
+      isEnabled().then(setAutoStart);
+  }, [])
+
+   const toggleAutostart = async () => {
+      if (autoStart) await disable();
+      else await enable();
+      setAutoStart(await isEnabled());
+    };
   
   const updateEngine = async (engineUrl: string) => {
     const newConfig = { ...config, search_engine: engineUrl };
-    // Update local state for instant UI feedback
     setConfig(newConfig);
-    // Persist to Rust backend
     await invoke("save_config", { config: newConfig });
   };
 
@@ -40,22 +51,22 @@ export const GeneralManager = ({ config, setConfig }: GeneralManagerProps) => {
           {ENGINES.map((eng) => (
             <button
               key={eng.id}
-              onClick={() => updateEngine(eng.id)}
+              onClick={() => updateEngine(eng.url)}
               className={`flex items-center cursor-pointer justify-between px-3 py-2 rounded-lg transition-colors group ${
-                config.search_engine === eng.id ? "bg-white/10" : "hover:bg-white/5"
+                config.search_engine === eng.url ? "bg-white/10" : "hover:bg-white/5"
               }`}
             >
               <div className="flex items-center gap-3">
                 <img 
                   src={eng.icon} 
-                  className={`size-4 ${config.search_engine === eng.id ? 'opacity-100' : 'opacity-40 grayscale group-hover:grayscale-0'}`} 
+                  className={`size-4 ${config.search_engine === eng.url ? 'opacity-100' : 'opacity-40 grayscale group-hover:grayscale-0'}`} 
                   alt={eng.name} 
                 />
-                <span className={`text-[13px] ${config.search_engine === eng.id ? 'text-white' : 'text-white/40'}`}>
+                <span className={`text-[13px] ${config.search_engine === eng.url ? 'text-fg' : 'text-fg/40'}`}>
                   {eng.name}
                 </span>
               </div>
-              {config.search_engine === eng.id && (
+              {config.search_engine === eng.url && (
                 <div className="size-1.5 rounded-full bg-white shadow-[0_0_8px_white]" />
               )}
             </button>
@@ -67,7 +78,8 @@ export const GeneralManager = ({ config, setConfig }: GeneralManagerProps) => {
         <ToggleItem 
           label="Launch at login" 
           description="Start Aura when you log in." 
-          defaultChecked 
+          checked={autoStart}
+          onChange={toggleAutostart}
         />
         <ToggleItem 
           label="Check for Updates" 

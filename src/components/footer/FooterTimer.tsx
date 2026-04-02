@@ -108,7 +108,7 @@ export function FooterTimer() {
               fill="none"
               stroke="currentColor"
               strokeWidth="1.5"
-              className="text-white/10"
+              className="text-fg/10"
             />
             <motion.circle
               cx="7"
@@ -127,7 +127,7 @@ export function FooterTimer() {
         </div>
         <span
           className={`font-mono text-[9px] font-black uppercase tracking-widest tabular-nums ${
-            timerData.isPaused ? "text-white/20" : "text-primary/90"
+            timerData.isPaused ? "text-fg/20" : "text-primary/90"
           }`}
         >
           {timerData.isPaused ? "Paused" : formatDisplay(timerData.remaining)}

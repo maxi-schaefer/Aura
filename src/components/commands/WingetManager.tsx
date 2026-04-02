@@ -140,10 +140,10 @@ export const WingetManager = ({ query }: { query: string }) => {
                 </div>
 
                 <div className="flex items-center gap-1 pr-1">
-                    <button onClick={handleExport} title="Export Setup" className="p-2 rounded-lg hover:bg-white/5 text-white/40 hover:text-white transition-all">
+                    <button onClick={handleExport} title="Export Setup" className="p-2 rounded-lg hover:bg-white/5 text-fg/40 hover:text-fg transition-all">
                         <Upload size={14} />
                     </button>
-                    <button onClick={handleImport} disabled={isBatching} title="Import Setup" className={`p-2 rounded-lg hover:bg-white/5 text-white/40 hover:text-white transition-all ${isBatching ? 'animate-pulse' : ''}`}>
+                    <button onClick={handleImport} disabled={isBatching} title="Import Setup" className={`p-2 rounded-lg hover:bg-white/5 text-fg/40 hover:text-fg transition-all ${isBatching ? 'animate-pulse' : ''}`}>
                         <Download size={14} />
                     </button>
                 </div>
@@ -179,14 +179,14 @@ export const WingetManager = ({ query }: { query: string }) => {
                             >
                                 <div className="flex items-center gap-3">
                                     <div className="w-10 h-10 rounded-lg bg-linear-to-br from-white/10 to-white/5 flex items-center justify-center">
-                                        <Package size={18} className="text-white/60" />
+                                        <Package size={18} className="text-fg/60" />
                                     </div>
                                     <div>
-                                        <div className="text-[13px] font-medium text-white/90 flex items-center gap-2">
+                                        <div className="text-[13px] font-medium text-fg/90 flex items-center gap-2">
                                             {pkg.name}
                                             {isInstalled && <Check size={12} className="text-emerald-400" />}
                                         </div>
-                                        <div className="text-[11px] text-white/30 font-mono">{pkg.id} • {pkg.version}</div>
+                                        <div className="text-[11px] text-fg/30 font-mono">{pkg.id} • {pkg.version}</div>
                                     </div>
                                 </div>
 
@@ -213,7 +213,7 @@ export const WingetManager = ({ query }: { query: string }) => {
                                         className={`h-8 px-3 rounded-lg text-[11px] font-medium transition-all flex items-center gap-2 ${
                                             view === "updates" ? "bg-orange-500/20 text-orange-400 hover:bg-orange-500/30"
                                             : isInstalled ? "bg-emerald-500/10 text-emerald-500/50 cursor-default"
-                                            : "bg-white/10 hover:bg-white/20 text-white"
+                                            : "bg-white/10 hover:bg-white/20 text-fg"
                                         }`}
                                     >
                                         {isActing && view !== "installed" ? <Loader2 size={12} className="animate-spin" /> 
@@ -231,7 +231,7 @@ export const WingetManager = ({ query }: { query: string }) => {
 };
 
 const TabButton = ({ children, active, onClick }: any) => (
-    <button onClick={onClick} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${active ? "bg-white/10 text-white" : "text-white/40 hover:text-white/60"}`}>
+    <button onClick={onClick} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${active ? "bg-white/10 text-fg" : "text-fg/40 hover:text-fg/60"}`}>
         {children}
     </button>
 );

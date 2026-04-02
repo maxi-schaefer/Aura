@@ -33,12 +33,12 @@ export const SpeedtestCard = ({ ping = 0, download = 0, upload = 0, stage = "pin
         <motion.div initial={{ opacity: 0, y: 10 }} animate={{ opacity: 1, y: 0 }} className="p-6 w-full max-w-md mx-auto bg-transparent">
             <div className="flex justify-between items-end mb-8 px-2">
                 <div>
-                    <h3 className="text-white/90 text-sm font-medium tracking-tight">Network Core</h3>
-                    <p className="text-[10px] text-white/20 uppercase tracking-[0.3em] font-bold">Spectral Analysis</p>
+                    <h3 className="text-fg/90 text-sm font-medium tracking-tight">Network Core</h3>
+                    <p className="text-[10px] text-fg/20 uppercase tracking-[0.3em] font-bold">Spectral Analysis</p>
                 </div>
                 <div className="flex items-center gap-2">
                     <div className={`h-1 w-1 rounded-full ${stage === "complete" ? "bg-green-500 shadow-[0_0_8px_#10b981]" : "bg-primary animate-pulse"}`} />
-                    <span className="text-[10px] font-bold text-white/30 uppercase tracking-widest tabular-nums">
+                    <span className="text-[10px] font-bold text-fg/30 uppercase tracking-widest tabular-nums">
                         {stage === "complete" ? "Ready" : stage}
                     </span>
                 </div>
@@ -71,10 +71,10 @@ export const SpeedtestCard = ({ ping = 0, download = 0, upload = 0, stage = "pin
                 </svg>
 
                 <div className="absolute inset-0 flex flex-col items-center justify-center pointer-events-none">
-                    <span className="text-6xl font-thin text-white tracking-tighter">{download.toFixed(0)}</span>
+                    <span className="text-6xl font-thin text-fg tracking-tighter">{download.toFixed(0)}</span>
                     <div className="flex items-center gap-2 opacity-30 mt-1">
                         <div className="h-px w-4 bg-white" />
-                        <span className="text-[9px] font-black uppercase tracking-[0.3em] text-white">Mbit/s</span>
+                        <span className="text-[9px] font-black uppercase tracking-[0.3em] text-fg">Mbit/s</span>
                         <div className="h-px w-4 bg-white" />
                     </div>
                 </div>
@@ -100,11 +100,11 @@ const MinimalStatItem = ({ label, value, unit, color }: MinimalStatItemProps) =>
     <div className="flex flex-col">
         <div className="flex items-center gap-1.5 mb-1">
             <div className={`h-1 w-1 rounded-full ${color}`} />
-            <span className="text-[8px] text-white/20 uppercase font-black tracking-widest">{label}</span>
+            <span className="text-[8px] text-fg/20 uppercase font-black tracking-widest">{label}</span>
         </div>
         <div className="flex items-baseline gap-1">
-            <span className="text-lg font-medium text-white/90">{value ?? "—"}</span>
-            <span className="text-[9px] text-white/20 font-light">{unit}</span>
+            <span className="text-lg font-medium text-fg/90">{value ?? "—"}</span>
+            <span className="text-[9px] text-fg/20 font-light">{unit}</span>
         </div>
     </div>
 );

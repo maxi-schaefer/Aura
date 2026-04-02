@@ -18,7 +18,7 @@ const getIcon = (type: string, isDir?: boolean) => {
 };
 
 const Kbd = ({ children }: { children: React.ReactNode }) => (
-  <kbd className="min-w-4.5 h-4.5 flex items-center justify-center px-1 rounded-[3px] bg-white/10 border-b border-white/20 text-[10px] font-medium text-white/50 font-sans shadow-sm">
+  <kbd className="min-w-4.5 h-4.5 flex items-center justify-center px-1 rounded-[3px] bg-white/10 border-b border-white/20 text-[10px] font-medium text-fg/50 font-sans shadow-sm">
     {children}
   </kbd>
 );
@@ -43,7 +43,7 @@ export const ResultItem = ({ id, name, type, isActive, subtitle, onMouseEnter, o
             )}
 
             <div className="relative z-10 flex items-center gap-3">
-                <div className={`transition-all duration-200  ${isActive ? 'opacity-100 text-primary' : 'opacity-40 text-white'}`}>
+                <div className={`transition-all duration-200  ${isActive ? 'opacity-100 text-primary' : 'opacity-40 text-fg'}`}>
                     {icon ? (
                         <img src={icon} alt="" className="size-5 rounded object-contain" />
                     ) : (
@@ -52,16 +52,16 @@ export const ResultItem = ({ id, name, type, isActive, subtitle, onMouseEnter, o
                 </div>
                 
                 <span className={`text-[13px] tracking-tight transition-colors ${
-                    isActive ? 'text-white' : 'text-white/60'
+                    isActive ? 'text-fg' : 'text-fg/60'
                 }`}>
                     {name}
-                    {isFile && <span className="text-[11px] text-white/30 ml-1">({id})</span>}
+                    {isFile && <span className="text-[11px] text-fg/30 ml-1">({id})</span>}
                 </span>
             </div>
 
             <div className="relative z-10 flex items-center gap-4">
                 <span className={`text-[11px] font-medium transition-opacity ${
-                    isActive ? 'text-white/40' : 'text-white/10'
+                    isActive ? 'text-fg/40' : 'text-fg/10'
                 }`}>
                     {subtitle}
                 </span>

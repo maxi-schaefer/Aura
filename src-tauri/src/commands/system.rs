@@ -1,11 +1,13 @@
-use std::{collections::HashMap, fs, path::PathBuf};
+use std::{collections::HashMap, fs, path::PathBuf, process::Stdio};
 use serde::{Serialize, Deserialize};
-use tauri::{AppHandle, command, Manager};
+use tauri::{AppHandle, command, Manager, Emitter};
 use rayon::prelude::*;
 use walkdir::WalkDir;
 use crate::scanner;
 use tauri_plugin_dialog::DialogExt;
 use std::process::Command as StdCommand;
+use std::io::BufRead;
+use std::io::BufReader;
 
 #[cfg(windows)]
 use std::os::windows::process::CommandExt;
@@ -31,6 +33,7 @@ pub struct Config {
     pub search_engine: String,
     pub username: Option<String>,
     pub first_run_complete: bool,
+    pub theme: Option<String>,
 }
 
 pub fn create_hidden_command(program: &str) -> StdCommand {
@@ -127,14 +130,26 @@ pub async fn get_winget_updates() -> Result<Vec<WingetPackage>, String> {
 }
 
 #[command]
-pub async fn install_package(id: String) -> Result<(), String> {
-    let status = create_hidden_command("winget")
-        .args(["install", "--id", &id, "--silent", "--accept-package-agreements", "--accept-source-agreements"])
-        .status()
+pub async fn install_package(app: AppHandle, id: String) -> Result<(), String> {
+    let mut child = create_hidden_command("winget")
+        .args(["install", "--id", &id, "--accept-package-agreements", "--accept-source-agreements"])
+        .stdout(Stdio::piped())
+        .spawn()
         .map_err(|e| e.to_string())?;
 
-    if status.success() { Ok(()) } 
-    else { Err("Operation failed".into()) }
+    let stdout = child.stdout.take().unwrap();
+    let reader = BufReader::new(stdout);
+
+    // Stream lines to frontend
+    for line in reader.lines() {
+        if let Ok(l) = line {
+            // Emit progress to the specific package ID
+            let _ = app.emit("winget-progress", serde_json::json!({ "id": id, "line": l }));
+        }
+    }
+
+    let status = child.wait().map_err(|e| e.to_string())?;
+    if status.success() { Ok(()) } else { Err("Failed".into()) }
 }
 
 #[command]
@@ -215,8 +230,8 @@ pub fn save_aliases(app: AppHandle, aliases: HashMap<String, String>) {
 
 #[command] pub fn get_config(app: AppHandle) -> Config {
     let path = app.path().app_config_dir().unwrap().join("config.json");
-    fs::read_to_string(path).map(|c| serde_json::from_str(&c).unwrap_or(Config { search_engine:"https://google.com/search?q=".into(),first_run_complete:false, username: None }))
-        .unwrap_or(Config { search_engine: "https://google.com/search?q=".into(), first_run_complete: false, username: None })
+    fs::read_to_string(path).map(|c| serde_json::from_str(&c).unwrap_or(Config { search_engine:"https://google.com/search?q=".into(),first_run_complete:false, username: None, theme: None }))
+    .unwrap_or(Config { search_engine: "https://google.com/search?q=".into(), first_run_complete: false, username: None, theme: None })
 }
 
 #[command] pub fn save_config(app: AppHandle, config: Config) -> Result<(), String> {

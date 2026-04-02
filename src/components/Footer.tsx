@@ -9,6 +9,7 @@ interface FooterProps {
     selectedIndex: number;
     selectedType: string;
     isInfoOpen: boolean;
+    activeCommand: string | null;
 }
 
 const getTypeLabel = (type: string) => {
@@ -24,7 +25,7 @@ const getTypeLabel = (type: string) => {
     return labels[type.toLowerCase()] || "Select";
 }
 
-export default function Footer({ results, selectedIndex, selectedType, isInfoOpen }: FooterProps) {
+export default function Footer({ results, selectedIndex, selectedType, isInfoOpen, activeCommand }: FooterProps) {
     const [version, setVersion] = useState("");
     const isFile = selectedType === "file";
 
@@ -38,16 +39,16 @@ export default function Footer({ results, selectedIndex, selectedType, isInfoOpe
             {/* Left Side: Version & Status */}
             <div className="flex items-center gap-4">
                 <div className="flex items-center gap-2 tabular-nums">
-                    <span className="text-[10px] font-bold text-white/40">{selectedIndex + 1}</span>
-                    <span className="text-[10px] text-white/10 font-light">of</span>
-                    <span className="text-[10px] font-bold text-white/20">{results}</span>
+                    <span className="text-[10px] font-bold text-fg/40">{selectedIndex + 1}</span>
+                    <span className="text-[10px] text-fg/10 font-light">of</span>
+                    <span className="text-[10px] font-bold text-fg/20">{results}</span>
                 </div>
                 
                 <div className="w-px h-3 bg-white/5" />
                 
                 <div className="flex items-center gap-2">
                     <FooterTimer />
-                    <span className="text-[9px] font-mono text-white/10 tracking-wider uppercase">v{version}</span>
+                    <span className="text-[9px] font-mono text-fg/10 tracking-wider uppercase">v{version}</span>
                 </div>
             </div>
 
@@ -64,26 +65,43 @@ export default function Footer({ results, selectedIndex, selectedType, isInfoOpe
                         {/* Secondary Action: Info Toggle (Only if file) */}
                         {isFile && (
                              <div className="flex items-center gap-2 pr-3 border-r border-white/5">
-                                <span className="text-[11px] font-medium text-white/30 tracking-tight">
+                                <span className="text-[11px] font-medium text-fg/30 tracking-tight">
                                     {isInfoOpen ? "Hide Details" : "Show Details"}
                                 </span>
                                 <div className="flex items-center gap-1">
-                                    <kbd className="h-4.5 px-1.5 flex items-center justify-center rounded-[3px] bg-white/5 border border-white/10 text-[9px] font-medium text-white/40 shadow-sm">Ctrl</kbd>
-                                    <kbd className="h-4.5 px-1.5 flex items-center justify-center rounded-[3px] bg-white/5 border border-white/10 text-[9px] font-medium text-white/40 shadow-sm">K</kbd>
+                                    <kbd className="h-4.5 px-1.5 flex items-center justify-center rounded-[3px] bg-white/5 border border-white/10 text-[9px] font-medium text-fg/40 shadow-sm">Ctrl</kbd>
+                                    <kbd className="h-4.5 px-1.5 flex items-center justify-center rounded-[3px] bg-white/5 border border-white/10 text-[9px] font-medium text-fg/40 shadow-sm">K</kbd>
                                 </div>
                              </div>
                         )}
 
                         {/* Primary Action */}
                         <div className="flex items-center gap-2 group cursor-pointer">
-                            <span className="text-[11px] text-white/60 tracking-tight group-hover:text-white transition-colors">
+                            <span className="text-[11px] text-fg/60 tracking-tight group-hover:text-fg transition-colors">
                                 {getTypeLabel(selectedType)}
                             </span>
                             <div className="flex items-center bg-white/10 rounded-sm p-0.5 px-1 border border-white/5 shadow-inner group-active:scale-95 transition-transform">
-                                <span className="text-[10px] text-white/70">↵</span>
-                                <span className="text-[8px] ml-1 text-white/30 uppercase tracking-tighter font-sans">Enter</span>
+                                <span className="text-[10px] text-fg/70">↵</span>
+                                <span className="text-[8px] ml-1 text-fg/30 uppercase tracking-tighter font-sans">Enter</span>
                             </div>
                         </div>
+                        
+                        {/* Primary Action */}
+                        {activeCommand && (
+                            <>
+                                <div className="w-px h-3 bg-white/5" />
+
+                                <div className="flex items-center gap-2 group cursor-pointer">
+                                    <span className="text-[11px] text-fg/60 tracking-tight group-hover:text-fg transition-colors">
+                                        Close Command
+                                    </span>
+                                    <div className="flex items-center bg-white/10 rounded-sm p-0.5 px-1 border border-white/5 shadow-inner group-active:scale-95 transition-transform">
+                                        <span className="text-[10px] text-fg/70">↵</span>
+                                        <span className="text-[8px] ml-1 text-fg/30 uppercase tracking-tighter font-sans">ESC</span>
+                                    </div>
+                                </div>
+                            </>
+                        )}
                     </motion.div>
                 </AnimatePresence>
             </div>

@@ -24,7 +24,7 @@ export const ResultList = ({ results, selectedIndex, setSelectedIndex, onExecute
         <div className="flex flex-col pb-2">
             {Object.entries(grouped).map(([group, entries]) => (
                 <div key={group} className="mt-2">
-                    <header className="px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] text-white/20 font-bold font-mono">
+                    <header className="px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] text-fg/20 font-bold font-mono">
                         {group}
                     </header>
                     <div className="space-y-0.5">
