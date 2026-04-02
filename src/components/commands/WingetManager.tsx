@@ -73,6 +73,15 @@ export const WingetManager = ({ query }: { query: string }) => {
         } finally { setActionId(null); }
     };
 
+    const handleUpdate = async (pkg: any) => {
+        if (!confirm(`Update ${pkg.name} to version ${pkg.version}?`)) return;
+        setActionId(pkg.id);
+        try {
+            await invoke("update_package", { id: pkg.id });
+            await refreshData();
+        } finally { setActionId(null); }
+    }
+
     const handleUninstall = async (pkg: any) => {
         if (!confirm(`Uninstall ${pkg.name}?`)) return;
         setActionId(pkg.id);
@@ -154,7 +163,7 @@ export const WingetManager = ({ query }: { query: string }) => {
                 {loading && <div className="space-y-1">{[...Array(5)].map((_, i) => <SkeletonRow key={i} />)}</div>}
 
                 <AnimatePresence mode="popLayout">
-                    {!loading && list.map((pkg, index) => {
+                    {!loading && list.map((pkg) => {
                         const isInstalled = installed.some(p => p.id === pkg.id);
                         const hasUpdate = updates.some(p => p.id === pkg.id);
                         const isActing = actionId === pkg.id;
@@ -183,9 +192,9 @@ export const WingetManager = ({ query }: { query: string }) => {
 
                                 <div className="flex items-center gap-2">
                                     {hasUpdate && view !== "updates" && (
-                                        <div className="flex items-center gap-1 px-2 py-1 rounded bg-orange-500/10 text-orange-400 text-[10px] font-bold">
+                                        <button onClick={() => handleUpdate(pkg)} disabled={isActing} className="h-8 px-3 rounded-lg bg-orange-500/20 text-orange-400 hover:bg-orange-500/30 text-[11px] font-medium flex items-center gap-2">
                                             <ArrowUpCircle size={10} /> Update available
-                                        </div>
+                                        </button>
                                     )}
 
                                     {isInstalled && (

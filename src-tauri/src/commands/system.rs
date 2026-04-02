@@ -7,6 +7,11 @@ use crate::scanner;
 use tauri_plugin_dialog::DialogExt;
 use std::process::Command as StdCommand;
 
+#[cfg(windows)]
+use std::os::windows::process::CommandExt;
+
+const CREATE_NO_WINDOW: u32 = 0x08000000;
+
 #[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct WingetPackage {
     pub name: String,
@@ -22,7 +27,18 @@ pub struct AppItem { pub name: String, pub path: String, pub icon: Option<String
 pub struct FileItem { pub name: String, pub path: String, pub is_dir: bool, pub icon: Option<String> }
 
 #[derive(Serialize, Deserialize)]
-pub struct Config { pub search_engine: String }
+pub struct Config { 
+    pub search_engine: String,
+    pub username: Option<String>,
+    pub first_run_complete: bool,
+}
+
+pub fn create_hidden_command(program: &str) -> StdCommand {
+    let mut cmd = StdCommand::new(program);
+    #[cfg(windows)]
+    cmd.creation_flags(CREATE_NO_WINDOW);
+    cmd
+}
 
 fn parse_winget_parallel(stdout: String) -> Vec<WingetPackage> {
     let lines: Vec<String> = stdout.lines().skip(2).map(|s| s.to_string()).collect();
@@ -46,14 +62,12 @@ fn parse_winget_parallel(stdout: String) -> Vec<WingetPackage> {
 
 #[command]
 pub async fn export_winget_setup(app: tauri::AppHandle, packages: Vec<WingetPackage>) -> Result<(), String> {
-    // FIX 2: Corrected Tauri v2 dialog syntax
     let file_path = app.dialog()
         .file()
         .set_file_name("winget_setup.json")
         .blocking_save_file(); // Use blocking for simpler async command flow
 
     if let Some(path) = file_path {
-        // We can use path.path because blocking_save_file returns a FilePath object in v2
         let path_str = path.to_string();
         let json = serde_json::to_string_pretty(&packages).map_err(|e| e.to_string())?;
         std::fs::write(path_str, json).map_err(|e| e.to_string())?;
@@ -63,7 +77,6 @@ pub async fn export_winget_setup(app: tauri::AppHandle, packages: Vec<WingetPack
 
 #[command]
 pub async fn import_winget_setup(app: tauri::AppHandle) -> Result<Vec<WingetPackage>, String> {
-    // FIX 3: Corrected Tauri v2 dialog syntax
     let file_path = app.dialog()
         .file()
         .add_filter("JSON", &["json"])
@@ -82,7 +95,7 @@ pub async fn import_winget_setup(app: tauri::AppHandle) -> Result<Vec<WingetPack
 pub async fn search_winget(query: String) -> Result<Vec<WingetPackage>, String> {
     if query.len() < 2 { return Ok(vec![]); }
 
-    let output = StdCommand::new("winget")
+    let output = create_hidden_command("winget")
         .args(["search", &query, "--accept-source-agreements"])
         .output()
         .map_err(|e| e.to_string())?;
@@ -93,7 +106,7 @@ pub async fn search_winget(query: String) -> Result<Vec<WingetPackage>, String> 
 
 #[command]
 pub async fn get_installed_winget() -> Result<Vec<WingetPackage>, String> {
-    let output = StdCommand::new("winget")
+    let output = create_hidden_command("winget")
         .args(["list", "--accept-source-agreements"])
         .output()
         .map_err(|e| e.to_string())?;
@@ -104,7 +117,7 @@ pub async fn get_installed_winget() -> Result<Vec<WingetPackage>, String> {
 
 #[command]
 pub async fn get_winget_updates() -> Result<Vec<WingetPackage>, String> {
-    let output = StdCommand::new("winget")
+    let output = create_hidden_command("winget")
         .args(["upgrade", "--accept-source-agreements"])
         .output()
         .map_err(|e| e.to_string())?;
@@ -115,7 +128,7 @@ pub async fn get_winget_updates() -> Result<Vec<WingetPackage>, String> {
 
 #[command]
 pub async fn install_package(id: String) -> Result<(), String> {
-    let status = StdCommand::new("winget")
+    let status = create_hidden_command("winget")
         .args(["install", "--id", &id, "--silent", "--accept-package-agreements", "--accept-source-agreements"])
         .status()
         .map_err(|e| e.to_string())?;
@@ -125,8 +138,19 @@ pub async fn install_package(id: String) -> Result<(), String> {
 }
 
 #[command]
+pub async fn update_package(id: String) -> Result<(), String> {
+    let status = create_hidden_command("winget")
+        .args(["upgrade", "--id", &id, "--silent", "--accept-source-agreements"])
+        .status()
+        .map_err(|e| e.to_string())?;
+
+    if status.success() { Ok(()) } 
+    else { Err("Update failed".into()) }
+}
+
+#[command]
 pub async fn uninstall_package(id: String) -> Result<(), String> {
-    let status = StdCommand::new("winget")
+    let status = create_hidden_command("winget")
         .args(["uninstall", "--id", &id, "--silent", "--accept-source-agreements"])
         .status()
         .map_err(|e| e.to_string())?;
@@ -191,8 +215,8 @@ pub fn save_aliases(app: AppHandle, aliases: HashMap<String, String>) {
 
 #[command] pub fn get_config(app: AppHandle) -> Config {
     let path = app.path().app_config_dir().unwrap().join("config.json");
-    fs::read_to_string(path).map(|c| serde_json::from_str(&c).unwrap_or(Config { search_engine: "https://google.com/search?q=".into() }))
-        .unwrap_or(Config { search_engine: "https://google.com/search?q=".into() })
+    fs::read_to_string(path).map(|c| serde_json::from_str(&c).unwrap_or(Config { search_engine:"https://google.com/search?q=".into(),first_run_complete:false, username: None }))
+        .unwrap_or(Config { search_engine: "https://google.com/search?q=".into(), first_run_complete: false, username: None })
 }
 
 #[command] pub fn save_config(app: AppHandle, config: Config) -> Result<(), String> {

@@ -1,5 +1,5 @@
 import { motion } from "framer-motion";
-import { FileText, Globe, Terminal, Hash, HardDrive, Info, Link as LinkIcon, Cpu } from "lucide-react";
+import { FileText, Globe, Terminal, Hash, Info, Link as LinkIcon, Cpu } from "lucide-react";
 
 interface InfoItemProps {
     label: string;
@@ -11,7 +11,7 @@ interface InfoItemProps {
 const InfoRow = ({ label, value, icon, color }: InfoItemProps) => {
     if (!value) return null;
     return (
-        <div className="flex items-center justify-between py-1.5 border-b border-white/[0.02] last:border-0">
+        <div className="flex items-center justify-between py-1.5 border-b border-white/2 last:border-0">
             <span className="text-[11px] text-white/30 font-medium">{label}</span>
             <div className="flex items-center gap-2 max-w-[65%] overflow-hidden">
                 {icon && <span className="text-white/20 shrink-0">{icon}</span>}
@@ -38,7 +38,7 @@ export const InfoPanel = ({ item }: { item: any }) => {
             initial={{ opacity: 0 }}
             animate={{ opacity: 1 }}
             exit={{ opacity: 0 }}
-            className="flex flex-col w-full h-full bg-white/[0.01] select-none"
+            className="flex flex-col w-full h-full bg-white/1 select-none"
         >
             {/* 1. Hero Section */}
             <div className="p-8 flex flex-col items-center text-center shrink-0 border-b border-white/5 bg-linear-to-b from-white/3 to-transparent">
@@ -53,7 +53,7 @@ export const InfoPanel = ({ item }: { item: any }) => {
                     )}
                 </div>
                 
-                <h2 className="text-white text-lg font-semibold tracking-tight leading-tight w-full px-4 break-words">
+                <h2 className="text-white text-lg font-semibold tracking-tight leading-tight w-full px-4 wrap-break-word">
                     {item.title}
                 </h2>
                 <div className="mt-2 flex items-center gap-2">
@@ -73,7 +73,7 @@ export const InfoPanel = ({ item }: { item: any }) => {
                         <h3 className="text-[10px] font-bold text-white/20 uppercase tracking-[0.2em]">Properties</h3>
                     </div>
                     
-                    <div className="bg-white/[0.02] border border-white/5 rounded-lg px-3 py-1">
+                    <div className="bg-white/2 border border-white/5 rounded-lg px-3 py-1">
                         {item.type === "file" && (
                             <>
                                 <InfoRow label="Extension" value={getFileExt(item.id)} icon={<Hash size={11} />} />
@@ -125,14 +125,14 @@ export const InfoPanel = ({ item }: { item: any }) => {
                 {/* Section: Shortcuts (Raycast Footer Style) */}
                 <div className="pt-4 border-t border-white/5">
                     <div className="grid grid-cols-2 gap-2">
-                        <div className="p-3 rounded-lg bg-white/[0.02] border border-white/5 flex flex-col gap-2">
+                        <div className="p-3 rounded-lg bg-white/2 border border-white/5 flex flex-col gap-2">
                             <span className="text-[9px] font-bold text-white/20 uppercase tracking-tighter">Action</span>
                             <div className="flex items-center justify-between">
                                 <span className="text-[10px] text-white/40">Run</span>
                                 <kbd className="px-1 py-0.5 rounded bg-white/10 text-white/60 text-[9px]">↵</kbd>
                             </div>
                         </div>
-                        <div className="p-3 rounded-lg bg-white/[0.02] border border-white/5 flex flex-col gap-2">
+                        <div className="p-3 rounded-lg bg-white/2 border border-white/5 flex flex-col gap-2">
                             <span className="text-[9px] font-bold text-white/20 uppercase tracking-tighter">Panel</span>
                             <div className="flex items-center justify-between">
                                 <span className="text-[10px] text-white/40">Close</span>

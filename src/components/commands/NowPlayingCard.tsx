@@ -144,7 +144,7 @@ export const NowPlayingCard = () => {
                 ease: "easeInOut",
                 delay: 0.2
                 }}
-                className="pointer-events-none absolute inset-0 bg-gradient-to-r from-transparent via-white/10 to-transparent"
+                className="pointer-events-none absolute inset-0 bg-linear-to-r from-transparent via-white/10 to-transparent"
             />
             <div
                 className="absolute inset-0 opacity-30 blur-[100px]"

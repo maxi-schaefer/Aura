@@ -21,7 +21,7 @@ export const COMMAND_MAP: Record<string, Command> = {
         cmd: "settings",
         title: "Settings",
         description: "Configure application preferences and customize your experience.",
-        render: () => <SettingsView />,
+        render: (query) => <SettingsView query={query} />,
         execute: () => ({ success: true }),
     },
 

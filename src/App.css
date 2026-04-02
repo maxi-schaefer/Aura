@@ -3,7 +3,7 @@
 @theme {
   --color-primary: var(--primary);
   --color-secondary: var(--secondary);
-  --glass-bg: rgba(0, 0, 0, 0.6);
+  --glass-bg: rgba(5, 5, 5, 0.8);
 }
 
 :root {

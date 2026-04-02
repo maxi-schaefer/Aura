@@ -1,9 +1,10 @@
 use serde::Serialize;
 use tauri::command;
-use std::process::Command;
 use regex::Regex;
 use lazy_static::lazy_static;
 use std::collections::HashMap;
+
+use crate::commands::system::create_hidden_command;
 
 #[derive(Serialize, Debug, Clone)]
 pub struct Beacon {
@@ -51,7 +52,7 @@ lazy_static! {
 
 #[command]
 pub async fn scan_neighborhood() -> Result<Vec<Beacon>, String> {
-    let output = Command::new("netsh")
+    let output = create_hidden_command("netsh")
         .args(["wlan", "show", "networks", "mode=bssid"])
         .output()
         .map_err(|e| format!("netsh failed: {}", e))?;

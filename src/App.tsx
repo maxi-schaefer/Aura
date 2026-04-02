@@ -11,6 +11,7 @@ import { useWindowShadow } from "./hooks/useWindowShadow";
 import { playSuccess, playTick } from "./lib/sound";
 import icon from "./assets/icon.png";
 import { InfoPanel } from "./components/InfoPanel";
+import SetupScreen from "./components/SetupScreen";
 
 export default function App() {
     const [query, setQuery] = useState("");
@@ -22,32 +23,49 @@ export default function App() {
     const [time, setTime] = useState("");
     const [showCopied, setShowCopied] = useState(false);
     const [isInfoOpen, setIsInfoOpen] = useState(false);
-    
+    const [firstRun, setFirstRun] = useState<boolean | null>(null);
+
     const containerRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
-    
+
     const { results } = useSearchLogic(!!activeCommand, query, allApps, aliases);
     const selectedItem = results[selectedIndex];
-    useWindowShadow(containerRef, isInfoOpen, [results, isLoading, activeCommand, query]);
+    useWindowShadow(containerRef, isInfoOpen, !!firstRun, [results, isLoading, activeCommand, query]);
 
+    // PRE-FLIGHT INITIALIZATION
     useEffect(() => {
-        (async () => {
-            const [apps, aliasMap] = await Promise.all([
-                invoke("get_installed_apps"),
-                invoke("get_aliases")
-            ]);
-            setAllApps(apps as any[]);
-            setAliases(aliasMap as Record<string, string>);
-            setTimeout(() => setIsLoading(false), 300);
-        })();
+        const initializeAura = async () => {
+            try {
+                // Fetch everything before showing the UI
+                const [apps, aliasMap, config] = await Promise.all([
+                    invoke("get_installed_apps"),
+                    invoke("get_aliases"),
+                    invoke("get_config") as Promise<any>
+                ]);
+
+                setAllApps(apps as any[]);
+                setAliases(aliasMap as Record<string, string>);
+                
+                // Determine if we need the setup flow
+                setFirstRun(config.first_run_complete === false);
+
+                // Exit loading state
+                setTimeout(() => setIsLoading(false), 300);
+            } catch (e) {
+                console.error("Initialization failed", e);
+                setIsLoading(false);
+            }
+        };
+
+        initializeAura();
     }, []);
 
     useEffect(() => {
-        if (isLoading) return;
+        if (isLoading || firstRun) return;
         const el = scrollContainerRef.current?.querySelector('[data-active="true"]');
         el?.scrollIntoView({ block: "nearest", behavior: "smooth", inline: "nearest" });
-    }, [selectedIndex, results, isLoading]);
+    }, [selectedIndex, results, isLoading, firstRun]);
 
     const suggestion = useMemo(() => {
         if (!query || !results.length || activeCommand) return "";
@@ -85,12 +103,12 @@ export default function App() {
 
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
-            const max = Math.max(0, results.length - 1);
+            if (firstRun || isLoading) return;
 
+            const max = Math.max(0, results.length - 1);
             inputRef.current?.focus();
 
-            // Info Panel
-            if(e.ctrlKey && e.key.toLowerCase() === "k") {
+            if (e.ctrlKey && e.key.toLowerCase() === "k") {
                 if (selectedItem) {
                     e.preventDefault();
                     setIsInfoOpen((open) => !open);
@@ -121,31 +139,30 @@ export default function App() {
                         setQuery("");
                     }
                     break;
-                    case "Enter":
-                        e.preventDefault();
-                        handleExecute();
+                case "Enter":
+                    e.preventDefault();
+                    handleExecute();
                     break;
                 case "ArrowDown":
                     if (activeCommand) break;
-                    
                     e.preventDefault();
                     setSelectedIndex((i) => (i < max ? i + 1 : i));
                     break;
-                    case "ArrowUp":
+                case "ArrowUp":
                     if (activeCommand) break;
-
                     e.preventDefault();
                     setSelectedIndex((i) => (i > 0 ? i - 1 : i));
                     break;
+
                 case "Alt":
                     e.preventDefault();
-                    break;
+                    break; // Ignore pure Alt key presses
             }
         };
 
         window.addEventListener("keydown", handler);
         return () => window.removeEventListener("keydown", handler);
-    }, [results, suggestion, activeCommand, query, handleExecute]);
+    }, [results, suggestion, activeCommand, query, handleExecute, firstRun, isLoading, selectedItem]);
 
     useEffect(() => setSelectedIndex(0), [query]);
 
@@ -157,12 +174,23 @@ export default function App() {
     }, []);
 
     useEffect(() => {
-        if (!isLoading && results.length) playTick();
-    }, [selectedIndex]);
+        if (!isLoading && results.length && !firstRun) playTick();
+    }, [selectedIndex, isLoading, firstRun, results.length]);
 
     useEffect(() => {
         if (showCopied) playSuccess();
     }, [showCopied]);
+
+    // RENDER STATES
+    if (firstRun === null || (isLoading && firstRun === null)) return null;
+
+    if (firstRun) {
+        return (
+            <div ref={containerRef} className="bg-transparent overflow-hidden">
+                <SetupScreen onComplete={() => setFirstRun(false)} />
+            </div>
+        );
+    }
 
     return (
         <div 
@@ -193,14 +221,12 @@ export default function App() {
                     </AnimatePresence>
 
                     <div className="relative flex-1 flex items-center h-8">
-                        {/* Icon */}
                         <img
                             src={icon}
                             alt="icon"
                             className="absolute left-1 w-5 h-5 pointer-events-none"
                         />
 
-                        {/* Input */}
                         <input
                             ref={inputRef}
                             autoFocus
@@ -210,7 +236,6 @@ export default function App() {
                             className="z-10 w-full bg-transparent outline-none text-lg text-white/90 placeholder:text-white/10 font-light tracking-tight pl-10"
                         />
 
-                        {/* Suggestion + Tab hint */}
                         {!activeCommand && query && (
                             <div className="absolute pl-10 text-lg font-light pointer-events-none flex items-center tracking-tight whitespace-pre">
                                 <span className="opacity-0 select-none">{query}</span>
@@ -252,7 +277,6 @@ export default function App() {
                         )}
                     </main>
                     
-                    {/* The Info Panel: Slides in from the right */}
                     <AnimatePresence>
                         {isInfoOpen && (
                             <motion.div

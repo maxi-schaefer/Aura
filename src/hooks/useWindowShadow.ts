@@ -3,7 +3,8 @@ import { getCurrentWindow, LogicalPosition, LogicalSize, primaryMonitor } from '
 
 export function useWindowShadow(
     containerRef: RefObject<HTMLDivElement | null>, 
-    isExpanded: boolean, // Add this
+    isExpanded: boolean,
+    isFirstRun: boolean, // Added this parameter
     dependencies: any[]
 ) {
     useEffect(() => {
@@ -12,23 +13,38 @@ export function useWindowShadow(
             const monitor = await primaryMonitor();
             if (!monitor) return;
 
-            const { height } = containerRef.current.getBoundingClientRect();
             const win = getCurrentWindow();
-            
-            // Toggle width between 650 (default) and 1000 (expanded)
-            const targetWidth = isExpanded ? 1250 : 1000; 
-            const logicalSize = new LogicalSize(targetWidth, Math.ceil(height));
-            
+            let targetWidth: number;
+            let targetHeight: number;
+
+            if (isFirstRun) {
+                targetWidth = 1000;
+                targetHeight = 650;
+            } else {
+                const { height } = containerRef.current.getBoundingClientRect();
+                targetWidth = isExpanded ? 1250 : 1000;
+                targetHeight = Math.ceil(height);
+            }
+
+            const logicalSize = new LogicalSize(targetWidth, targetHeight);
             await win.setSize(logicalSize);
             
             const monitorSize = monitor.size.toLogical(monitor.scaleFactor);
             const x = (monitorSize.width / 2) - (targetWidth / 2);
-            const y = monitorSize.height * 0.25;
+            
+            const y = isFirstRun 
+                ? (monitorSize.height / 2) - (targetHeight / 2)
+                : monitorSize.height * 0.25;
+
             await win.setPosition(new LogicalPosition(x, y));
         };
 
         const observer = new ResizeObserver(() => requestAnimationFrame(update));
         if (containerRef.current) observer.observe(containerRef.current);
+        
+        // Initial run
+        update();
+
         return () => observer.disconnect();
-    }, [isExpanded, ...dependencies]); // Watch isExpanded
+    }, [isExpanded, isFirstRun, ...dependencies]);
 }

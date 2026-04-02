@@ -179,7 +179,7 @@ export const WifiScanner = () => {
       {hovered && (
         <div 
           ref={cardRef}
-          className="absolute z-50 pointer-events-none bg-[#1a1d21]/70 backdrop-blur-xl border border-white/20 rounded-xl p-4 shadow-2xl min-w-[260px] transition-transform duration-100 ease-out"
+          className="absolute z-50 pointer-events-none bg-[#1a1d21]/70 backdrop-blur-xl border border-white/20 rounded-xl p-4 shadow-2xl min-w-65 transition-transform duration-100 ease-out"
           style={{ 
             left: mousePos.x, top: mousePos.y,
             transform: `translate(${cardOffset.x}px, ${cardOffset.y}px)` 

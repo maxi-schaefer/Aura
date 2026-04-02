@@ -1,6 +1,19 @@
-import { useState } from "react";
+import { useState, useMemo } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Settings, Bell, Palette, Cpu, Shield, Globe, Keyboard, Info, Command as CmdIcon, ChevronDown } from "lucide-react";
+import { Settings, Palette, Cpu, Keyboard, Info, Command as CmdIcon } from "lucide-react";
+
+// Engine Assets (Assuming paths from previous context)
+import googleIcon from "../../assets/engines/google.png";
+import ddgIcon from "../../assets/engines/duckduckgo.png";
+import braveIcon from "../../assets/engines/brave.png";
+import bingIcon from "../../assets/engines/bing.png";
+
+const ENGINES = [
+  { id: "google", name: "Google", icon: googleIcon },
+  { id: "duckduckgo", name: "DuckDuckGo", icon: ddgIcon },
+  { id: "brave", name: "Brave", icon: braveIcon },
+  { id: "bing", name: "Bing", icon: bingIcon },
+];
 
 const CATEGORIES = [
   { id: "general", label: "General", icon: <Settings size={14} /> },
@@ -10,21 +23,30 @@ const CATEGORIES = [
   { id: "about", label: "About", icon: <Info size={14} /> },
 ];
 
-export const SettingsView = () => {
+export const SettingsView = ({ query = "" }: { query?: string }) => {
   const [activeTab, setActiveTab] = useState("general");
+  const [currentEngine, setCurrentEngine] = useState("google");
+
+  // Filter logic for settings search
+  const filteredCategories = useMemo(() => {
+    if (!query) return CATEGORIES;
+    return CATEGORIES.filter(cat => 
+        cat.label.toLowerCase().includes(query.toLowerCase())
+    );
+  }, [query]);
 
   return (
-    <div className="flex h-[450px] w-full gap-0 antialiased">
-      {/* Sidebar - Raycast uses a subtle side border */}
+    <div className="flex h-122 w-full gap-0 antialiased">
+      {/* Sidebar */}
       <div className="w-56 flex flex-col gap-0.5 border-r border-white/5 p-2">
-        {CATEGORIES.map((cat) => (
+        {filteredCategories.map((cat) => (
           <button
             key={cat.id}
             onClick={() => setActiveTab(cat.id)}
             className={`cursor-pointer flex items-center justify-between px-3 py-2 rounded-md transition-all group ${
               activeTab === cat.id 
                 ? "bg-white/10 text-white shadow-sm" 
-                : "text-white/40 hover:bg-white/[0.03] hover:text-white/60"
+                : "text-white/40 hover:bg-white/3 hover:text-white/60"
             }`}
           >
             <div className="flex items-center gap-3">
@@ -39,25 +61,43 @@ export const SettingsView = () => {
       </div>
 
       {/* Content Area */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar bg-black/10">
+      <div className="flex-1 overflow-y-auto custom-scrollbar">
         <AnimatePresence mode="wait">
           <motion.div
             key={activeTab}
-            initial={{ opacity: 0, y: 5 }}
-            animate={{ opacity: 1, y: 0 }}
-            exit={{ opacity: 0, y: -5 }}
-            transition={{ duration: 0.15 }}
+            initial={{ opacity: 0, x: 10 }}
+            animate={{ opacity: 1, x: 0 }}
+            exit={{ opacity: 0, x: -10 }}
+            transition={{ duration: 0.2 }}
             className="p-6 space-y-8"
           >
             {activeTab === "general" && (
               <>
-                <Section label="Application">
-                  <ToggleItem label="Launch at login" description="Automatically start when you log in to your computer." defaultChecked />
-                  <ToggleItem label="Check for Updates" description="Keep the app updated with the latest features." defaultChecked />
+                <Section label="Search Engine">
+                  <div className="p-1 grid grid-cols-1 gap-1">
+                    {ENGINES.map((eng) => (
+                      <button
+                        key={eng.id}
+                        onClick={() => setCurrentEngine(eng.id)}
+                        className={`flex items-center cursor-pointer justify-between px-3 py-2 rounded-lg transition-colors group ${
+                          currentEngine === eng.id ? "bg-white/10" : "hover:bg-white/5"
+                        }`}
+                      >
+                        <div className="flex items-center gap-3">
+                          <img src={eng.icon} className={`size-4 ${currentEngine === eng.id ? 'opacity-100' : 'opacity-40 grayscale group-hover:grayscale-0'}`} alt="" />
+                          <span className={`text-[13px] ${currentEngine === eng.id ? 'text-white' : 'text-white/40'}`}>{eng.name}</span>
+                        </div>
+                        {currentEngine === eng.id && (
+                            <div className="size-1.5 rounded-full bg-white shadow-[0_0_8px_white]" />
+                        )}
+                      </button>
+                    ))}
+                  </div>
                 </Section>
-                <Section label="Window Behavior">
-                  <ToggleItem label="On Top" description="Always keep the search window above other apps." />
-                  <SelectItem label="Close Window" description="When to hide the window." options={["After Action", "Manual Only"]} />
+
+                <Section label="Application">
+                  <ToggleItem label="Launch at login" description="Start Aura when you log in." defaultChecked />
+                  <ToggleItem label="Check for Updates" description="Keep the app updated." defaultChecked />
                 </Section>
               </>
             )}
@@ -65,17 +105,9 @@ export const SettingsView = () => {
             {activeTab === "appearance" && (
               <Section label="Visual Preferences">
                 <SelectItem label="Theme" description="Choose your preferred color scheme." options={["Glass Morphic", "Midnight", "Light Bloom"]} />
-                <RangeItem label="Window Radius" description="Adjust corner roundness." value={16} />
-                <ToggleItem label="Vibrant Colors" description="Allow accent colors to bleed through background." defaultChecked />
+                <RangeItem label="Window Radius" description="Adjust corner roundness." />
+                <ToggleItem label="Vibrant Colors" description="Allow accent colors to bleed through." defaultChecked />
               </Section>
-            )}
-
-            {activeTab === "shortcuts" && (
-               <Section label="Global Hotkeys">
-                  <ShortcutItem label="Toggle Search" keys={["Alt", "Space"]} />
-                  <ShortcutItem label="Clipboard History" keys={["Cmd", "Shift", "V"]} />
-                  <ShortcutItem label="System Settings" keys={["Cmd", ","]} />
-               </Section>
             )}
           </motion.div>
         </AnimatePresence>
@@ -142,7 +174,7 @@ const ShortcutItem = ({ label, keys }: { label: string; keys: string[] }) => (
     </div>
 );
 
-const RangeItem = ({ label, description, value }: any) => (
+const RangeItem = ({ label, description }: any) => (
     <div className="flex items-center justify-between p-4 bg-transparent hover:bg-white/3 transition-colors border-b border-white/5 last:border-0">
       <div>
         <div className="text-[13.5px] text-white/90 font-medium">{label}</div>
