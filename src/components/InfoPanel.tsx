@@ -1,5 +1,6 @@
 import { motion } from "framer-motion";
 import { FileText, Globe, Terminal, Hash, Info, Link as LinkIcon, Cpu } from "lucide-react";
+import { i } from "mathjs";
 
 interface InfoItemProps {
     label: string;
@@ -30,7 +31,6 @@ export const InfoPanel = ({ item }: { item: any }) => {
 
     const getFileExt = (path: string) => path.split('.').pop()?.toUpperCase() || 'FILE';
     
-    // Clean up paths for display (e.g., C:\Users\Name\... -> ~\...)
     const displayPath = item.id?.replace(/^[A-Z]:\\Users\\[^\\]+/, '~');
 
     return (
@@ -44,9 +44,19 @@ export const InfoPanel = ({ item }: { item: any }) => {
             <div className="p-8 flex flex-col items-center text-center shrink-0 border-b border-white/5 bg-linear-to-b from-white/3 to-transparent">
                 <div className="relative group mb-5">
                     <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500" />
-                    {item.icon ? (
-                        <img src={item.icon} className="relative size-20 object-contain drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] rounded-xl" alt="" />
-                    ) : (
+                    {item.icon ? 
+                        typeof item.icon === "string" ? (
+                            <img src={item.icon} className="relative size-20 object-contain drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] rounded-xl" alt="" />
+                        ) : (
+                            (() => {
+                                const Icon = item.icon;
+                                return (
+                                    <div className="relative size-20 rounded-2xl bg-white/5 flex items-center justify-center text-fg/10 border border-white/10 shadow-inner">
+                                        <Icon size={40} strokeWidth={1.5} />
+                                    </div>
+                                )
+                            })()
+                        ) : (
                         <div className="relative size-20 rounded-2xl bg-white/5 flex items-center justify-center text-fg/10 border border-white/10 shadow-inner">
                             <FileText size={40} strokeWidth={1.5} />
                         </div>

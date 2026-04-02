@@ -1,6 +1,7 @@
 import { invoke } from "@tauri-apps/api/core";
 import { Section, ToggleItem } from "../commands/SettingsView"; // Adjust paths as needed
 import { disable, enable, isEnabled } from "@tauri-apps/plugin-autostart";
+import { motion } from "framer-motion";
 
 // Engine Assets
 import googleIcon from "../../assets/engines/google.png";
@@ -49,13 +50,14 @@ export const GeneralManager = ({ config, setConfig }: GeneralManagerProps) => {
       <Section label="Search Engine">
         <div className="p-1 grid grid-cols-1 gap-1">
           {ENGINES.map((eng) => (
-            <button
+            <motion.button
               key={eng.id}
               onClick={() => updateEngine(eng.url)}
               className={`flex items-center cursor-pointer justify-between px-3 py-2 rounded-lg transition-colors group ${
                 config.search_engine === eng.url ? "bg-white/10" : "hover:bg-white/5"
               }`}
-            >
+            > 
+
               <div className="flex items-center gap-3">
                 <img 
                   src={eng.icon} 
@@ -69,7 +71,7 @@ export const GeneralManager = ({ config, setConfig }: GeneralManagerProps) => {
               {config.search_engine === eng.url && (
                 <div className="size-1.5 rounded-full bg-white shadow-[0_0_8px_white]" />
               )}
-            </button>
+            </motion.button>
           ))}
         </div>
       </Section>
