@@ -45,7 +45,7 @@ export const InfoPanel = ({ item }: { item: any }) => {
                 <div className="relative group mb-5">
                     <div className="absolute inset-0 bg-primary/20 blur-3xl rounded-full opacity-20 group-hover:opacity-40 transition-opacity duration-500" />
                     {item.icon ? (
-                        <img src={item.icon} className="relative size-20 object-contain drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)]" alt="" />
+                        <img src={item.icon} className="relative size-20 object-contain drop-shadow-[0_10px_10px_rgba(0,0,0,0.5)] rounded-xl" alt="" />
                     ) : (
                         <div className="relative size-20 rounded-2xl bg-white/5 flex items-center justify-center text-white/10 border border-white/10 shadow-inner">
                             <FileText size={40} strokeWidth={1.5} />

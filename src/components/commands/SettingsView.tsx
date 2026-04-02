@@ -1,39 +1,53 @@
-import { useState, useMemo } from "react";
+import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
-import { Settings, Palette, Cpu, Keyboard, Info, Command as CmdIcon } from "lucide-react";
+import { 
+  Settings, Palette, Keyboard, Info, 
+  Command as CmdIcon, Plus, Trash2 
+} from "lucide-react";
+import { invoke } from "@tauri-apps/api/core";
 
-// Engine Assets (Assuming paths from previous context)
+// Assets
 import googleIcon from "../../assets/engines/google.png";
 import ddgIcon from "../../assets/engines/duckduckgo.png";
-import braveIcon from "../../assets/engines/brave.png";
 import bingIcon from "../../assets/engines/bing.png";
+import yahooIcon from "../../assets/engines/yahoo.png";
+import braveIcon from "../../assets/engines/brave.png";
+import ecosiaIcon from "../../assets/engines/ecosia.png";
+import { AliasManager } from "../settings/AliasManager";
+import { GeneralManager } from "../settings/GeneralManager";
 
 const ENGINES = [
-  { id: "google", name: "Google", icon: googleIcon },
-  { id: "duckduckgo", name: "DuckDuckGo", icon: ddgIcon },
-  { id: "brave", name: "Brave", icon: braveIcon },
-  { id: "bing", name: "Bing", icon: bingIcon },
+    { id: "bing", name: "Bing", url: "https://www.bing.com/search?q=", icon: bingIcon },
+    { id: "brave", name: "Brave", url: "https://search.brave.com/search?q=", icon: braveIcon },
+    { id: "duckduckgo", name: "DuckDuckGo", url: "https://duckduckgo.com/?q=", icon: ddgIcon },
+    { id: "ecosia", name: "Ecosia", url: "https://www.ecosia.org/search?q=", icon: ecosiaIcon },
+    { id: "google", name: "Google", url: "https://google.com/search?q=", icon: googleIcon },
+    { id: "yahoo", name: "Yahoo", url: "https://search.yahoo.com/search?p=", icon: yahooIcon },
 ];
 
 const CATEGORIES = [
   { id: "general", label: "General", icon: <Settings size={14} /> },
   { id: "appearance", label: "Appearance", icon: <Palette size={14} /> },
+  { id: "alias", label: "Alias", icon: <CmdIcon size={14} /> },
   { id: "shortcuts", label: "Shortcuts", icon: <Keyboard size={14} /> },
-  { id: "extensions", label: "Extensions", icon: <Cpu size={14} /> },
   { id: "about", label: "About", icon: <Info size={14} /> },
 ];
 
 export const SettingsView = ({ query = "" }: { query?: string }) => {
   const [activeTab, setActiveTab] = useState("general");
-  const [currentEngine, setCurrentEngine] = useState("google");
+  const [config, setConfig] = useState<any>(null);
 
-  // Filter logic for settings search
+  // Load config on mount
+  useEffect(() => {
+    invoke("get_config").then((res) => setConfig(res));
+  }, []);
+
   const filteredCategories = useMemo(() => {
     if (!query) return CATEGORIES;
-    return CATEGORIES.filter(cat => 
-        cat.label.toLowerCase().includes(query.toLowerCase())
-    );
+    return CATEGORIES.filter(cat => cat.label.toLowerCase().includes(query.toLowerCase()));
   }, [query]);
+
+  if (!config) return null;
 
   return (
     <div className="flex h-122 w-full gap-0 antialiased">
@@ -44,9 +58,7 @@ export const SettingsView = ({ query = "" }: { query?: string }) => {
             key={cat.id}
             onClick={() => setActiveTab(cat.id)}
             className={`cursor-pointer flex items-center justify-between px-3 py-2 rounded-md transition-all group ${
-              activeTab === cat.id 
-                ? "bg-white/10 text-white shadow-sm" 
-                : "text-white/40 hover:bg-white/3 hover:text-white/60"
+              activeTab === cat.id ? "bg-white/10 text-white" : "text-white/40 hover:text-white/60"
             }`}
           >
             <div className="flex items-center gap-3">
@@ -60,65 +72,44 @@ export const SettingsView = ({ query = "" }: { query?: string }) => {
         ))}
       </div>
 
-      {/* Content Area */}
-      <div className="flex-1 overflow-y-auto custom-scrollbar">
-        <AnimatePresence mode="wait">
-          <motion.div
-            key={activeTab}
-            initial={{ opacity: 0, x: 10 }}
-            animate={{ opacity: 1, x: 0 }}
-            exit={{ opacity: 0, x: -10 }}
-            transition={{ duration: 0.2 }}
-            className="p-6 space-y-8"
-          >
-            {activeTab === "general" && (
-              <>
-                <Section label="Search Engine">
-                  <div className="p-1 grid grid-cols-1 gap-1">
-                    {ENGINES.map((eng) => (
-                      <button
-                        key={eng.id}
-                        onClick={() => setCurrentEngine(eng.id)}
-                        className={`flex items-center cursor-pointer justify-between px-3 py-2 rounded-lg transition-colors group ${
-                          currentEngine === eng.id ? "bg-white/10" : "hover:bg-white/5"
-                        }`}
-                      >
-                        <div className="flex items-center gap-3">
-                          <img src={eng.icon} className={`size-4 ${currentEngine === eng.id ? 'opacity-100' : 'opacity-40 grayscale group-hover:grayscale-0'}`} alt="" />
-                          <span className={`text-[13px] ${currentEngine === eng.id ? 'text-white' : 'text-white/40'}`}>{eng.name}</span>
-                        </div>
-                        {currentEngine === eng.id && (
-                            <div className="size-1.5 rounded-full bg-white shadow-[0_0_8px_white]" />
-                        )}
-                      </button>
-                    ))}
-                  </div>
-                </Section>
+      {/* Body Component */}
+      <SettingsBody 
+        activeTab={activeTab} 
+        config={config} 
+        setConfig={setConfig} 
+      />
+    </div>
+  );
+};
 
-                <Section label="Application">
-                  <ToggleItem label="Launch at login" description="Start Aura when you log in." defaultChecked />
-                  <ToggleItem label="Check for Updates" description="Keep the app updated." defaultChecked />
-                </Section>
-              </>
-            )}
+// --- New Body Component ---
+const SettingsBody = ({ activeTab, config, setConfig }: any) => {
+  return (
+    <div className="flex-1 overflow-y-auto custom-scrollbar">
+      <AnimatePresence mode="wait">
+        <motion.div
+          key={activeTab}
+          initial={{ opacity: 0, x: 10 }}
+          animate={{ opacity: 1, x: 0 }}
+          exit={{ opacity: 0, x: -10 }}
+          transition={{ duration: 0.2 }}
+          className="p-6"
+        >
+          {activeTab === "general" && (
+            <GeneralManager config={config} setConfig={setConfig} />
+          )}
 
-            {activeTab === "appearance" && (
-              <Section label="Visual Preferences">
-                <SelectItem label="Theme" description="Choose your preferred color scheme." options={["Glass Morphic", "Midnight", "Light Bloom"]} />
-                <RangeItem label="Window Radius" description="Adjust corner roundness." />
-                <ToggleItem label="Vibrant Colors" description="Allow accent colors to bleed through." defaultChecked />
-              </Section>
-            )}
-          </motion.div>
-        </AnimatePresence>
-      </div>
+          {activeTab === "alias" && (
+            <AliasManager />
+          )}
+        </motion.div>
+      </AnimatePresence>
     </div>
   );
 };
 
 // --- Refined Sub-components ---
-
-const Section = ({ label, children }: { label: string; children: React.ReactNode }) => (
+export const Section = ({ label, children }: { label: string; children: React.ReactNode }) => (
   <div className="space-y-3">
     <h3 className="text-[11px] font-semibold text-white/20 uppercase tracking-widest ml-1">{label}</h3>
     <div className="space-y-px rounded-xl overflow-hidden border border-white/5 bg-white/1">
@@ -127,7 +118,7 @@ const Section = ({ label, children }: { label: string; children: React.ReactNode
   </div>
 );
 
-const ToggleItem = ({ label, description, defaultChecked = false }: any) => {
+export const ToggleItem = ({ label, description, defaultChecked = false }: any) => {
   const [checked, setChecked] = useState(defaultChecked);
   return (
     <div 
@@ -149,7 +140,7 @@ const ToggleItem = ({ label, description, defaultChecked = false }: any) => {
   );
 };
 
-const SelectItem = ({ label, description, options }: any) => (
+export const SelectItem = ({ label, description, options }: any) => (
     <div className="flex items-center justify-between p-4 bg-transparent hover:bg-white/3 transition-colors border-b border-white/5 last:border-0">
       <div>
         <div className="text-[13.5px] text-white/90 font-medium">{label}</div>
@@ -161,7 +152,7 @@ const SelectItem = ({ label, description, options }: any) => (
     </div>
 );
 
-const ShortcutItem = ({ label, keys }: { label: string; keys: string[] }) => (
+export const ShortcutItem = ({ label, keys }: { label: string; keys: string[] }) => (
     <div className="flex items-center justify-between p-4 bg-transparent hover:bg-white/3 transition-colors border-b border-white/5 last:border-0">
       <span className="text-[13.5px] text-white/90 font-medium">{label}</span>
       <div className="flex gap-1.5">
@@ -174,7 +165,7 @@ const ShortcutItem = ({ label, keys }: { label: string; keys: string[] }) => (
     </div>
 );
 
-const RangeItem = ({ label, description }: any) => (
+export const RangeItem = ({ label, description }: any) => (
     <div className="flex items-center justify-between p-4 bg-transparent hover:bg-white/3 transition-colors border-b border-white/5 last:border-0">
       <div>
         <div className="text-[13.5px] text-white/90 font-medium">{label}</div>

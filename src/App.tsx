@@ -106,7 +106,7 @@ export default function App() {
             if (firstRun || isLoading) return;
 
             const max = Math.max(0, results.length - 1);
-            inputRef.current?.focus();
+            if(!activeCommand) inputRef.current?.focus();
 
             if (e.ctrlKey && e.key.toLowerCase() === "k") {
                 if (selectedItem) {
@@ -119,12 +119,6 @@ export default function App() {
             if ((e.key === "Tab" || e.key === "ArrowRight") && suggestion && !activeCommand) {
                 e.preventDefault();
                 setQuery((q) => q + suggestion);
-                return;
-            }
-
-            if (e.key === "Backspace" && !query && activeCommand) {
-                setActiveCommand(null);
-                setQuery(activeCommand.title.toLowerCase());
                 return;
             }
 

@@ -1,5 +1,6 @@
 import { useEffect, useState, useMemo, useRef } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { AnimatePresence, motion } from "framer-motion";
 
 type Beacon = {
   ssid: string;
@@ -17,7 +18,7 @@ const bandOffsets = { ism: 0, unii1: 45, unii2a: 55, unii2c: 65, unii3: 85 };
 const bandWidths = { ism: 45, unii1: 10, unii2a: 10, unii2c: 20, unii3: 15 };
 
 const ALL_CHANNELS = {
-  ism: [1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
+  ism: [0, 1, 2, 3, 4, 5, 6, 7, 8, 9, 10, 11, 12, 13],
   unii1: [36, 40, 44, 48],
   unii2a: [52, 56, 60, 64],
   unii2c: [100, 104, 108, 112, 116, 120, 124, 128, 132, 136, 140, 144],
@@ -119,20 +120,43 @@ export const WifiScanner = () => {
           <div className="w-[15%] text-center py-1.5 bg-blue-200/5 rounded-tr-xl">UNII-3</div>
       </div>
 
-      <div className="relative bg-[#14181c]/60 border border-white/5 rounded-b-xl p-4 shadow-2xl">
+      <div className="relative  border border-white/5 rounded-b-xl p-4 shadow-2xl">
         <svg viewBox={`0 -10 ${svgWidth} 120`} className="w-full h-96 overflow-visible select-none">
           
           {/* VERTICAL CHANNEL GRID */}
           <g>
-            {Object.values(ALL_CHANNELS).flat().map((ch) => {
-              const xPos = getX(ch);
-              return (
-                <g key={`ch-${ch}`}>
-                  <line x1={xPos} x2={xPos} y1="0" y2="100" stroke="white" strokeOpacity="0.04" strokeWidth="0.3" />
-                  <text x={xPos} y="106" fontSize="2.5" fill="white" fillOpacity="0.15" textAnchor="middle">{ch}</text>
-                </g>
-              );
-            })}
+            {Object.entries(ALL_CHANNELS).map(([_, channels]) => 
+              channels.map((ch) => {
+                const xPos = getX(ch);
+                const is5G = ch > 14;
+                const shouldShowText = !is5G || ch % 8 === 0 || ch === 36 || ch === 149 || ch === 165;
+
+                return (
+                  <g key={`ch-${ch}`}>
+                    <line 
+                      x1={xPos} x2={xPos} 
+                      y1="0" y2="100" 
+                      stroke="white" 
+                      strokeOpacity="0.04" 
+                      strokeWidth="0.2" 
+                    />
+                    {shouldShowText && (
+                      <text 
+                        x={xPos} 
+                        y="108" 
+                        fontSize="2.5" 
+                        fill="white" 
+                        fillOpacity="0.3" 
+                        textAnchor="middle"
+                        className="font-mono"
+                      >
+                        {ch}
+                      </text>
+                    )}
+                  </g>
+                );
+              })
+            )}
           </g>
 
           {/* HORIZONTAL DB GRID */}
@@ -143,32 +167,111 @@ export const WifiScanner = () => {
             </g>
           ))}
 
-          {/* SIGNAL PATHS */}
           {beacons.map((b) => {
             const is5G = b.frequency > 4000;
-            const x = getX(b.channel);
-            const y = dbmToY(b.dbm);
             const w = is5G ? 4 : 9;
+            const xStart = getX(b.channel);
+            const xEnd = xStart + (w * 2);
             const color = bssidColors[b.bssid];
             const isHovered = hovered?.bssid === b.bssid;
 
             return (
-              <g key={b.bssid} onMouseEnter={() => setHovered(b)} onMouseLeave={() => setHovered(null)} className="cursor-pointer">
-                {isHovered && <path d={getWifiPath(x, y, w)} fill={color} filter="blur(8px)" opacity="0.3" />}
-                <path
+              <g key={`guide-${b.bssid}`}>
+                {/* Subtle background fill */}
+                <motion.rect
+                  initial={false}
+                  animate={{ opacity: isHovered ? 0.05 : 0.01 }}
+                  x={xStart} y="0" width={xEnd - xStart} height="100"
+                  fill={color}
+                />
+                {/* Start Line */}
+                <motion.line
+                  initial={false}
+                  animate={{ 
+                    opacity: isHovered ? 0.8 : 0.1, 
+                    strokeWidth: isHovered ? 0.5 : 0.2 
+                  }}
+                  x1={xStart} x2={xStart} y1="0" y2="100"
+                  stroke={color} strokeDasharray={isHovered ? "none" : "1 1"}
+                />
+                {/* End Line */}
+                <motion.line
+                  initial={false}
+                  animate={{ 
+                    opacity: isHovered ? 0.8 : 0.1, 
+                    strokeWidth: isHovered ? 0.5 : 0.2 
+                  }}
+                  x1={xEnd} x2={xEnd} y1="0" y2="100"
+                  stroke={color} strokeDasharray={isHovered ? "none" : "1 1"}
+                />
+                
+                {/* Boundary Labels - Only show on hover to avoid clutter */}
+                <AnimatePresence>
+                  {isHovered && (() => {
+                    const startCh = b.channel;
+                    const endCh = is5G ? b.channel + 4 : b.channel + 2;
+
+                    return (
+                      <motion.g initial={{ opacity: 0 }} animate={{ opacity: 1 }} exit={{ opacity: 0 }}>
+                        <text x={xStart} y="-4" fontSize="2.5" fill={color} textAnchor="middle" className="font-mono font-bold">
+                          {startCh}
+                        </text>
+                        <text x={xEnd} y="-4" fontSize="2.5" fill={color} textAnchor="middle" className="font-mono font-bold">
+                          {endCh}
+                        </text>
+                      </motion.g>
+                    );
+                  })()}
+                </AnimatePresence>
+              </g>
+            );
+          })}
+
+          {/* LAYER 2: SIGNAL PATHS (Above guides) */}
+          {beacons.map((b) => {
+            const is5G = b.frequency > 4000;
+            const xStart = getX(b.channel);
+            const w = is5G ? 4 : 9;
+            const x = xStart + w;
+            const y = dbmToY(b.dbm);
+            const color = bssidColors[b.bssid];
+            const isHovered = hovered?.bssid === b.bssid;
+
+            return (
+              <g 
+                key={b.bssid} 
+                onMouseEnter={() => setHovered(b)} 
+                onMouseLeave={() => setHovered(null)} 
+                className="cursor-pointer"
+              >
+                {isHovered && (
+                  <motion.path 
+                    layoutId={`glow-${b.bssid}`}
+                    d={getWifiPath(x, y, w)} 
+                    fill={color} 
+                    filter="blur(8px)" 
+                    opacity="0.3" 
+                  />
+                )}
+                <motion.path
                   d={getWifiPath(x, y, w)}
                   fill={color}
-                  fillOpacity={isHovered ? 0.45 : 0.12}
+                  animate={{ 
+                    fillOpacity: isHovered ? 0.5 : 0.15,
+                    strokeWidth: isHovered ? 0.6 : 0.2 
+                  }}
                   stroke={color}
-                  strokeWidth={isHovered ? 0.6 : 0.2}
                   className="transition-all duration-300 ease-out"
                 />
-                <text 
-                  x={x} y={y - 5} textAnchor="middle" fontSize="4" fill={color} 
-                  className={`pointer-events-none transition-opacity ${isHovered ? 'opacity-100 font-bold' : 'opacity-60'}`}
+                <motion.text 
+                  x={x} y={y - 5} 
+                  textAnchor="middle" fontSize="4" 
+                  fill={color}
+                  animate={{ opacity: isHovered ? 1 : 0.6, fontWeight: isHovered ? 700 : 400 }}
+                  className="pointer-events-none"
                 >
                   {b.ssid || "Hidden"}
-                </text>
+                </motion.text>
               </g>
             );
           })}
