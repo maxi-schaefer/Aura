@@ -139,10 +139,7 @@ export default function App() {
                     }
                     break;
                 case "Enter":
-                    e.preventDefault();
-                    
-                    if (activeCommand) return;
-                    
+                    e.preventDefault();                    
                     handleExecute();
                     break;
                 case "ArrowDown":

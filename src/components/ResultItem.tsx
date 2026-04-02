@@ -9,7 +9,7 @@ const getIcon = (type: string, isDir?: boolean) => {
   switch (type) {
     case "app": return <Command {...iconProps} />;
     case "file": return isDir ? <Folder {...iconProps} /> : <FileText {...iconProps} />;
-    case "alias": return <Globe {...iconProps} />;
+    case "alias": return <Command {...iconProps} />;
     case "command": return <AppWindow {...iconProps} />;
     case "calc": return <Calculator {...iconProps} />;
     case "color": return <Palette {...iconProps} />;
@@ -43,15 +43,22 @@ export const ResultItem = ({ id, name, type, isActive, subtitle, onMouseEnter, o
             )}
 
             <div className="relative z-10 flex items-center gap-3">
-                <div className={`transition-all duration-200  ${isActive ? 'opacity-100 text-primary' : 'opacity-40 text-fg'}`}>
+                <div className={`transition-all duration-200  ${isActive ? 'opacity-100 text-primary scale-105' : 'opacity-40 text-fg'}`}>
                     {icon ? (
-                        <img src={icon} alt="" className="size-5 rounded object-contain" />
+                        typeof icon === "string" ? (
+                            <img src={icon} alt="" className="size-5 rounded object-contain" />
+                        ) : (
+                            (() => {
+                                const Icon = icon;
+                                return <Icon size={16} strokeWidth={2} />;
+                            })()
+                        )
                     ) : (
                         getIcon(type, isDir)
                     )}
                 </div>
                 
-                <span className={`text-[13px] tracking-tight transition-colors ${
+                <span className={`text-[13px] tracking-tight transition-colors  ${
                     isActive ? 'text-fg' : 'text-fg/60'
                 }`}>
                     {name}

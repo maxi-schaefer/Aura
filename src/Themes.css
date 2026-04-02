@@ -1,0 +1,72 @@
+
+:root.gruvbox {
+  --primary: #fe8019;
+  --fg: #fbf1c7;
+  --secondary: #cc241d;
+  --bg: #1d2021cc;
+}
+
+:root.catppuccin {
+  --primary: #ca9ee6;
+  --fg: #c6d0f5;
+  --secondary: #eb34a8;
+  --bg: #1e1e2ecc;
+}
+
+:root.one-dark {
+  --primary: #528bff;
+  --fg: #f2f4f5;
+  --secondary: #eb34a8;
+  --bg: #282c34cc;
+}
+
+:root.manly-spring {
+  --primary: #7a8f7a;
+  --fg: #e5ded8;
+  --secondary:  	#3e4a3f;
+  --bg: #1c1c1ccc;
+}
+
+:root.discord {
+  --primary: #7289da;
+  --fg: #fff;
+  --secondary:  	#506fe0;
+  --bg: #23272acc;
+}
+
+:root.stormy-morning {
+  --primary: #bdddfc;
+  --fg: #e5ded8;
+  --secondary:#88bdf2;
+  --bg: #384959cc;
+}
+
+::view-transition-old(root),
+::view-transition-new(root) {
+  animation: none;
+  mix-blend-mode: normal;
+}
+
+/* The "Mask" effect */
+::view-transition-old(root) {
+  animation: none;
+  opacity: 1;
+}
+
+::view-transition-new(root) {
+  background-color: var(--bg); 
+  
+  z-index: 9999;
+  clip-path: circle(0% at var(--reveal-x) var(--reveal-y));
+  animation: reveal-circle 750ms cubic-bezier(0.4, 0, 0.2, 1) forwards;
+}
+
+/* Ensure the wrapper doesn't have its own transparency issues */
+::view-transition-group(root) {
+  animation: none;
+}
+
+@keyframes reveal-circle {
+  from { clip-path: circle(0% at var(--reveal-x) var(--reveal-y)); }
+  to { clip-path: circle(125% at var(--reveal-x) var(--reveal-y)); }
+}

@@ -11,7 +11,7 @@ import bingIcon from "../assets/engines/bing.png";
 import yahooIcon from "../assets/engines/yahoo.png";
 import braveIcon from "../assets/engines/brave.png";
 import ecosiaIcon from "../assets/engines/ecosia.png";
-import { useTheme } from "../hooks/useTheme";
+import { THEMES, useTheme } from "../hooks/useTheme";
 
 const ENGINES = [
     { id: "google", name: "Google", url: "https://google.com/search?q=", icon: googleIcon },
@@ -20,12 +20,6 @@ const ENGINES = [
     { id: "bing", name: "Bing", url: "https://www.bing.com/search?q=", icon: bingIcon },
     { id: "ecosia", name: "Ecosia", url: "https://www.ecosia.org/search?q=", icon: ecosiaIcon },
     { id: "yahoo", name: "Yahoo", url: "https://search.yahoo.com/search?p=", icon: yahooIcon },
-];
-
-const THEMES_AVAILABLE = [
-    { id: "default", name: "Aura Dark" },
-    { id: "gruvbox", name: "Gruvbox Retro" },
-    { id: "catppuccin", name: "Catppuccin Mocha" }
 ];
 
 const pageVariants: Variants = {
@@ -57,20 +51,28 @@ export default function SetupScreen({ onComplete, config, setConfig }: any) {
     }, [step]);
 
     const handleFinalize = async () => {
-        try {
-            await invoke("save_config", { 
-                config: { 
-                    search_engine: selectedEngine.url, 
-                    first_run_complete: true, 
-                    username,
-                    theme: theme || "default"
-                } 
-            });
+    try {
+        await invoke("save_config", { 
+            config: { 
+                search_engine: selectedEngine.url, 
+                first_run_complete: true, 
+                username,
+                theme: theme || "default"
+            } 
+        });
+
+        setStep(3);
+
+        setTimeout(() => {
+            setStep(4);
+
             setTimeout(onComplete, 1500);
-        } catch (e) {
-            console.error(e);
-        }
-    };
+        }, 2000);
+
+    } catch (e) {
+        console.error(e);
+    }
+};
 
     const stepsContent: Record<number, JSX.Element> = {
         [-1]: (
@@ -82,7 +84,7 @@ export default function SetupScreen({ onComplete, config, setConfig }: any) {
                 </p>
                 <button
                     onClick={() => setStep(0)}
-                    className="mt-4 px-6 py-2.5 bg-white text-black text-xs  rounded-md hover:bg-neutral-200 transition-colors cursor-pointer"
+                    className="mt-4 px-6 py-2.5 bg-primary text-black text-xs  rounded-md hover:bg-neutral-200 transition-colors cursor-pointer"
                 >
                     Get Started
                 </button>
@@ -117,20 +119,21 @@ export default function SetupScreen({ onComplete, config, setConfig }: any) {
                     <h2 className="text-sm text-fg/90">Appearance</h2>
                 </div>
                 <div className="grid grid-cols-1 gap-2">
-                    {THEMES_AVAILABLE.map((t) => (
+                    {THEMES.map((t) => (
                         <button
                             key={t.id}
                             onClick={(e) => changeTheme(t.id, e)}
-                            className={`w-full flex items-center justify-between px-4 py-3 rounded-lg border transition-all ${
+                            className={`w-full cursor-pointer flex items-center justify-between px-4 py-3 rounded-lg border transition-all ${
                                 theme === t.id ? "bg-fg/10 border-fg/20" : "bg-fg/2 border-fg/5 hover:bg-fg/5"
                             }`}
                         >
-                            <span className={`text-sm ${theme === t.id ? "text-fg" : "text-fg/40"}`}>{t.name}</span>
+                            <div className={`rounded-full size-3 border-2 border-white/30`} style={{ backgroundColor: t.primary }}/>
+                            <span className={`text-sm ${theme === t.id ? "text-fg" : "text-fg/40"}`}>{t.label}</span>
                             {theme === t.id && <div className="size-1.5 rounded-full bg-fg shadow-[0_0_8px_var(--fg)]" />}
                         </button>
                     ))}
                 </div>
-                <button onClick={() => setStep(2)} className="w-full py-3 bg-fg text-bg rounded-lg text-xs cursor-pointer">Continue</button>
+                <button onClick={() => setStep(2)} className="w-full py-3 bg-primary text-bg rounded-lg text-xs cursor-pointer">Continue</button>
             </motion.div>
         ),
         2: (
@@ -159,7 +162,7 @@ export default function SetupScreen({ onComplete, config, setConfig }: any) {
                                     </span>
                                 </div>
                                 {isSelected && (
-                                    <motion.div layoutId="check" className="size-1.5 rounded-full bg-white shadow-[0_0_8px_rgba(255,255,255,0.5)]" />
+                                    <motion.div layoutId="check" className="size-1.5 rounded-full bg-primary shadow-[0_0_8px_rgba(255,255,255,0.5)]" />
                                 )}
                             </button>
                         );
@@ -167,7 +170,7 @@ export default function SetupScreen({ onComplete, config, setConfig }: any) {
                 </div>
 
                 <button
-                    onClick={() => { setStep(3); handleFinalize(); }}
+                    onClick={handleFinalize}
                     className="w-full flex items-center justify-center py-3 bg-white/5 cursor-pointer border border-white/10 text-fg rounded-lg hover:bg-white/10 transition-all active:scale-[0.98] text-xs "
                 >
                     Finalize Setup
@@ -187,6 +190,47 @@ export default function SetupScreen({ onComplete, config, setConfig }: any) {
                 <div className="text-center">
                     <p className="text-sm  text-fg/80">Initializing Aura...</p>
                     <p className="text-[11px] text-fg/30 mt-1">Setting up environment for {username}</p>
+                </div>
+            </motion.div>
+        ),
+        4: (
+            <motion.div
+                key="done"
+                variants={pageVariants}
+                initial="initial"
+                animate="animate"
+                exit="exit"
+                className="flex flex-col items-center py-10 space-y-4"
+            >
+                <motion.div
+                    initial={{ scale: 0.6, opacity: 0 }}
+                    animate={{ scale: 1, opacity: 1 }}
+                    transition={{ duration: 0.4, ease: "easeOut" }}
+                    className="size-12 rounded-full bg-green-500/10 flex items-center justify-center"
+                >
+                    <motion.svg
+                        viewBox="0 0 24 24"
+                        className="size-6 text-green-400"
+                        initial={{ pathLength: 0 }}
+                        animate={{ pathLength: 1 }}
+                        transition={{ duration: 0.5, ease: "easeOut" }}
+                    >
+                        <motion.path
+                            d="M5 13l4 4L19 7"
+                            fill="transparent"
+                            stroke="currentColor"
+                            strokeWidth="2"
+                            strokeLinecap="round"
+                            strokeLinejoin="round"
+                        />
+                    </motion.svg>
+                </motion.div>
+
+                <div className="text-center">
+                    <p className="text-sm text-fg/90">You're all set 🎉</p>
+                    <p className="text-[11px] text-fg/40 mt-1">
+                        Welcome, {username}
+                    </p>
                 </div>
             </motion.div>
         ),

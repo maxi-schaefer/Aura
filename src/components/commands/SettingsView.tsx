@@ -129,7 +129,7 @@ export const ToggleItem = ({ label, description, defaultChecked = false, checked
           <motion.div 
             animate={{ x: checked ? 18 : 3 }}
             transition={{ type: "spring", stiffness: 500, damping: 30 }}
-            className="absolute top-1 w-3 h-3 rounded-full bg-white shadow-lg" 
+            className="absolute top-0.5 size-4 rounded-full bg-white shadow-lg" 
           />
       </div>
     </div>

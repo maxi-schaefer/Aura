@@ -1,3 +1,5 @@
+import { LucideIcon } from "lucide-react";
+
 export type Result = {
     id: string;
     title: string;
@@ -10,7 +12,7 @@ export type Result = {
 
     view?: React.ReactNode;
     width?: number;
-    icon?: string;
+    icon?: string | LucideIcon;
 
     score: number;
     group: string;

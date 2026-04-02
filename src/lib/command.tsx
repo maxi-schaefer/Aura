@@ -7,12 +7,15 @@ import { WifiScanner } from "../components/commands/WifiScanner";
 import { WingetManager } from "../components/commands/WingetManager";
 import { parseTimerString } from "./utils";
 
+import { AlarmClock, CloudSun, Download, Gauge, LucideIcon, Music, Settings, Sun, WifiCog,  } from "lucide-react";
+
 export interface Command {
     cmd: string;
-    title: string; // Added for the breadcrumb UI
+    title: string;
     description: string;
-    render?: (args: string, copied?: boolean) => any; // For live widget mode
-    preview?: (args: string[]) => string; // For the subtitle in list mode
+    icon?: LucideIcon;
+    render?: (args: string, copied?: boolean) => any;
+    preview?: (args: string[]) => string;
     execute: (args: string[]) => any | Promise<any>;
 }
 
@@ -21,6 +24,7 @@ export const COMMAND_MAP: Record<string, Command> = {
         cmd: "settings",
         title: "Settings",
         description: "Configure application preferences and customize your experience.",
+        icon: Settings,
         render: (query) => <SettingsView query={query} />,
         execute: () => ({ success: true }),
     },
@@ -28,6 +32,7 @@ export const COMMAND_MAP: Record<string, Command> = {
     install: {
         cmd: "install",
         title: "Winget",
+        icon: Download,
         description: "Search, install, and manage Windows packages using Winget.",
         render: (query) => <WingetManager query={query} />,
         execute: async () => { return { success: true }; }
@@ -36,6 +41,7 @@ export const COMMAND_MAP: Record<string, Command> = {
     weather: {
         cmd: "weather",
         title: "Weather",
+        icon: CloudSun,
         description: "View current weather conditions and forecasts for any location.",
         render: (query) => <WeatherCard city={query} />,
         execute: async (args) => args.join(" ") || ""
@@ -44,6 +50,7 @@ export const COMMAND_MAP: Record<string, Command> = {
     speedtest: {
         cmd: "speedtest",
         title: "Speedtest",
+        icon: Gauge,
         description: "Measure network performance, including latency, download, and upload speeds.",
         render: () => <SpeedtestResult />,
         execute: () => <SpeedtestResult />,
@@ -52,6 +59,7 @@ export const COMMAND_MAP: Record<string, Command> = {
     timer: {
         cmd: "timer",
         title: "Timer",
+        icon: AlarmClock,
         description: "Start, pause, or manage countdown timers using natural time inputs.",
         render: (query) => {
             const totalSeconds = parseTimerString(query);
@@ -82,6 +90,7 @@ export const COMMAND_MAP: Record<string, Command> = {
     nowplaying: {
         cmd: "nowplaying",
         title: "Now Playing",
+        icon: Music,
         description: "Display the media currently playing on your system.",
         render: () => <NowPlayingCard />,
         execute: async () => {
@@ -92,6 +101,7 @@ export const COMMAND_MAP: Record<string, Command> = {
     wifi: {
         cmd: "wifi",
         title: "WiFi Explorer",
+        icon: WifiCog,
         description: "Scan nearby WiFi networks and visualize signal strength and congestion.",
         render: () => <WifiScanner />,
         execute: () => { return { success: true } }

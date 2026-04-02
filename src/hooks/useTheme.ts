@@ -1,14 +1,22 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useCallback } from "react";
 
-const THEMES = ["default", "gruvbox", "catppuccin"];
+export const THEMES = [
+  { id: "default", label: "Aura Dark", primary: "#fff" },
+  { id: "gruvbox", label: "Gruvbox Retro", primary: "#fe8019" },
+  { id: "catppuccin", label: "Catppuccin Mocha", primary: "#ca9ee6" },
+  { id: "one-dark", label: "One Dark Pro", primary: "#528bff" },
+  { id: "manly-spring", label: "Manly Spring", primary: "#7a8f7a" },
+  { id: "discord", label: "Discord", primary: "#7289da" },
+  { id: "stormy-morning", label: "Stormy Morning", primary: "#bdddfc" },
+];
 
 export function useTheme(config: any, setConfig: (c: any) => void) {
   const theme = config?.theme || "default";
 
   const applyTheme = useCallback((themeName: string) => {
     const root = document.documentElement;
-    root.classList.remove(...THEMES);
+    root.classList.remove(...THEMES.map((t) => t.id));
     if (themeName !== "default") {
       root.classList.add(themeName);
     }

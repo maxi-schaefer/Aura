@@ -60,24 +60,24 @@ export function useSearchLogic(activeCommandMode: boolean, query: string, allApp
 
       for (const [cmdKey, command] of matchedCommands.slice(0, MAX_PER_GROUP)) {
           r.push({
-              id: `command-${cmdKey}`,
-              title: command.title || cmdKey,
-              subtitle: command.description,
-              type: "command",
-              group: "Commands",
-              render: command.render, 
-              action: async (runtimeArgs?: string[]) => {
-                  const finalArgs = runtimeArgs && runtimeArgs.length > 0 ? runtimeArgs : args;
-                  
-                  const result = await command.execute(finalArgs);
-                  
-                  if (typeof result === "string") {
-                      await navigator.clipboard.writeText(result);
-                  }
-                  return result;
-              },
-              score: 100
-          });
+            id: `command-${cmdKey}`,
+            title: command.title || cmdKey,
+            subtitle: command.description,
+            type: "command",
+            group: "Commands",
+            render: command.render,
+            icon: command.icon,
+            action: async (runtimeArgs?: string[]) => {
+                const finalArgs = runtimeArgs && runtimeArgs.length > 0 ? runtimeArgs : args;
+                const result = await command.execute(finalArgs);
+
+                if (typeof result === "string") {
+                    await navigator.clipboard.writeText(result);
+                }
+                return result;
+            },
+            score: 100
+        });
       }
 
       // ✅ Apps
