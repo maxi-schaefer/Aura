@@ -50,7 +50,11 @@ export const ResultItem = ({ id, name, type, isActive, subtitle, onMouseEnter, o
                         ) : (
                             (() => {
                                 const Icon = icon;
-                                return <Icon size={16} strokeWidth={2} />;
+                                return (
+                                    <div className="bg-linear-135 from-primary to-secondary text-fg rounded-md p-1">
+                                        <Icon size={16} strokeWidth={2} />
+                                    </div>
+                                )
                             })()
                         )
                     ) : (
