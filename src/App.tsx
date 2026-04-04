@@ -107,10 +107,16 @@ export default function App() {
     }, [query]);
 
     useEffect(() => {
-        setSelectedIndex((i) => Math.min(i, results.length - 1));
+        setSelectedIndex((prev) => {
+            const prevItem = results[prev];
+            if (!prevItem) return 0;
+
+            const newIndex = results.findIndex(r => r.id === prevItem.id);
+            return newIndex !== -1 ? newIndex : 0;
+        });
     }, [results]);
 
-    useWindowShadow(containerRef, isInfoOpen, !!firstRun, [
+    useWindowShadow(containerRef, isInfoOpen, firstRun || false, [
         results,
         isLoading,
         activeCommand,
@@ -121,11 +127,14 @@ export default function App() {
 
     if (firstRun) {
         return (
-            <SetupScreen
-                onComplete={() => setFirstRun(false)}
-                config={config}
-                setConfig={setConfig}
-            />
+            /* Use h-fit to ensure the ResizeObserver detects height changes in setup steps */
+            <div ref={containerRef} className="flex flex-col w-full h-fit overflow-hidden antialiased">
+                <SetupScreen
+                    onComplete={() => setFirstRun(false)}
+                    config={config}
+                    setConfig={setConfig}
+                />
+            </div>
         );
     }
 

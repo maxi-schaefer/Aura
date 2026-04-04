@@ -4,7 +4,7 @@ import { getCurrentWindow, LogicalPosition, LogicalSize, primaryMonitor } from '
 export function useWindowShadow(
     containerRef: RefObject<HTMLDivElement | null>, 
     isExpanded: boolean,
-    isFirstRun: boolean, // Added this parameter
+    isFirstRun: boolean,
     dependencies: any[]
 ) {
     useEffect(() => {

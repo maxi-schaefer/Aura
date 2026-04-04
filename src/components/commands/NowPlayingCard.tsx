@@ -46,10 +46,21 @@ export const NowPlayingCard = () => {
 
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
-            if (e.key === " " && media) {
-                e.preventDefault();
-                sendCommand("play_pause");
-            }
+            switch (e.key) {
+                case " ":
+                     if (media) {
+                        e.preventDefault();
+                        sendCommand("play_pause");
+                    }
+                    break;
+                case "ArrowRight":
+                    sendCommand("next");
+                    break;
+
+                case "ArrowLeft":
+                    sendCommand("prev");
+                    break;
+            }            
         };
 
         window.addEventListener("keydown", handler);

@@ -7,9 +7,17 @@ const MAX_PER_GROUP = 30;
 export function buildCalculatorResult(calculation: string | null) {
     if (!calculation) return [];
 
+    // Format numbers with commas
+    const formattedCalculation = calculation.replace(
+        /(\d+)(\.\d+)?/g,
+        (_, intPart, decPart) => {
+            return Number(intPart).toLocaleString() + (decPart || "");
+        }
+    );
+
     return [{
         id: "calc",
-        title: calculation,
+        title: formattedCalculation,
         subtitle: "Calculator",
         type: "calc" as const,
         score: 1000,
@@ -17,12 +25,12 @@ export function buildCalculatorResult(calculation: string | null) {
         render: (q: string) => (
             <CalculatorView
                 query={q}
-                result={calculation}
+                result={formattedCalculation}
                 fromLabel="Input"
                 toLabel="Result"
             />
         ),
-        action: () => navigator.clipboard.writeText(calculation),
+        action: () => navigator.clipboard.writeText(formattedCalculation),
     }];
 }
 

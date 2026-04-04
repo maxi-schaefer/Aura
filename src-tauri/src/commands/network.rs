@@ -1,8 +1,8 @@
-use serde::Serialize;
-use tauri::command;
-use regex::Regex;
 use lazy_static::lazy_static;
+use regex::Regex;
+use serde::Serialize;
 use std::collections::HashMap;
+use tauri::command;
 
 use crate::commands::system::create_hidden_command;
 
@@ -23,7 +23,7 @@ pub struct Beacon {
 
 lazy_static! {
     static ref RE_SSID: Regex = Regex::new(r"^SSID\s+\d+\s*:\s*(.+)$").unwrap();
-    static ref RE_AUTH: Regex = Regex::new(r"(?i)(?:Auth)\w*\s*:\s*(.+)$").unwrap(); 
+    static ref RE_AUTH: Regex = Regex::new(r"(?i)(?:Auth)\w*\s*:\s*(.+)$").unwrap();
     static ref RE_BSSID: Regex = Regex::new(r"([0-9a-f]{2}(:[0-9a-f]{2}){5})").unwrap();
     static ref RE_SIGNAL: Regex = Regex::new(r"(\d+)%").unwrap();
     static ref RE_CHANNEL: Regex = Regex::new(r"\b(\d{1,3})\b").unwrap();
@@ -34,7 +34,7 @@ lazy_static! {
         let mut m = HashMap::new();
         // Ensure oui.txt is in your src folder or adjust path accordingly
         let data = include_str!("../assets/oui.txt");
-        
+
         for line in data.lines() {
             // IEEE format: "XX-XX-XX   (hex)		VENDOR NAME"
             if line.contains("(hex)") {
@@ -101,7 +101,9 @@ pub async fn scan_neighborhood() -> Result<Vec<Beacon>, String> {
                 }
             }
 
-            if trimmed.to_lowercase().contains("kanal") || trimmed.to_lowercase().contains("channel") {
+            if trimmed.to_lowercase().contains("kanal")
+                || trimmed.to_lowercase().contains("channel")
+            {
                 if let Some(caps) = RE_CHANNEL.captures(trimmed) {
                     if let Ok(ch) = caps[1].parse::<u16>() {
                         last.channel = ch;
@@ -111,7 +113,11 @@ pub async fn scan_neighborhood() -> Result<Vec<Beacon>, String> {
                             36..=165 => 5000 + (ch as u32 * 5),
                             _ => 0,
                         };
-                        last.band = if last.frequency < 3000 { "2.4 GHz".into() } else { "5 GHz".into() };
+                        last.band = if last.frequency < 3000 {
+                            "2.4 GHz".into()
+                        } else {
+                            "5 GHz".into()
+                        };
                     }
                 }
             }
@@ -127,10 +133,13 @@ pub async fn scan_neighborhood() -> Result<Vec<Beacon>, String> {
 
 fn lookup_vendor(bssid: &str) -> String {
     let normalized = bssid.replace(":", "").to_uppercase();
-    if normalized.len() < 6 { return "Unknown".to_string(); }
+    if normalized.len() < 6 {
+        return "Unknown".to_string();
+    }
     let prefix = &normalized[0..6];
 
-    OUI_MAP.get(prefix)
+    OUI_MAP
+        .get(prefix)
         .cloned()
         .unwrap_or_else(|| "Unknown Vendor".to_string())
 }
