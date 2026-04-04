@@ -1,183 +1,98 @@
 import "./App.css";
 import { AnimatePresence, motion } from "framer-motion";
-import { invoke } from "@tauri-apps/api/core";
-import { useEffect, useRef, useState, useCallback, useMemo } from "react";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import { LoadingState } from "./components/LoadingState";
 import Footer from "./components/footer/Footer";
 import { ResultList } from "./components/ResultList";
 import { useSearchLogic } from "./hooks/useSearchLogic";
 import { useWindowShadow } from "./hooks/useWindowShadow";
-import { playSuccess, playTick } from "./lib/sound";
 import icon from "./assets/icon.png";
 import { InfoPanel } from "./components/InfoPanel";
 import SetupScreen from "./components/SetupScreen";
 import { useTheme } from "./hooks/useTheme";
+import { useCallback, useEffect, useMemo, useRef, useState } from "react";
+import { useAppInitialization } from "./hooks/useAppInitialization";
+import { useClock } from "./hooks/useClock";
+import { useExecution } from "./hooks/useExecution";
+import { useKeyboardNavigation } from "./hooks/useKeyboardNavigation";
+import { playSuccess, playTick } from "./lib/sound";
 
 export default function App() {
     const [query, setQuery] = useState("");
-    const [allApps, setAllApps] = useState<any[]>([]);
-    const [aliases, setAliases] = useState<Record<string, string>>({});
-    const [config, setConfig] = useState<any>(null);
-
-    const [activeCommand, setActiveCommand] = useState<any | null>(null);
-    const [isLoading, setIsLoading] = useState(true);
     const [selectedIndex, setSelectedIndex] = useState(0);
-    const [time, setTime] = useState("");
-    const [showCopied, setShowCopied] = useState(false);
+    const [activeCommand, setActiveCommand] = useState<any | null>(null);
     const [isInfoOpen, setIsInfoOpen] = useState(false);
-    const [firstRun, setFirstRun] = useState<boolean | null>(null);
+    const [showCopied, setShowCopied] = useState(false);
 
     const containerRef = useRef<HTMLDivElement>(null);
     const scrollContainerRef = useRef<HTMLDivElement>(null);
     const inputRef = useRef<HTMLInputElement>(null);
     const lastQuery = useRef("");
 
-    const { applyTheme } = useTheme(config, setConfig);
+    const { applyTheme } = useTheme(null, () => {});
+
+    const {
+        allApps,
+        aliases,
+        config,
+        setConfig,
+        isLoading,
+        firstRun,
+        setFirstRun,
+    } = useAppInitialization(applyTheme);
 
     const { results } = useSearchLogic(!!activeCommand, query, allApps, aliases);
     const selectedItem = results[selectedIndex];
-    useWindowShadow(containerRef, isInfoOpen, !!firstRun, [results, isLoading, activeCommand, query]);
 
-    // PRE-FLIGHT INITIALIZATION
-    useEffect(() => {
-        const initializeAura = async () => {
-            try {
-                const [apps, aliasMap, cfg] = await Promise.all([
-                    invoke("get_installed_apps"),
-                    invoke("get_aliases"),
-                    invoke("get_config") as Promise<any>,
-                ]);
-
-                setAllApps(apps as any[]);
-                setAliases(aliasMap as Record<string, string>);
-                setConfig(cfg);
-
-                setFirstRun(cfg.first_run_complete === false);
-
-                applyTheme(cfg.theme || "default");
-
-                setTimeout(() => setIsLoading(false), 300);
-            } catch (e) {
-                console.error("Initialization failed", e);
-                setIsLoading(false);
-            }
-        };
-
-        initializeAura();
-    }, []);
-
-    useEffect(() => {
-        if (isLoading || firstRun) return;
-        const el = scrollContainerRef.current?.querySelector('[data-active="true"]');
-        el?.scrollIntoView({ block: "nearest", behavior: "smooth", inline: "nearest" });
-    }, [selectedIndex, results, isLoading, firstRun]);
-
-    const suggestion = useMemo(() => {
-        if (!query || !results.length || activeCommand) return "";
-        const t = results[0].title;
-        return t.toLowerCase().startsWith(query.toLowerCase()) ? t.slice(query.length) : "";
-    }, [query, results, activeCommand]);
+    const time = useClock();
 
     const triggerCopied = useCallback(() => {
         setShowCopied(true);
         setTimeout(() => setShowCopied(false), 2000);
     }, []);
 
-    const handleExecute = useCallback(async () => {
-        if (activeCommand) {
-            const result = await activeCommand.action?.([query]);
-            if (result?.success) triggerCopied();
-            return;
-        }
+    const suggestion = useMemo(() => {
+        if (!query || !results.length || activeCommand) return "";
 
-        const current = results[selectedIndex];
-        if (!current?.action) return;
+        const top = results[0]?.title || "";
+        return top.toLowerCase().startsWith(query.toLowerCase())
+            ? top.slice(query.length)
+            : "";
+    }, [query, results, activeCommand]);
 
-        if (current.type === "command") {
-            lastQuery.current = query;
-            const result = await current.action();
-            setActiveCommand(current);
-            setQuery("");
-            if (result?.success) triggerCopied();
-            return;
-        }
+    const handleExecute = useExecution({
+        results,
+        selectedIndex,
+        activeCommand,
+        query,
+        setQuery,
+        setActiveCommand,
+        triggerCopied,
+        lastQuery,
+    });
 
-        await current.action();
-        setQuery("");
-        getCurrentWindow().hide();
-    }, [results, selectedIndex, activeCommand, query, triggerCopied]);
-
-    useEffect(() => {
-        const handler = (e: KeyboardEvent) => {
-            if (firstRun || isLoading) return;
-
-            const max = Math.max(0, results.length - 1);
-            if(!activeCommand) inputRef.current?.focus();
-
-            if (e.ctrlKey && e.key.toLowerCase() === "k") {
-                if (selectedItem) {
-                    e.preventDefault();
-                    setIsInfoOpen((open) => !open);
-                    return;
-                }
-            }
-
-            if ((e.key === "Tab" || e.key === "ArrowRight") && suggestion && !activeCommand) {
-                e.preventDefault();
-                setQuery((q) => q + suggestion);
-                return;
-            }
-
-            switch (e.key) {
-                case "Escape":
-                    e.preventDefault();
-                    if (activeCommand) {
-                        setActiveCommand(null);
-                        setQuery(lastQuery.current); // 🔹 Restore "Settings"
-                        setSelectedIndex(0);
-                    } else {
-                        if (!query) {
-                            getCurrentWindow().hide();
-                        } else {
-                            setQuery("");
-                            lastQuery.current = ""; // Reset saved query
-                        }
-                    }
-                    break;
-                case "Enter":
-                    e.preventDefault();                    
-                    handleExecute();
-                    break;
-                case "ArrowDown":
-                    if (activeCommand) break;
-                    e.preventDefault();
-                    setSelectedIndex((i) => (i < max ? i + 1 : i));
-                    break;
-                case "ArrowUp":
-                    if (activeCommand) break;
-                    e.preventDefault();
-                    setSelectedIndex((i) => (i > 0 ? i - 1 : i));
-                    break;
-
-                case "Alt":
-                    e.preventDefault();
-                    break; // Ignore pure Alt key presses
-            }
-        };
-
-        window.addEventListener("keydown", handler);
-        return () => window.removeEventListener("keydown", handler);
-    }, [results, suggestion, activeCommand, query, handleExecute, firstRun, isLoading, selectedItem]);
-
-    useEffect(() => setSelectedIndex(0), [query]);
+    useKeyboardNavigation({
+        results,
+        selectedIndex,
+        setSelectedIndex,
+        activeCommand,
+        setActiveCommand,
+        query,
+        setQuery,
+        suggestion,
+        handleExecute,
+        firstRun,
+        isLoading,
+        selectedItem,
+        setIsInfoOpen,
+        inputRef,
+        lastQuery,
+    });
 
     useEffect(() => {
-        const i = setInterval(() => {
-            setTime(new Date().toLocaleTimeString([], { hour: "2-digit", minute: "2-digit" }));
-        }, 1000);
-        return () => clearInterval(i);
-    }, []);
+        if (isLoading || firstRun) return;
+        const el = scrollContainerRef.current?.querySelector('[data-active="true"]');
+        el?.scrollIntoView({ block: "nearest", behavior: "smooth", inline: "nearest" });
+    }, [selectedIndex, results, isLoading, firstRun]);
 
     useEffect(() => {
         if (!isLoading && results.length && !firstRun) playTick();
@@ -187,14 +102,30 @@ export default function App() {
         if (showCopied) playSuccess();
     }, [showCopied]);
 
-    // RENDER STATES
-    if (firstRun === null || (isLoading && firstRun === null)) return null;
+    useEffect(() => {
+        setSelectedIndex(0);
+    }, [query]);
+
+    useEffect(() => {
+        setSelectedIndex((i) => Math.min(i, results.length - 1));
+    }, [results]);
+
+    useWindowShadow(containerRef, isInfoOpen, !!firstRun, [
+        results,
+        isLoading,
+        activeCommand,
+        query,
+    ]);
+
+    if (firstRun === null) return null;
 
     if (firstRun) {
         return (
-            <div ref={containerRef} className="bg-transparent overflow-hidden">
-                <SetupScreen onComplete={() => setFirstRun(false)} config={config} setConfig={setConfig} />
-            </div>
+            <SetupScreen
+                onComplete={() => setFirstRun(false)}
+                config={config}
+                setConfig={setConfig}
+            />
         );
     }
 
@@ -285,7 +216,6 @@ export default function App() {
                                         </motion.div>
                                     ) : (
                                         <>
-                                            {/* 🔹 HERO SECTION: If the top result has a custom renderer and it's a calculator */}
                                             {results[0]?.type === "calc" && query.length > 0 && (
                                                 <div className="mb-4 p-2">
                                                 {results[0].render?.(query, setConfig, showCopied, config)}
@@ -293,13 +223,12 @@ export default function App() {
                                             )}
 
                                             <ResultList
-                                                /* Filter out the calc from the list if it's already shown in Hero */
-                                                results={results[0]?.type === "calc" ? results.slice(1) : results}
+                                                results={results}
                                                 selectedIndex={selectedIndex}
                                                 setSelectedIndex={setSelectedIndex}
                                                 onExecute={handleExecute}
                                             />
-                                            </>
+                                        </>
                                     )}
                                 </main>
                                 

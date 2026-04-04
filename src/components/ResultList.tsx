@@ -21,7 +21,7 @@ export const ResultList = ({ results, selectedIndex, setSelectedIndex, onExecute
     }, [results]);
 
     return (
-        <div className="flex flex-col pb-2">
+        <div className="flex flex-col pb-2 custom-scrollbar">
             {Object.entries(grouped).map(([group, entries]) => (
                 <div key={group} className="mt-2">
                     <header className="px-3 py-1.5 text-[10px] uppercase tracking-[0.15em] text-fg/20 font-bold font-mono">

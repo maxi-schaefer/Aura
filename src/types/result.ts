@@ -7,7 +7,7 @@ export type Result = {
 
     type: "app" | "file" | "alias" | "command" | "calc" | "color" | "fallback";
 
-    action?: () => void | Promise<any>;
+    action?: (runtimeArgs?: string[]) => Promise<any>;
     render?: (
         query: string,
         setConfig: (config: any) => void,

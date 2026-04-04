@@ -50,8 +50,8 @@ export const InfoPanel = ({ item }: { item: any }) => {
                             (() => {
                                 const Icon = item.icon;
                                 return (
-                                    <div className="relative size-20 rounded-2xl bg-white/5 flex items-center justify-center text-fg/10 border border-white/10 shadow-inner">
-                                        <Icon size={40} strokeWidth={1.5} />
+                                    <div className="bg-linear-135 from-primary to-secondary text-fg rounded-lg p-1">
+                                        <Icon size={40} strokeWidth={2} />
                                     </div>
                                 )
                             })()
