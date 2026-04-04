@@ -8,6 +8,7 @@ use tauri_plugin_dialog::DialogExt;
 use std::process::Command as StdCommand;
 use std::io::BufRead;
 use std::io::BufReader;
+use regex::Regex;
 
 #[cfg(windows)]
 use std::os::windows::process::CommandExt;
@@ -140,12 +141,32 @@ pub async fn install_package(app: AppHandle, id: String) -> Result<(), String> {
 
     let stdout = child.stdout.take().unwrap();
     let reader = BufReader::new(stdout);
+    
+    // Regex to find "10%" or " [====>    ] 25%"
+    let re_pct = Regex::new(r"(\d+)%").unwrap();
 
-    // Stream lines to frontend
     for line in reader.lines() {
         if let Ok(l) = line {
-            // Emit progress to the specific package ID
-            let _ = app.emit("winget-progress", serde_json::json!({ "id": id, "line": l }));
+            let mut status = "Processing...";
+            let mut progress = 0;
+
+            if l.contains("Downloading") { status = "Downloading"; }
+            else if l.contains("Installing") { status = "Installing"; }
+            else if l.contains("Successfully installed") { status = "Completed"; }
+
+            // Extract percentage if available
+            if let Some(caps) = re_pct.captures(&l) {
+                if let Ok(p) = caps[1].parse::<i32>() {
+                    progress = p;
+                }
+            }
+
+            let _ = app.emit("winget-progress", serde_json::json!({ 
+                "id": id, 
+                "line": l.trim(),
+                "status": status,
+                "progress": progress
+            }));
         }
     }
 

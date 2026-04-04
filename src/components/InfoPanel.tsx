@@ -1,6 +1,5 @@
 import { motion } from "framer-motion";
 import { FileText, Globe, Terminal, Hash, Info, Link as LinkIcon, Cpu } from "lucide-react";
-import { i } from "mathjs";
 
 interface InfoItemProps {
     label: string;

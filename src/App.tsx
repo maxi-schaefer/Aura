@@ -4,7 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { useEffect, useRef, useState, useCallback, useMemo } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
 import { LoadingState } from "./components/LoadingState";
-import Footer from "./components/Footer";
+import Footer from "./components/footer/Footer";
 import { ResultList } from "./components/ResultList";
 import { useSearchLogic } from "./hooks/useSearchLogic";
 import { useWindowShadow } from "./hooks/useWindowShadow";
@@ -281,14 +281,14 @@ export default function App() {
                                         <LoadingState />
                                     ) : activeCommand ? (
                                         <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="p-2">
-                                            {activeCommand.render ? activeCommand.render(query, showCopied, config, setConfig) : activeCommand.view}
+                                            {activeCommand.render ? activeCommand.render(query, setConfig, showCopied, config) : activeCommand.view}
                                         </motion.div>
                                     ) : (
                                         <>
                                             {/* 🔹 HERO SECTION: If the top result has a custom renderer and it's a calculator */}
                                             {results[0]?.type === "calc" && query.length > 0 && (
                                                 <div className="mb-4 p-2">
-                                                {results[0].render?.(query)}
+                                                {results[0].render?.(query, setConfig, showCopied, config)}
                                                 </div>
                                             )}
 

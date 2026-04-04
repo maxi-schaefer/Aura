@@ -9,6 +9,7 @@ import { AliasManager } from "../settings/AliasManager";
 import { GeneralManager } from "../settings/GeneralManager";
 import About from "../settings/About";
 import { AppearanceManager } from "../settings/AppereanceManager";
+import { User } from "lucide-react"
 
 const CATEGORIES = [
   { id: "general", label: "General", icon: <Settings size={14} /> },
@@ -18,12 +19,12 @@ const CATEGORIES = [
   { id: "about", label: "About", icon: <Info size={14} /> },
 ];
 
-export const SettingsView = ({ query = "", config, setConfig }: { query?: string; config: any; setConfig?: (config: any) => void }) => {
+export const SettingsView = ({ query = "", config, setConfig }: { query?: string; config: any; setConfig: (config: any) => void }) => {
   const [activeTab, setActiveTab] = useState("general");
 
   // Load config on mount
   useEffect(() => {
-    invoke("get_config").then((res) => setConfig && setConfig(res));
+    invoke("get_config").then((res) => setConfig(res));
   }, []);
 
   const filteredCategories = useMemo(() => {
@@ -36,7 +37,22 @@ export const SettingsView = ({ query = "", config, setConfig }: { query?: string
   return (
     <div className="flex h-122 w-full gap-0 antialiased">
       {/* Sidebar */}
-      <div className="w-56 flex flex-col gap-0.5 border-r border-white/5 p-2">
+      <div className="w-60 flex flex-col gap-0.5 border-r border-white/5 p-2">
+        {/* User Profile */}
+        <div className="mb-4 pb-4 border-b border-white/5">
+          <div className="flex items-center gap-3 px-3 py-2 rounded-xl bg-white/3 border border-white/5 shadow-inner">
+            <div className="relative size-8 rounded-full bg-linear-to-br from-white/10 to-white/5 border border-white/10 flex items-center justify-center overflow-hidden">
+               <div className="absolute inset-0 bg-primary/30 blur-md" />
+               <User size={14} className="text-fg/60 relative z-10" />
+            </div>
+            <div className="flex flex-col min-w-0">
+              <span className="text-[12px] font-semibold text-fg/90 truncate">
+                {config.username || "Explorer"}
+              </span>
+            </div>
+          </div>
+        </div>
+
         {filteredCategories.map((cat) => (
           <button
             key={cat.id}
@@ -51,6 +67,7 @@ export const SettingsView = ({ query = "", config, setConfig }: { query?: string
             </div>
           </button>
         ))}
+
       </div>
 
       {/* Body Component */}

@@ -2,6 +2,7 @@ import { Variants } from "framer-motion";
 import { useState, useRef, useEffect, JSX } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { invoke } from "@tauri-apps/api/core";
+import { getVersion } from "@tauri-apps/api/app"
 
 // Assets
 import auraLogo from "../assets/icon.png";
@@ -14,6 +15,7 @@ import ecosiaIcon from "../assets/engines/ecosia.png";
 import { THEMES, useTheme } from "../hooks/useTheme";
 // 🔹 Import our new selector
 import { WindowModeSelector } from "./commands/SettingsView"; 
+import { ArrowLeft } from "lucide-react";
 
 const ENGINES = [
     { id: "google", name: "Google", url: "https://google.com/search?q=", icon: googleIcon },
@@ -40,6 +42,7 @@ const pageVariants: Variants = {
 
 export default function SetupScreen({ onComplete, config, setConfig }: any) {
     const [step, setStep] = useState(-1);
+    const [version, setVersion] = useState("");
     const [username, setUsername] = useState("");
     const [selectedEngine, setSelectedEngine] = useState(ENGINES[0]);
     const inputRef = useRef<HTMLInputElement>(null);
@@ -51,6 +54,14 @@ export default function SetupScreen({ onComplete, config, setConfig }: any) {
             setTimeout(() => inputRef.current?.focus(), 100);
         }
     }, [step]);
+
+    useEffect(() => {
+        getVersion().then(setVersion);
+    }, []);
+
+    const handleBack = () => {
+        if (step > -1) setStep(step - 1);
+    };
 
     const handleFinalize = async () => {
         try {
@@ -84,7 +95,7 @@ export default function SetupScreen({ onComplete, config, setConfig }: any) {
                 </p>
                 <button
                     onClick={() => setStep(0)}
-                    className="mt-4 px-8 py-3 bg-white text-black text-xs rounded-full hover:bg-neutral-200 transition-all cursor-pointer active:scale-95 shadow-lg"
+                    className="mt-4 px-8 py-3 bg-primary text-black text-xs rounded-full hover:bg-primary/80 transition-all cursor-pointer active:scale-95 shadow-lg"
                 >
                     Get Started
                 </button>
@@ -107,7 +118,7 @@ export default function SetupScreen({ onComplete, config, setConfig }: any) {
                         className="w-full bg-white/3 border border-white/10 rounded-xl px-4 py-4 text-base text-fg outline-none focus:border-white/20 focus:bg-white/5 transition-all"
                     />
                 </div>
-                <button onClick={() => username.trim() && setStep(1)} className="w-full py-3 bg-white/5 border border-white/10 rounded-xl text-xs text-fg hover:bg-white/10 transition-colors">Continue</button>
+                <button onClick={() => username.trim() && setStep(1)} className="cursor-pointer w-full py-3 bg-white/5 border border-white/10 rounded-xl text-xs text-fg hover:bg-white/10 transition-colors">Continue</button>
             </motion.div>
         ),
         1: (
@@ -178,7 +189,7 @@ export default function SetupScreen({ onComplete, config, setConfig }: any) {
 
                 <button
                     onClick={handleFinalize}
-                    className="w-full py-3 bg-white text-black  rounded-xl text-xs active:scale-[0.98] transition-transform"
+                    className="w-full py-3 cursor-pointer bg-primary text-foreground  rounded-xl text-xs active:scale-[0.98] transition-transform"
                 >
                     Finalize Setup
                 </button>
@@ -232,6 +243,21 @@ export default function SetupScreen({ onComplete, config, setConfig }: any) {
                 {step !== -1 && <span className="text-[10px] font-mono text-fg/20 uppercase tracking-widest">Setup</span>}
             </motion.div>
 
+            <AnimatePresence>
+                {step >= 0 && step < 3 && (
+                    <motion.button
+                        initial={{ opacity: 0, x: 10 }}
+                        animate={{ opacity: 1, x: 0 }}
+                        exit={{ opacity: 0, x: 10 }}
+                        onClick={handleBack}
+                        className="absolute top-12 right-12 z-30 flex items-center gap-2 px-3 py-1.5 rounded-lg bg-white/5 border border-white/5 text-fg/40 hover:text-fg hover:bg-white/10 hover:border-white/10 transition-all cursor-pointer group"
+                    >
+                        <ArrowLeft size={12} className="group-hover:-translate-x-0.5 transition-transform" />
+                        <span className="text-[10px] font-medium uppercase tracking-wider">Back</span>
+                    </motion.button>
+                )}
+            </AnimatePresence>
+
             <div className="w-full max-w-100 z-10">
                 <AnimatePresence mode="wait">
                     {stepsContent[step]}
@@ -239,10 +265,7 @@ export default function SetupScreen({ onComplete, config, setConfig }: any) {
             </div>
 
             <div className="absolute bottom-6 w-full px-10 flex justify-between items-center opacity-20">
-                <span className="text-[10px] font-mono text-fg tracking-tight italic">v0.2.6</span>
-                <div className="flex gap-4">
-                    <span className="text-[9px] text-fg uppercase tracking-tighter">Enter to Select</span>
-                </div>
+                <span className="text-[10px] font-mono text-fg tracking-tight italic">v{version}</span>
             </div>
         </div>
     );

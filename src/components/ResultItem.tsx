@@ -1,6 +1,6 @@
 import { motion } from "framer-motion";
 import { 
-  AppWindow, FileText, Folder, Globe, Calculator, 
+  AppWindow, FileText, Folder, Calculator, 
   Palette,Command, ExternalLink 
 } from "lucide-react";
 

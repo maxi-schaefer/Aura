@@ -1,161 +1,59 @@
-import { useMemo, useState, useEffect } from 'react';
-import { matchSorter } from "match-sorter";
-import { calculateExpression, detectColor } from "../lib/utils";
-import { COMMAND_MAP } from "../lib/command";
-import { invoke } from '@tauri-apps/api/core';
+import { useEffect, useMemo, useState } from "react";
 import { Result } from "../types/result";
-import { CalculatorView } from "../components/CalculatorView";
+import { calculateExpression, detectColor } from "../lib/utils";
+import { invoke } from "@tauri-apps/api/core";
+import { loadCommands } from "../lib/command";
+import { buildAliasResults, buildAppResults, buildCalculatorResult, buildColorResult, buildCommandResults, buildFallback, buildFileResults } from "../lib/resultBuilders";
 
-const MAX_PER_GROUP = 30;
+export function useSearchLogic(
+    activeCommandMode: boolean,
+    query: string,
+    allApps: any[],
+    aliases: Record<string, string>
+) {
+    const [results, setResults] = useState<Result[]>([]);
+    const [fileResults, setFileResults] = useState<any[]>([]);
+    const [commands, setCommands] = useState<Record<string, any>>({});
 
-export function useSearchLogic(activeCommandMode: boolean, query: string, allApps: any[], aliases: Record<string, string>) {
-  const [results, setResults] = useState<Result[]>([]);
-  const [fileResults, setFileResults] = useState<any[]>([]);
+    const calculation = useMemo(() => calculateExpression(query), [query]);
+    const detectedColor = useMemo(() => detectColor(query), [query]);
 
-  const calculation = useMemo(() => calculateExpression(query), [query]);
-  const detectedColor = useMemo(() => detectColor(query), [query]);
+    useEffect(() => {
+        if (!query) return setFileResults([]);
 
-  // 🔹 File search (always active now)
-  useEffect(() => {
-    if (!query) return setFileResults([]);
-    invoke("search_files", { query }).then((res: any) => setFileResults(res));
-  }, [query]);
+        invoke("search_files", { query }).then((res: any) => setFileResults(res));
+    }, [query]);
 
-  useEffect(() => {
-    const build = async () => {
-      if (activeCommandMode) return;
+    useEffect(() => {
+        loadCommands().then((res: any) => setCommands(res));
+    }, []);
 
-      let r: Result[] = [];
+    useEffect(() => {
+        if (activeCommandMode) return;
 
-      // ✅ Calculator
-      if (calculation) {
-        r.push({
-          id: "calc",
-          title: calculation,
-          subtitle: "Calculator",
-          type: "calc",
-          score: 1000, // Top priority
-          group: "Calculator",
-          render: (q: string) => (
-            <CalculatorView
-              query={q} 
-              result={calculation} 
-              fromLabel="Input" 
-              toLabel="Result" 
-            />
-          ),
-          action: () => navigator.clipboard.writeText(calculation),
-        });
-      }
+        let r: Result[] = [];
 
-      // ✅ Color
-      if (detectedColor) {
-        r.push({
-          id: "color",
-          title: detectedColor,
-          subtitle: "Color",
-          type: "color",
-          action: () => navigator.clipboard.writeText(detectedColor),
-          score: 95,
-          group: "Quick Actions"
-        });
-      }
+        r.push(...buildCalculatorResult(calculation));
+        r.push(...buildColorResult(detectedColor));
+        r.push(...buildCommandResults(query, commands));
+        r.push(...buildAppResults(query, allApps));
+        r.push(...buildFileResults(fileResults));
+        r.push(...buildAliasResults(query, aliases));
+        r.push(...buildFallback(query, r));
 
-      // ✅ Commands (NO PREFIX anymore)
-      const [inputCmd, ...args] = query.toLowerCase().split(" ");
-      const matchedCommands = Object.entries(COMMAND_MAP).filter(([key]) =>
-          key.includes(inputCmd)
-      );
+        r.sort((a, b) => b.score - a.score);
 
-      for (const [cmdKey, command] of matchedCommands.slice(0, MAX_PER_GROUP)) {
-          r.push({
-            id: `command-${cmdKey}`,
-            title: command.title || cmdKey,
-            subtitle: command.description,
-            type: "command",
-            group: "Commands",
-            render: command.render,
-            icon: command.icon,
-            action: async (runtimeArgs?: string[]) => {
-                const finalArgs = runtimeArgs && runtimeArgs.length > 0 ? runtimeArgs : args;
-                const result = await command.execute(finalArgs);
+        setResults(r);
+    }, [
+        query,
+        allApps,
+        aliases,
+        calculation,
+        detectedColor,
+        fileResults,
+        commands,
+        activeCommandMode,
+    ]);
 
-                if (typeof result === "string") {
-                    await navigator.clipboard.writeText(result);
-                }
-                return result;
-            },
-            score: 100
-        });
-      }
-
-      // ✅ Apps
-      const filteredApps = query
-        ? matchSorter(allApps, query, { keys: ["name"] })
-        : allApps;
-
-        r.push(...filteredApps.slice(0, MAX_PER_GROUP).map((app, index) => ({
-            id: app.path,
-            title: app.name,
-            subtitle: "Application",
-            type: "app" as const,
-            action: async () => {
-                await invoke("launch_app", { path: app.path });
-            },
-            icon: app.icon,
-            score: 50 - index,
-            group: "Applications"
-        })));
-
-        // ✅ Files
-        r.push(...fileResults.slice(0, MAX_PER_GROUP).map((file, index) => ({
-            id: file.path,
-            title: file.name,
-            subtitle: file.is_dir ? "Folder" : "File",
-            type: "file" as const,
-            icon: file.icon,
-            action: async () => {
-                await invoke("launch_app", { path: file.path });
-            },
-            score: 40 - index,
-            group: "Files"
-        })));
-
-      // ✅ Aliases
-      const aliasEntries = Object.entries(aliases);
-      const filteredAliases = query ? matchSorter(aliasEntries, query.replace("@", ""), { keys: [(item) => item[0]] }) : aliasEntries;
-
-        r.push(...filteredAliases.slice(0, MAX_PER_GROUP).map(([key, url]) => ({
-          id: key,
-          title: `@${key}`,
-          subtitle: url,
-          type: "alias" as const,
-          action: async () => {
-            await invoke("search_web", { query: url });
-          },
-          score: 80,
-          group: "Aliases"
-        })));
-
-      // ✅ Fallback
-      if (r.length === 0 && query.length > 0) {
-        r.push({
-          id: "fallback",
-          title: `Search "${query}"`,
-          subtitle: "Browser",
-          type: "fallback",
-          action: () => invoke("search_web", { query }),
-          score: 10,
-          group: "Search"
-        });
-      }
-
-      r.sort((a, b) => b.score - a.score);
-      setResults(r);
-    };
-
-    build();
-  }, [query, allApps, aliases, calculation, detectedColor, fileResults]);
-
-  return { results };
+    return { results };
 }

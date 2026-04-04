@@ -1,7 +1,7 @@
 // components/Footer.tsx
 import { getVersion } from "@tauri-apps/api/app"
 import { useEffect, useState } from "react";
-import { FooterTimer } from "./footer/FooterTimer";
+import { FooterTimer } from "./FooterTimer";
 import { motion, AnimatePresence } from "framer-motion";
 
 interface FooterProps {

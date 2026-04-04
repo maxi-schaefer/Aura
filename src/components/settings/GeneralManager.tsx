@@ -47,6 +47,20 @@ export const GeneralManager = ({ config, setConfig }: GeneralManagerProps) => {
 
   return (
     <div className="space-y-8">
+      <Section label="Application">
+        <ToggleItem 
+          label="Launch at login" 
+          description="Start Aura when you log in." 
+          checked={autoStart}
+          onChange={toggleAutostart}
+        />
+        <ToggleItem 
+          label="Check for Updates" 
+          description="Keep the app updated." 
+          defaultChecked 
+        />
+      </Section>
+
       <Section label="Search Engine">
         <div className="p-1 grid grid-cols-1 gap-1">
           {ENGINES.map((eng) => (
@@ -74,20 +88,6 @@ export const GeneralManager = ({ config, setConfig }: GeneralManagerProps) => {
             </motion.button>
           ))}
         </div>
-      </Section>
-
-      <Section label="Application">
-        <ToggleItem 
-          label="Launch at login" 
-          description="Start Aura when you log in." 
-          checked={autoStart}
-          onChange={toggleAutostart}
-        />
-        <ToggleItem 
-          label="Check for Updates" 
-          description="Keep the app updated." 
-          defaultChecked 
-        />
       </Section>
     </div>
   );

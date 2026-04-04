@@ -8,7 +8,12 @@ export type Result = {
     type: "app" | "file" | "alias" | "command" | "calc" | "color" | "fallback";
 
     action?: () => void | Promise<any>;
-    render?: (args: string) => any;
+    render?: (
+        query: string,
+        setConfig: (config: any) => void,
+        copied?: boolean,
+        config?: any
+    ) => React.ReactNode;
 
     view?: React.ReactNode;
     width?: number;
