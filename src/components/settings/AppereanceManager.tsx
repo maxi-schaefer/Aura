@@ -35,8 +35,8 @@ export const AppearanceManager = ({ config, setConfig }: AppearanceManagerProps)
             return (
               <button
                 key={t.id}
-                onClick={() => changeTheme(t.id)}
-                className={`relative flex items-center gap-3 px-4 py-4 rounded-xl border transition-all cursor-pointer group overflow-hidden
+                onClick={(e) => changeTheme(t.id, e)}
+                className={`relative flex items-center gap-3 p-2 rounded-xl border transition-all cursor-pointer group overflow-hidden
                   ${isActive 
                     ? "bg-primary/8 border-primary/20 shadow-lg" 
                     : "bg-white/2 border-white/5 hover:bg-white/5 hover:border-white/10"
@@ -47,7 +47,7 @@ export const AppearanceManager = ({ config, setConfig }: AppearanceManagerProps)
                   className="relative z-10 size-8 rounded-full border-2 border-white/10 flex items-center justify-center shrink-0"
                   style={{ backgroundColor: t.primary }}
                 >
-                  {isActive && <Check size={14} className="text-fg shadow-sm" />}
+                  {isActive && <Check size={14} className="text-black" />}
                 </div>
 
                 <div className="relative z-10 flex flex-col items-start text-left">

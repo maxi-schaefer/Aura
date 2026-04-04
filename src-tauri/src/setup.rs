@@ -1,15 +1,21 @@
 use tauri::{
     menu::{Menu, MenuItem, PredefinedMenuItem},
     tray::TrayIconBuilder,
-    App, Emitter, Manager, WindowEvent,
+    App, Manager, WindowEvent,
 };
-use tauri_plugin_global_shortcut::{Code, GlobalShortcutExt, Modifiers, Shortcut, ShortcutState};
+use tauri_plugin_global_shortcut::{GlobalShortcutExt, Shortcut};
+use std::str::FromStr;
+
+#[cfg(target_os = "windows")]
+use windows_sys::Win32::UI::WindowsAndMessaging::*;
 
 use crate::commands::system::get_config;
 
 pub fn init(app: &mut App) -> std::result::Result<(), Box<dyn std::error::Error>> {
     let window = app.get_webview_window("main").unwrap();
     let app_handle = app.handle().clone();
+
+    create_main_window(&app_handle, window.clone());
 
     // 1. Check first-run status immediately
     let config = get_config(app_handle.clone());
@@ -34,12 +40,10 @@ pub fn init(app: &mut App) -> std::result::Result<(), Box<dyn std::error::Error>
 
     // --- Focus & Visibility Logic ---
     if is_first_run {
-        // 1. Force the window to show on the taskbar for the setup process
         let _ = window.set_skip_taskbar(false);
         let _ = window.show();
         let _ = window.set_focus();
     } else {
-        // 2. Ensure it is hidden from taskbar if already configured
         let _ = window.set_skip_taskbar(true);
     }
 
@@ -60,28 +64,87 @@ pub fn init(app: &mut App) -> std::result::Result<(), Box<dyn std::error::Error>
     });
 
     // --- Global Shortcut ---
-    let alt_space = Shortcut::new(Some(Modifiers::ALT), Code::Space);
-    app.global_shortcut()
-        .on_shortcut(alt_space, move |app_handle, _shortcut, event| {
-            if event.state() == ShortcutState::Pressed {
-                if let Some(window) = app_handle.get_webview_window("main") {
-                    let current_config = get_config(app_handle.clone());
+    let app_handle = app.handle().clone();
+    refresh_global_shortcut(&app_handle);
 
+    Ok(())
+}
+
+fn create_main_window(_app: &tauri::AppHandle, window: tauri::WebviewWindow) -> tauri::WebviewWindow {
+    let _ = window.set_decorations(false);
+    let _ = window.set_always_on_top(true);
+    let _ = window.set_skip_taskbar(true);
+
+    #[cfg(target_os = "windows")]
+    {
+        unsafe {
+            let hwnd = window.hwnd().unwrap().0 as *mut std::ffi::c_void;
+            
+            let style = GetWindowLongW(hwnd as _, GWL_STYLE) as u32;
+            let ex_style = GetWindowLongW(hwnd as _, GWL_EXSTYLE) as u32;
+
+            let new_style = (style & !WS_SYSMENU & !WS_CAPTION) | WS_POPUP;
+            let new_ex_style = ex_style | WS_EX_TOOLWINDOW;
+
+            SetWindowLongW(hwnd as _, GWL_STYLE, new_style as i32);
+            SetWindowLongW(hwnd as _, GWL_EXSTYLE, new_ex_style as i32);
+            
+            SetWindowPos(
+                hwnd as _, 
+                std::ptr::null_mut(), // HWND_TOP
+                0, 0, 0, 0,
+                SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED
+            );
+        }
+    }
+    window
+}
+
+pub fn refresh_global_shortcut(app: &tauri::AppHandle) {
+    let config = crate::commands::system::get_config(app.clone());
+    let shortcut_str = config.main_shortcut.unwrap_or_else(|| "Alt+Space".to_string());
+    
+    // 1. Unregister everything
+    let _ = app.global_shortcut().unregister_all();
+
+    // 2. Register the new shortcut
+    if let Ok(shortcut) = Shortcut::from_str(&shortcut_str) {
+        let _ = app.global_shortcut().on_shortcut(shortcut, move |app, _shortcut, event| {
+            if event.state() == tauri_plugin_global_shortcut::ShortcutState::Pressed {
+                if let Some(window) = app.get_webview_window("main") {
                     if window.is_visible().unwrap_or(false) {
                         let _ = window.hide();
                     } else {
-                        // If setup is done, always ensure skip_taskbar is true before showing
-                        if current_config.first_run_complete {
-                            let _ = window.set_skip_taskbar(true);
-                        }
-
                         let _ = window.show();
                         let _ = window.set_focus();
-                        let _ = window.emit("window-opened", ());
                     }
                 }
             }
-        })?;
+        });
+    }
 
-    Ok(())
+    #[cfg(target_os = "windows")]
+    if let Some(window) = app.get_webview_window("main") {
+        unsafe {
+            if let Ok(hwnd_wrap) = window.hwnd() {
+                // Cast HWND correctly
+                let hwnd = hwnd_wrap.0 as *mut std::ffi::c_void;
+                
+                let h_menu = GetSystemMenu(hwnd as _, 0);
+                if h_menu != std::ptr::null_mut() {
+                    for i in (0..10).rev() {
+                        // h_menu is an HMENU, which is also a pointer type in windows-sys
+                        DeleteMenu(h_menu as _, i as u32, MF_BYPOSITION);
+                    }
+                }
+
+                SetWindowPos(
+                    hwnd as _, 
+                    std::ptr::null_mut(), 
+                    0, 0, 0, 0,
+                    SWP_NOMOVE | SWP_NOSIZE | SWP_NOZORDER | SWP_FRAMECHANGED
+                );
+            }
+        }
+    }
 }

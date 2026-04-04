@@ -1,4 +1,5 @@
 use crate::scanner;
+use crate::setup;
 use rayon::prelude::*;
 use regex::Regex;
 use serde::{Deserialize, Serialize};
@@ -45,6 +46,7 @@ pub struct Config {
     pub first_run_complete: bool,
     pub theme: Option<String>,
     pub window_mode: Option<String>,
+    pub main_shortcut: Option<String>
 }
 
 pub fn create_hidden_command(program: &str) -> StdCommand {
@@ -347,6 +349,7 @@ pub fn get_config(app: AppHandle) -> Config {
         username: None,
         theme: None,
         window_mode: Some("compact".into()),
+        main_shortcut: Some("ALT+Space".into())
     };
 
     fs::read_to_string(path)
@@ -361,5 +364,8 @@ pub fn save_config(app: AppHandle, config: Config) -> Result<(), String> {
     let _ = fs::create_dir_all(&dir);
     let json = serde_json::to_string_pretty(&config).map_err(|e| e.to_string())?;
     fs::write(dir.join("config.json"), json).map_err(|e| e.to_string())?;
+
+    setup::refresh_global_shortcut(&app);
+
     Ok(())
 }

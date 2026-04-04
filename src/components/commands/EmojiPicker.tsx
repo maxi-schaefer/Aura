@@ -11,7 +11,7 @@ const EMOJIS = Object.entries(emojiData).map(([char, info]: any) => ({
     group: info.group,
 }));
 
-const COLUMNS = 8;
+const COLUMNS = 10;
 
 const EmojiButton = memo(({ emoji, isSelected, onHover, onClick, forwardRef }: any) => (
     <button
@@ -25,7 +25,12 @@ const EmojiButton = memo(({ emoji, isSelected, onHover, onClick, forwardRef }: a
         `}
     >
         <span className="relative z-10 pointer-events-none">{emoji.char}</span>
-        {isSelected && <div className="absolute inset-0 border border-white/20 rounded-xl pointer-events-none" />}
+        {isSelected && (
+            <>
+                <div className="absolute inset-0 border border-white/20 rounded-xl pointer-events-none" />
+                <div className="absolute inset-0 scale-95 border border-white/10 rounded-xl pointer-events-none" />
+            </>
+        )}
     </button>
 ));
 
@@ -155,7 +160,7 @@ export const EmojiPicker = ({ query }: { query: string }) => {
                                     {row.label}
                                 </div>
                             ) : (
-                                <div className="grid grid-cols-8 gap-2 mb-2">
+                                <div className="grid grid-cols-10 gap-2 mb-2">
                                     {row.items.map((emoji: any, colIdx: number) => {
                                         const idx = row.startIndex + colIdx;
                                         return (
@@ -190,7 +195,7 @@ export const EmojiPicker = ({ query }: { query: string }) => {
                 {copyFeedback && (
                     <motion.div 
                         initial={{ opacity: 0, scale: 0.9 }} animate={{ opacity: 1, scale: 1 }} exit={{ opacity: 0 }}
-                        className="absolute inset-0 z-50 bg-black/40 backdrop-blur-lg flex flex-col items-center justify-center"
+                        className="absolute inset-0 z-50 bg-black/90 backdrop-blur-lg flex flex-col items-center justify-center"
                     >
                         <span className="text-7xl drop-shadow-2xl">{copyFeedback}</span>
                         <span className="text-[10px]  mt-4 text-white/40 tracking-[.5em]">COPIED</span>

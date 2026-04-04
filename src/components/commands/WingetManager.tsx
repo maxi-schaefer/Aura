@@ -2,8 +2,7 @@ import { useState, useEffect, useMemo } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-    Package, Loader2, Check, ArrowUpCircle, 
-    Trash2
+    Package, Loader2, Check, ArrowUpCircle, Trash2, Upload, Download 
 } from "lucide-react";
 import { listen } from "@tauri-apps/api/event";
 
@@ -31,10 +30,7 @@ export const WingetManager = ({ query }: { query: string }) => {
 
     useEffect(() => { refreshData(); }, []);
 
-    // Clear packages when leaving search view to prevent "ghost" results
-    useEffect(() => {
-        if (view !== "search") setPackages([]);
-    }, [view]);
+    useEffect(() => { if (view !== "search") setPackages([]); }, [view]);
 
     useEffect(() => {
         const unlisten = listen("winget-progress", (event: any) => {
@@ -55,79 +51,78 @@ export const WingetManager = ({ query }: { query: string }) => {
         } catch (e) { console.error("Refresh failed", e); }
     };
 
-    // Improved Search Logic
+    // Search logic
     useEffect(() => {
         if (view !== "search") return;
         if (query.trim().length < 2) { setPackages([]); return; }
-
-        const search = async () => {
+        const timer = setTimeout(async () => {
             setLoading(true);
             try {
                 const results: any = await invoke("search_winget", { query });
                 setPackages(results);
             } finally { setLoading(false); }
-        };
-
-        const timer = setTimeout(search, 400);
+        }, 400);
         return () => clearTimeout(timer);
     }, [query, view]);
 
-    // Robust list filtering
+    // Filter list based on view
     const list = useMemo(() => {
         switch (view) {
-            case "search":
-                return packages;
-            case "updates":
-                return updates;
+            case "search": return packages;
+            case "updates": return updates;
             case "installed":
                 if (!query) return installed;
-                const lowerQuery = query.toLowerCase();
-                return installed.filter(p =>
-                    p.name.toLowerCase().includes(lowerQuery) ||
-                    p.id.toLowerCase().includes(lowerQuery)
-                );
-            default:
-                return [];
+                const q = query.toLowerCase();
+                return installed.filter(p => p.name.toLowerCase().includes(q) || p.id.toLowerCase().includes(q));
+            default: return [];
         }
     }, [view, packages, updates, installed, query]);
 
-    // Actions (Fixed progress cleanup)
+    // Deduplicate
+    const dedupedList = useMemo(() => {
+        const seen = new Set<string>();
+        return list.filter(pkg => {
+            const uid = `${pkg.id}-${pkg.version}-${pkg.source}`;
+            if (seen.has(uid)) return false;
+            seen.add(uid);
+            return true;
+        });
+    }, [list]);
+
+    // Actions
     const handleAction = async (pkg: any) => {
         if (actionId) return;
         setActionId(pkg.id);
         try {
             await invoke("install_package", { id: pkg.id });
-            // Keep progress visible briefly for UX
             setTimeout(() => {
-                setProgressMap(prev => {
-                    const newMap = { ...prev };
-                    delete newMap[pkg.id];
-                    return newMap;
-                });
+                setProgressMap(prev => { const n = { ...prev }; delete n[pkg.id]; return n; });
                 refreshData();
             }, 1500);
-        } catch (e) {
-            console.error(e);
-        } finally {
-            setActionId(null);
-        }
+        } catch (e) { console.error(e); } finally { setActionId(null); }
     };
 
     const handleUpdate = async (pkg: any) => {
         setActionId(pkg.id);
-        try {
-            await invoke("update_package", { id: pkg.id });
-            refreshData();
-        } finally { setActionId(null); }
+        try { await invoke("update_package", { id: pkg.id }); refreshData(); }
+        finally { setActionId(null); }
     };
 
     const handleUninstall = async (pkg: any) => {
         if (!confirm(`Uninstall ${pkg.name}?`)) return;
         setActionId(pkg.id);
-        try {
-            await invoke("uninstall_package", { id: pkg.id });
-            refreshData();
-        } finally { setActionId(null); }
+        try { await invoke("uninstall_package", { id: pkg.id }); refreshData(); }
+        finally { setActionId(null); }
+    };
+
+    const handleExport = async () => {
+        await invoke("export_winget_setup", { packages: installed });
+    };
+
+    const handleImport = async () => {
+        const imported: any = await invoke("import_winget_setup");
+        setPackages(imported);
+        setView("search");
     };
 
     const renderPackageActions = (pkg: any) => {
@@ -138,7 +133,7 @@ export const WingetManager = ({ query }: { query: string }) => {
 
         if (isActing && progressData) {
             return (
-                <div className="flex flex-col items-end gap-1.5 min-w-[120px]">
+                <div className="flex flex-col items-end gap-1 min-w-30">
                     <div className="flex items-center gap-2">
                         <motion.span 
                             animate={{ opacity: [0.5, 1, 0.5] }}
@@ -163,27 +158,19 @@ export const WingetManager = ({ query }: { query: string }) => {
         return (
             <div className="flex items-center gap-2">
                 {hasUpdate && view !== "updates" && (
-                    <button onClick={() => handleUpdate(pkg)} className="h-8 px-3 rounded-lg bg-orange-500/20 text-orange-400 text-[11px] font-medium flex items-center gap-2">
+                    <button onClick={() => handleUpdate(pkg)} className="cursor-pointer h-8 px-3 rounded-lg bg-orange-500/20 text-orange-400 text-[11px] font-medium flex items-center gap-2">
                         <ArrowUpCircle size={10} /> Update
                     </button>
                 )}
-
                 {isInstalled && (
-                    <button 
-                        onClick={() => handleUninstall(pkg)}
-                        className="h-8 w-8 flex items-center justify-center rounded-lg bg-red-500/10 text-red-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/20"
-                    >
+                    <button onClick={() => handleUninstall(pkg)}
+                        className=" cursor-pointer h-8 w-8 flex items-center justify-center rounded-lg bg-red-500/10 text-red-400 opacity-0 group-hover:opacity-100 transition-all hover:bg-red-500/20">
                         <Trash2 size={14} />
                     </button>
                 )}
-
-                <button
-                    onClick={() => view === "updates" ? handleUpdate(pkg) : handleAction(pkg)}
+                <button onClick={() => view === "updates" ? handleUpdate(pkg) : handleAction(pkg)}
                     disabled={isInstalled && view !== "updates"}
-                    className={`h-8 px-3 rounded-lg text-[11px] font-medium transition-all ${
-                        isInstalled ? "bg-emerald-500/10 text-emerald-500/50" : "bg-white/10 hover:bg-white/20"
-                    }`}
-                >
+                    className={`cursor-pointer h-8 px-3 rounded-lg text-[11px] font-medium transition-all ${isInstalled ? "bg-emerald-500/10 text-emerald-500/50" : "bg-white/10 hover:bg-white/20"}`}>
                     {isActing ? <Loader2 size={12} className="animate-spin" /> : isInstalled ? "Installed" : "Install"}
                 </button>
             </div>
@@ -203,44 +190,52 @@ export const WingetManager = ({ query }: { query: string }) => {
                         Updates {updates.length > 0 && <span className="ml-1.5 px-1.5 py-0.5 rounded-full bg-orange-500/20 text-orange-400 text-[10px] font-bold">{updates.length}</span>}
                     </TabButton>
                 </div>
+                <div className="flex gap-2">
+                    <button about="Download" onClick={handleExport} className="cursor-pointer p-1 rounded-lg bg-white/10 hover:bg-white/20"><Download size={16} /></button>
+                    <button about="Upload" onClick={handleImport} className="cursor-pointer p-1 rounded-lg bg-white/10 hover:bg-white/20"><Upload size={16} /></button>
+                </div>
             </div>
 
             {/* List */}
             <div className="flex-1 overflow-y-auto custom-scrollbar p-2 space-y-1">
                 {loading ? (
                     <div className="space-y-1">{[...Array(5)].map((_, i) => <SkeletonRow key={i} />)}</div>
-                ) : list.length === 0 ? (
+                ) : dedupedList.length === 0 ? (
                     <div className="h-full flex flex-col items-center justify-center text-fg/20 space-y-2">
                         <Package size={32} strokeWidth={1} />
                         <span className="text-xs font-medium">No packages found</span>
                     </div>
                 ) : (
                     <AnimatePresence mode="popLayout">
-                        {list.map((pkg) => (
-                            <motion.div
-                                layout
-                                initial={{ opacity: 0, scale: 0.98 }}
-                                animate={{ opacity: 1, scale: 1 }}
-                                exit={{ opacity: 0, scale: 0.98 }}
-                                // Changed key to just pkg.id to help Framer Motion track the same element across views
-                                key={pkg.id}
-                                className="group flex items-center justify-between p-3 rounded-xl bg-white/3 border border-white/5 hover:border-white/10 hover:bg-white/6 transition-all"
-                            >
-                                <div className="flex items-center gap-3">
-                                    <div className="w-10 h-10 rounded-lg bg-linear-to-br from-white/10 to-white/5 flex items-center justify-center">
-                                        <Package size={18} className="text-fg/60" />
-                                    </div>
-                                    <div>
-                                        <div className="text-[13px] font-medium text-fg/90 flex items-center gap-2">
-                                            {pkg.name}
-                                            {installed.some(p => p.id === pkg.id) && <Check size={12} className="text-emerald-400" />}
+                        {dedupedList.map((pkg, index) => {
+                            const key = `${pkg.id}-${pkg.version}-${pkg.source}-${index}`;
+                            const isInstalled = installed.some(p => p.id === pkg.id);
+                            const hasUpdate = updates.some(p => p.id === pkg.id);
+                            return (
+                                <motion.div
+                                    layout
+                                    initial={{ opacity: 0, scale: 0.98 }}
+                                    animate={{ opacity: 1, scale: 1 }}
+                                    exit={{ opacity: 0, scale: 0.98 }}
+                                    key={key}
+                                    className="group flex items-center justify-between p-3 rounded-xl bg-white/3 border border-white/5 hover:border-white/10 hover:bg-white/6 transition-all"
+                                >
+                                    <div className="flex flex-col md:flex-row md:items-center gap-3">
+                                        <div className="w-10 h-10 rounded-lg bg-linear-to-br from-white/10 to-white/5 flex items-center justify-center">
+                                            <Package size={18} className="text-fg/60" />
                                         </div>
-                                        <div className="text-[11px] text-fg/30 font-mono">{pkg.id} • {pkg.version}</div>
+                                        <div className="flex flex-col md:flex-row md:items-center gap-4 text-[11px] text-fg/30 font-mono">
+                                            <div className="font-medium text-fg/90 flex items-center gap-1">{pkg.name} {isInstalled && <Check size={12} className="text-emerald-400" />}</div>
+                                            <div>ID: {pkg.id}</div>
+                                            <div>Version: {pkg.version}</div>
+                                            <div>Source: {pkg.source}</div>
+                                            {hasUpdate && <div className="text-orange-400 font-bold">Update Available</div>}
+                                        </div>
                                     </div>
-                                </div>
-                                {renderPackageActions(pkg)}
-                            </motion.div>
-                        ))}
+                                    {renderPackageActions(pkg)}
+                                </motion.div>
+                            );
+                        })}
                     </AnimatePresence>
                 )}
             </div>
@@ -249,7 +244,7 @@ export const WingetManager = ({ query }: { query: string }) => {
 };
 
 const TabButton = ({ children, active, onClick }: any) => (
-    <button onClick={onClick} className={`px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${active ? "bg-white/10 text-fg" : "text-fg/40 hover:text-fg/60"}`}>
+    <button onClick={onClick} className={`cursor-pointer px-3 py-1.5 rounded-lg text-xs font-medium transition-all ${active ? "bg-white/10 text-fg" : "text-fg/40 hover:text-fg/60"}`}>
         {children}
     </button>
 );

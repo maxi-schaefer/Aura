@@ -10,6 +10,7 @@ import { GeneralManager } from "../settings/GeneralManager";
 import About from "../settings/About";
 import { AppearanceManager } from "../settings/AppereanceManager";
 import { User } from "lucide-react"
+import { ShortcutsManager } from "../settings/ShortcutManager";
 
 const CATEGORIES = [
   { id: "general", label: "General", icon: <Settings size={14} /> },
@@ -105,6 +106,10 @@ const SettingsBody = ({ activeTab, config, setConfig }: any) => {
             <AliasManager />
           )}
           
+          {activeTab === "shortcuts" && (
+            <ShortcutsManager config={config} setConfig={setConfig} />
+          )}
+
           {activeTab === "about" && (
             <About />
           )}
@@ -138,7 +143,7 @@ export const ToggleItem = ({ label, description, defaultChecked = false, checked
         <div className="text-[13.5px] text-fg/90 font-medium group-hover:text-fg">{label}</div>
         <div className="text-[12px] text-fg/30 leading-snug mt-0.5">{description}</div>
       </div>
-      <div className={`w-9 h-5 rounded-full relative transition-all duration-200 ${checked ? 'bg-linear-to-r from-green-500 to-green-400' : 'bg-white/5'}`}>
+      <div className={`w-9 h-5 rounded-full relative transition-all duration-200 ${checked ? 'bg-linear-to-r from-primary to-secondary' : 'bg-white/5'}`}>
           <motion.div 
             animate={{ x: checked ? 18 : 3 }}
             transition={{ type: "spring", stiffness: 500, damping: 30 }}

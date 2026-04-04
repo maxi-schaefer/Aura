@@ -39,6 +39,10 @@ export function useKeyboardNavigation({
 }: Props) {
     useEffect(() => {
         const handler = (e: KeyboardEvent) => {
+            if ((e.key === "Alt" || e.key === "Menu") && !e.ctrlKey && !e.metaKey && !e.shiftKey) {
+                e.preventDefault();
+            }
+
             if (firstRun || isLoading) return;
 
             const max = Math.max(0, results.length - 1);
@@ -99,7 +103,9 @@ export function useKeyboardNavigation({
         };
 
         window.addEventListener("keydown", handler);
-        return () => window.removeEventListener("keydown", handler);
+        return () => {
+            window.removeEventListener("keydown", handler);
+        };
     }, [
         results,
         selectedIndex,
