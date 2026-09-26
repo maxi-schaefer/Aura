@@ -1,7 +1,6 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
-import { getCurrentWindow } from "@tauri-apps/api/window";
 import { Check, Copy, Pipette } from "lucide-react";
 import {
     Rgb,
@@ -75,22 +74,14 @@ export const ColorPicker = ({ query }: { query: string }) => {
         if (!window.EyeDropper) return;
         setPickError(null);
 
-        const appWindow = getCurrentWindow();
-
-        // Open the picker before hiding: it needs this document active to
-        // start. Once the OS-level picker owns the screen, Aura gets out of
-        // the way so it is not covering whatever you are sampling.
-        const picking = new window.EyeDropper().open();
-        await appWindow.hide();
-
+        // The window deliberately stays visible here. Chromium cancels an
+        // in-flight EyeDropper when the initiating document is hidden, so
+        // hiding Aura to get it out of the way kills the pick instead.
         try {
-            const { sRGBHex } = await picking;
+            const { sRGBHex } = await new window.EyeDropper().open();
             setPicked(sRGBHex);
         } catch {
             // Dismissing the picker with Escape rejects; not an error.
-        } finally {
-            await appWindow.show();
-            await appWindow.setFocus();
         }
     };
 
