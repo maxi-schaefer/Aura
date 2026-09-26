@@ -15,11 +15,12 @@ import { useClock } from "./hooks/useClock";
 import { useExecution } from "./hooks/useExecution";
 import { useKeyboardNavigation } from "./hooks/useKeyboardNavigation";
 import { playSuccess, playTick } from "./lib/sound";
+import { Result } from "./types/result";
 
 export default function App() {
     const [query, setQuery] = useState("");
     const [selectedIndex, setSelectedIndex] = useState(0);
-    const [activeCommand, setActiveCommand] = useState<any | null>(null);
+    const [activeCommand, setActiveCommand] = useState<Result | null>(null);
     const [isInfoOpen, setIsInfoOpen] = useState(false);
     const [showCopied, setShowCopied] = useState(false);
 
@@ -261,7 +262,7 @@ export default function App() {
                                 results={results.length}
                                 selectedType={results[selectedIndex]?.type || ""}
                                 isInfoOpen={isInfoOpen}
-                                activeCommand={activeCommand?.id}
+                                activeCommand={activeCommand?.id ?? null}
                             />
                         </motion.div>
                     )}
