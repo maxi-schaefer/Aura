@@ -1,3 +1,4 @@
+pub mod picker;
 pub mod notes;
 pub mod backup;
 pub mod content;

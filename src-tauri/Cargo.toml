@@ -41,4 +41,9 @@ regex = "1.12.3"
 tauri-plugin-dialog = "2.6.0"
 lazy_static = "1.5.0"
 tauri-plugin-clipboard-manager = "2"
-windows-sys = "0.61.2"
+windows-sys = { version = "0.61.2", features = [
+    "Win32_Foundation",
+    "Win32_Graphics_Gdi",
+    "Win32_UI_Input_KeyboardAndMouse",
+    "Win32_UI_WindowsAndMessaging",
+] }

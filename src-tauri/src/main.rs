@@ -45,6 +45,7 @@ pub fn run() {
             commands::notes::get_note,
             commands::notes::save_note,
             commands::notes::append_note,
+            commands::picker::start_color_pick,
         ])
         .setup(|app| {
             setup::init(app)?;

@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { AnimatePresence, motion } from "framer-motion";
 import { writeText } from "@tauri-apps/plugin-clipboard-manager";
+import { invoke } from "@tauri-apps/api/core";
 import { Check, Copy, Pipette } from "lucide-react";
 import {
     Rgb,
@@ -68,20 +69,24 @@ export const ColorPicker = ({ query }: { query: string }) => {
         [source]
     );
 
-    const canPick = typeof window !== "undefined" && typeof window.EyeDropper === "function";
+    const [isPicking, setIsPicking] = useState(false);
 
     const pickFromScreen = async () => {
-        if (!window.EyeDropper) return;
         setPickError(null);
+        setIsPicking(true);
 
-        // The window deliberately stays visible here. Chromium cancels an
-        // in-flight EyeDropper when the initiating document is hidden, so
-        // hiding Aura to get it out of the way kills the pick instead.
         try {
-            const { sRGBHex } = await new window.EyeDropper().open();
-            setPicked(sRGBHex);
-        } catch {
-            // Dismissing the picker with Escape rejects; not an error.
+            // Native Win32 pick rather than the web EyeDropper: Chromium
+            // cancels an in-flight EyeDropper the moment the initiating
+            // document is hidden, so it cannot be combined with getting
+            // Aura out of the way. Resolves null when cancelled with Escape.
+            const hex = await invoke<string | null>("start_color_pick");
+            if (hex) setPicked(hex);
+        } catch (e) {
+            console.error("Screen pick failed", e);
+            setPickError(String(e));
+        } finally {
+            setIsPicking(false);
         }
     };
 
@@ -93,12 +98,12 @@ export const ColorPicker = ({ query }: { query: string }) => {
     const pickButton = (
         <button
             onClick={pickFromScreen}
-            disabled={!canPick}
-            title={canPick ? "Pick a colour from anywhere on screen" : "Not supported by this webview"}
+            disabled={isPicking}
+            title="Pick a colour from anywhere on screen"
             className="flex items-center gap-2 px-3 py-2 rounded-lg border border-white/10 bg-white/5 text-[12px] text-fg/70 transition-colors enabled:hover:bg-white/10 enabled:hover:text-fg disabled:opacity-30 disabled:cursor-not-allowed cursor-pointer"
         >
             <Pipette size={14} />
-            Pick from screen
+            {isPicking ? "Picking..." : "Pick from screen"}
         </button>
     );
 
