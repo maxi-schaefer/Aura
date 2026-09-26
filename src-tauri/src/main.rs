@@ -34,6 +34,8 @@ pub fn run() {
             commands::system::import_winget_setup,
             commands::system::export_winget_setup,
             commands::system::update_package,
+            commands::vscode::get_vscode_projects,
+            commands::vscode::open_vscode_project,
         ])
         .setup(|app| {
             setup::init(app)?;
