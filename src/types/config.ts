@@ -14,6 +14,17 @@ export interface Config {
     theme?: string | null;
     window_mode?: WindowMode | null;
     main_shortcut?: string | null;
+    /** Global shortcut per command id, e.g. { color: "Alt+C" }. */
+    command_shortcuts?: Record<string, string> | null;
+}
+
+/** Outcome of registering one accelerator, from `refresh_shortcuts`. */
+export interface ShortcutRegistration {
+    /** "main", or the command id the accelerator opens. */
+    id: string;
+    accelerator: string;
+    ok: boolean;
+    error?: string | null;
 }
 
 export type SetConfig = (config: Config) => void;

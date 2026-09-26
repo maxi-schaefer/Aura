@@ -188,6 +188,7 @@ mod tests {
             theme: Some("nord".into()),
             window_mode: Some("expanded".into()),
             main_shortcut: Some("Ctrl+Space".into()),
+                command_shortcuts: None,
         }
     }
 
@@ -334,6 +335,7 @@ mod tests {
                 theme: Some("nord".into()),
                 window_mode: Some("expanded".into()),
                 main_shortcut: Some("Ctrl+Space".into()),
+                command_shortcuts: None,
             }),
             aliases: Some(HashMap::from([("gh".into(), "github.com".into())])),
         };

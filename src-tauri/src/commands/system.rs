@@ -46,7 +46,10 @@ pub struct Config {
     pub first_run_complete: bool,
     pub theme: Option<String>,
     pub window_mode: Option<String>,
-    pub main_shortcut: Option<String>
+    pub main_shortcut: Option<String>,
+    /// Global shortcut per command id, e.g. {"color": "Alt+C"}.
+    #[serde(default)]
+    pub command_shortcuts: Option<std::collections::HashMap<String, String>>,
 }
 
 pub fn create_hidden_command(program: &str) -> StdCommand {
@@ -387,7 +390,8 @@ pub fn get_config(app: AppHandle) -> Config {
         username: None,
         theme: None,
         window_mode: Some("compact".into()),
-        main_shortcut: Some("ALT+Space".into())
+        main_shortcut: Some("ALT+Space".into()),
+        command_shortcuts: None,
     };
 
     fs::read_to_string(path)

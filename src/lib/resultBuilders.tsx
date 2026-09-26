@@ -49,6 +49,42 @@ export function buildColorResult(color: string | null) {
     }];
 }
 
+/**
+ * Builds the result for a single command.
+ *
+ * Exported so a command can also be opened without going through the list,
+ * which is how a per-command global shortcut activates one.
+ */
+export function buildCommandResult(
+    cmdKey: string,
+    command: Command,
+    queryArgs: string[] = []
+) {
+    return {
+        id: `command-${cmdKey}`,
+        title: command.title || cmdKey,
+        subtitle: command.description,
+        type: "command" as const,
+        group: "Commands",
+        icon: command.icon,
+        args: command.args,
+        render: command.render,
+        score: 100,
+        action: async (runtimeArgs?: string[]) => {
+            const finalArgs =
+                runtimeArgs && runtimeArgs.length > 0 ? runtimeArgs : queryArgs;
+
+            const result = await command.execute(finalArgs);
+
+            if (typeof result === "string") {
+                await navigator.clipboard.writeText(result);
+            }
+
+            return result;
+        },
+    };
+}
+
 export function buildCommandResults(
     query: string,
     commands: Record<string, Command>
@@ -58,31 +94,7 @@ export function buildCommandResults(
     return Object.entries(commands)
         .filter(([key]) => key.includes(inputCmd))
         .slice(0, MAX_PER_GROUP)
-        .map(([cmdKey, command]) => ({
-            id: `command-${cmdKey}`,
-            title: command.title || cmdKey,
-            subtitle: command.description,
-            type: "command" as const,
-            group: "Commands",
-            icon: command.icon,
-            args: command.args,
-            render: command.render,
-            score: 100,
-            action: async (runtimeArgs?: string[]) => {
-                const finalArgs =
-                    runtimeArgs && runtimeArgs.length > 0
-                        ? runtimeArgs
-                        : args;
-
-                const result = await command.execute(finalArgs);
-
-                if (typeof result === "string") {
-                    await navigator.clipboard.writeText(result);
-                }
-
-                return result;
-            },
-        }));
+        .map(([cmdKey, command]) => buildCommandResult(cmdKey, command, args));
 }
 
 /**

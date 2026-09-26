@@ -58,5 +58,6 @@ export function useSearchLogic(
         activeCommandMode,
     ]);
 
-    return { results };
+    // Exposed so a global shortcut can open a command directly.
+    return { results, commands };
 }

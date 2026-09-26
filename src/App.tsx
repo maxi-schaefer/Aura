@@ -17,6 +17,8 @@ import { playSuccess, playTick } from "./lib/sound";
 import { Result } from "./types/result";
 import { SearchHeader } from "./components/SearchHeader";
 import { parseArguments } from "./lib/commandArgs";
+import { listen } from "@tauri-apps/api/event";
+import { buildCommandResult } from "./lib/resultBuilders";
 
 export default function App() {
     const [query, setQuery] = useState("");
@@ -42,7 +44,7 @@ export default function App() {
         setFirstRun,
     } = useAppInitialization(applyTheme);
 
-    const { results } = useSearchLogic(!!activeCommand, query, allApps, aliases);
+    const { results, commands } = useSearchLogic(!!activeCommand, query, allApps, aliases);
     const selectedItem = results[selectedIndex];
 
     const time = useClock();
@@ -95,6 +97,23 @@ export default function App() {
         inputRef,
         lastQuery,
     });
+
+    // A per-command global shortcut opens that command straight away.
+    useEffect(() => {
+        const pending = listen<string>("command://activate", ({ payload }) => {
+            const command = commands[payload];
+            if (!command) return;
+
+            lastQuery.current = "";
+            setQuery("");
+            setSelectedIndex(0);
+            setActiveCommand(buildCommandResult(payload, command));
+        });
+
+        return () => {
+            pending.then((unlisten) => unlisten());
+        };
+    }, [commands]);
 
     useEffect(() => {
         if (isLoading || firstRun) return;
