@@ -1,7 +1,7 @@
 import { useState, useMemo, useEffect } from "react";
 import { motion, AnimatePresence } from "framer-motion";
 import { 
-  Settings, Palette, Keyboard, Info, 
+  Settings, Palette, Keyboard, Info, DatabaseBackup,
   Command as CmdIcon 
 } from "lucide-react";
 import { invoke } from "@tauri-apps/api/core";
@@ -11,6 +11,7 @@ import About from "../settings/About";
 import { AppearanceManager } from "../settings/AppearanceManager";
 import { User } from "lucide-react"
 import { ShortcutsManager } from "../settings/ShortcutManager";
+import { BackupManager } from "../settings/BackupManager";
 import { Config, SetConfig } from "../../types/config";
 
 const CATEGORIES = [
@@ -18,6 +19,7 @@ const CATEGORIES = [
   { id: "appearance", label: "Appearance", icon: <Palette size={14} /> },
   { id: "alias", label: "Alias", icon: <CmdIcon size={14} /> },
   { id: "shortcuts", label: "Shortcuts", icon: <Keyboard size={14} /> },
+  { id: "backup", label: "Backup", icon: <DatabaseBackup size={14} /> },
   { id: "about", label: "About", icon: <Info size={14} /> },
 ];
 
@@ -109,6 +111,10 @@ const SettingsBody = ({ activeTab, config, setConfig }: { activeTab: string; con
           
           {activeTab === "shortcuts" && (
             <ShortcutsManager config={config} setConfig={setConfig} />
+          )}
+
+          {activeTab === "backup" && (
+            <BackupManager config={config} setConfig={setConfig} />
           )}
 
           {activeTab === "about" && (

@@ -38,6 +38,8 @@ pub fn run() {
             commands::vscode::open_vscode_project,
             commands::content::search_file_contents,
             commands::content::open_file_at_line,
+            commands::backup::export_settings,
+            commands::backup::import_settings,
         ])
         .setup(|app| {
             setup::init(app)?;

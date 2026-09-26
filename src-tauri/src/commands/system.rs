@@ -39,7 +39,7 @@ pub struct FileItem {
     pub icon: Option<String>,
 }
 
-#[derive(Serialize, Deserialize)]
+#[derive(Serialize, Deserialize, Clone, Debug)]
 pub struct Config {
     pub search_engine: String,
     pub username: Option<String>,

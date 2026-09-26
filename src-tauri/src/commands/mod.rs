@@ -1,3 +1,4 @@
+pub mod backup;
 pub mod content;
 pub mod media;
 pub mod network;

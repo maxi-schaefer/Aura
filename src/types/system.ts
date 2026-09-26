@@ -1,3 +1,5 @@
+import { Config } from "./config";
+
 /** An installed application, as returned by `get_installed_apps`. */
 export interface AppItem {
     name: string;
@@ -33,4 +35,12 @@ export interface ContentMatch {
     preview: string;
     /** Total matching lines in the file, which may exceed those returned. */
     total_in_file: number;
+}
+
+/** Result of `import_settings`, describing what was restored. */
+export interface ImportSummary {
+    config_imported: boolean;
+    aliases_imported: number;
+    /** The config now in effect, to adopt without reloading. */
+    config: Config;
 }
