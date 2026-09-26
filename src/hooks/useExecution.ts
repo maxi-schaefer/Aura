@@ -1,5 +1,5 @@
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { Result } from "../types/result";
+import { Result, ResultModifier } from "../types/result";
 
 type UseExecutionProps = {
     results: Result[];
@@ -22,7 +22,7 @@ export function useExecution({
     triggerCopied,
     lastQuery,
 }: UseExecutionProps) {
-    return async () => {
+    return async (modifier?: ResultModifier) => {
         if (activeCommand) {
             const result = await activeCommand.action?.([query]);
             if (result?.success) triggerCopied();
@@ -30,7 +30,29 @@ export function useExecution({
         }
 
         const current = results[selectedIndex];
-        if (!current?.action) return;
+        if (!current) return;
+
+        if (modifier) {
+            const action = current.actions?.find((a) => a.modifier === modifier);
+            // Nothing bound to this modifier: do nothing rather than falling
+            // through to the default action, which would surprise the user.
+            if (!action) return;
+
+            try {
+                await action.run();
+            } catch (e) {
+                console.error(`Action "${action.label}" failed`, e);
+                return;
+            }
+
+            if (!action.keepOpen) {
+                setQuery("");
+                getCurrentWindow().hide();
+            }
+            return;
+        }
+
+        if (!current.action) return;
 
         if (current.type === "command") {
             lastQuery.current = query;

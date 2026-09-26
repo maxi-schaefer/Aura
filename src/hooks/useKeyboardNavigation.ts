@@ -1,6 +1,6 @@
 import { useEffect } from "react";
 import { getCurrentWindow } from "@tauri-apps/api/window";
-import { Result } from "../types/result";
+import { Result, ResultModifier } from "../types/result";
 
 type Props = {
     results: Result[];
@@ -11,7 +11,7 @@ type Props = {
     query: string;
     setQuery: (q: string | ((q: string) => string)) => void;
     suggestion: string;
-    handleExecute: () => void;
+    handleExecute: (modifier?: ResultModifier) => void;
     firstRun: boolean | null;
     isLoading: boolean;
     selectedItem: Result | undefined;
@@ -81,7 +81,9 @@ export function useKeyboardNavigation({
 
                 case "Enter":
                     e.preventDefault();
-                    handleExecute();
+                    handleExecute(
+                        e.ctrlKey ? "ctrl" : e.shiftKey ? "shift" : undefined
+                    );
                     break;
 
                 case "ArrowDown":

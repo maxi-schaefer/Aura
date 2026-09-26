@@ -23,7 +23,7 @@ const Kbd = ({ children }: { children: React.ReactNode }) => (
   </kbd>
 );
 
-export const ResultItem = ({ id, name, type, isActive, subtitle, onMouseEnter, onClick, icon }: any) => {
+export const ResultItem = ({ id, name, type, isActive, subtitle, onMouseEnter, onClick, icon, actions }: any) => {
     const isFile = type === "file";
     const isDir = isFile && subtitle === "Folder";
 
@@ -31,7 +31,7 @@ export const ResultItem = ({ id, name, type, isActive, subtitle, onMouseEnter, o
         <motion.div
             data-active={isActive}
             onMouseEnter={onMouseEnter}
-            onClick={() => onClick(true)}
+            onClick={(e) => onClick(e.ctrlKey ? "ctrl" : e.shiftKey ? "shift" : undefined)}
             className="relative flex items-center justify-between px-3 py-2 cursor-pointer rounded-md transition-all"
         >
             {isActive && (
@@ -78,8 +78,17 @@ export const ResultItem = ({ id, name, type, isActive, subtitle, onMouseEnter, o
                 </span>
                 
                 {isActive && (
-                    <div className="flex items-center opacity-20">
-                         <Kbd>↵</Kbd>
+                    <div className="flex items-center gap-3">
+                        {actions?.map((action: { modifier: string; label: string }) => (
+                            <span key={action.modifier} className="flex items-center gap-1">
+                                <Kbd>{action.modifier === "ctrl" ? "Ctrl" : "Shift"}</Kbd>
+                                <Kbd>↵</Kbd>
+                                <span className="text-[10px] text-fg/25">{action.label}</span>
+                            </span>
+                        ))}
+                        <div className="opacity-20">
+                            <Kbd>↵</Kbd>
+                        </div>
                     </div>
                 )}
             </div>

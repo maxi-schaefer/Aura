@@ -1,4 +1,4 @@
-import { Result } from "../types/result";
+import { Result, ResultModifier } from "../types/result";
 import { ResultItem } from "./ResultItem";
 import { useMemo } from "react";
 
@@ -6,7 +6,7 @@ interface Props {
     results: Result[];
     selectedIndex: number;
     setSelectedIndex: (i: number) => void;
-    onExecute: (fromClick?: boolean) => void;
+    onExecute: (modifier?: ResultModifier) => void;
 }
 
 export const ResultList = ({ results, selectedIndex, setSelectedIndex, onExecute }: Props) => {
@@ -39,6 +39,7 @@ export const ResultList = ({ results, selectedIndex, setSelectedIndex, onExecute
                                 isActive={selectedIndex === globalIndex}
                                 onMouseEnter={() => setSelectedIndex(globalIndex)}
                                 onClick={onExecute}
+                                actions={item.actions}
                                 icon={item.icon}
                             />
                         ))}

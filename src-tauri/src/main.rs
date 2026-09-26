@@ -40,6 +40,8 @@ pub fn run() {
             commands::content::open_file_at_line,
             commands::backup::export_settings,
             commands::backup::import_settings,
+            commands::system::reveal_in_explorer,
+            commands::system::launch_app_elevated,
         ])
         .setup(|app| {
             setup::init(app)?;

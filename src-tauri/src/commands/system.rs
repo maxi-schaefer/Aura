@@ -322,6 +322,44 @@ pub fn launch_app(path: String) {
     let _ = open::that(path);
 }
 
+/// Opens Explorer with the item selected, rather than opening the item.
+#[command]
+pub fn reveal_in_explorer(path: String) -> Result<(), String> {
+    let target = std::path::Path::new(&path);
+    if !target.exists() {
+        return Err(format!("{path} no longer exists"));
+    }
+
+    // /select, needs the path as a single argument and no quoting of its own.
+    create_hidden_command("explorer")
+        .arg(format!("/select,{path}"))
+        .spawn()
+        .map(|_| ())
+        .map_err(|e| format!("Could not reveal {path}: {e}"))
+}
+
+/// Launches a program with an elevation prompt.
+#[command]
+pub fn launch_app_elevated(path: String) -> Result<(), String> {
+    let target = std::path::Path::new(&path);
+    if !target.exists() {
+        return Err(format!("{path} no longer exists"));
+    }
+
+    // PowerShell's Start-Process is the simplest route to a UAC prompt.
+    create_hidden_command("powershell")
+        .args([
+            "-NoProfile",
+            "-WindowStyle",
+            "Hidden",
+            "-Command",
+            &format!("Start-Process -FilePath '{}' -Verb RunAs", path.replace('\'', "''")),
+        ])
+        .spawn()
+        .map(|_| ())
+        .map_err(|e| format!("Could not run {path} as administrator: {e}"))
+}
+
 #[command]
 pub fn get_aliases(app: AppHandle) -> HashMap<String, String> {
     let path = app.path().app_config_dir().unwrap().join("aliases.json");

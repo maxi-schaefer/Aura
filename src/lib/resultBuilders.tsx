@@ -108,6 +108,23 @@ function buildLaunchableResults<T extends { name: string; path: string; icon?: s
         action: async () => {
             await invoke("launch_app", { path: item.path });
         },
+        actions: [
+            {
+                modifier: "shift" as const,
+                label: "Reveal",
+                run: () => invoke("reveal_in_explorer", { path: item.path }),
+            },
+            // Elevation only makes sense for something executable.
+            ...(options.type === "app"
+                ? [
+                      {
+                          modifier: "ctrl" as const,
+                          label: "Run as admin",
+                          run: () => invoke("launch_app_elevated", { path: item.path }),
+                      },
+                  ]
+                : []),
+        ],
     }));
 }
 
