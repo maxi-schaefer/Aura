@@ -4,6 +4,16 @@ import { RotateCcw } from "lucide-react";
 import { Config, SetConfig } from "../../types/config";
 import { useConfigPatch } from "../../hooks/useConfigPatch";
 
+/** Reads the modifier keys held during a keyboard event, in display order. */
+const getModifiers = (e: KeyboardEvent): string[] => {
+  const mods: string[] = [];
+  if (e.ctrlKey) mods.push("Ctrl");
+  if (e.altKey) mods.push("Alt");
+  if (e.shiftKey) mods.push("Shift");
+  if (e.metaKey) mods.push("Command");
+  return mods;
+};
+
 interface ShortcutsManagerProps {
   config: Config;
   setConfig: SetConfig;
@@ -36,11 +46,7 @@ export const ShortcutsManager = ({ config, setConfig, isSetup = false }: Shortcu
     const handleKeyDown = (e: KeyboardEvent) => {
       e.preventDefault();
       
-      const mods = [];
-      if (e.ctrlKey) mods.push("Ctrl");
-      if (e.altKey) mods.push("Alt");
-      if (e.shiftKey) mods.push("Shift");
-      if (e.metaKey) mods.push("Command");
+      const mods = getModifiers(e);
 
       // If it's just a modifier, update the live view
       if (["Control", "Shift", "Alt", "Meta", "AltGraph"].includes(e.key)) {
@@ -66,12 +72,7 @@ export const ShortcutsManager = ({ config, setConfig, isSetup = false }: Shortcu
     const handleKeyUp = (e: KeyboardEvent) => {
       if (!isRecording) return;
       // Update held modifiers when user lets go of a key
-      const mods = [];
-      if (e.ctrlKey) mods.push("Ctrl");
-      if (e.altKey) mods.push("Alt");
-      if (e.shiftKey) mods.push("Shift");
-      if (e.metaKey) mods.push("Command");
-      setHeldModifiers(mods);
+      setHeldModifiers(getModifiers(e));
     };
 
     window.addEventListener("keydown", handleKeyDown);
