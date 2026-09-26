@@ -10,6 +10,14 @@ export const THEMES = [
   { id: "manly-spring", label: "Manly Spring", primary: "#7a8f7a" },
   { id: "discord", label: "Discord", primary: "#7289da" },
   { id: "stormy-morning", label: "Stormy Morning", primary: "#bdddfc" },
+  { id: "nord", label: "Nord", primary: "#88c0d0" },
+  { id: "dracula", label: "Dracula", primary: "#bd93f9" },
+  { id: "tokyo-night", label: "Tokyo Night", primary: "#7aa2f7" },
+  { id: "rose-pine", label: "Rosé Pine", primary: "#ebbcba" },
+  { id: "solarized-dark", label: "Solarized Dark", primary: "#268bd2" },
+  { id: "everforest", label: "Everforest", primary: "#a7c080" },
+  { id: "monokai-pro", label: "Monokai Pro", primary: "#ffd866" },
+  { id: "kanagawa", label: "Kanagawa", primary: "#7e9cd8" },
 ];
 
 export function useTheme(config: Config | null, setConfig: SetConfig) {

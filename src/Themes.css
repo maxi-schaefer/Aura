@@ -41,6 +41,62 @@
   --bg: #384959cc;
 }
 
+:root.nord {
+  --primary: #88c0d0;
+  --fg: #eceff4;
+  --secondary: #5e81ac;
+  --bg: #2e3440cc;
+}
+
+:root.dracula {
+  --primary: #bd93f9;
+  --fg: #f8f8f2;
+  --secondary: #ff79c6;
+  --bg: #282a36cc;
+}
+
+:root.tokyo-night {
+  --primary: #7aa2f7;
+  --fg: #c0caf5;
+  --secondary: #bb9af7;
+  --bg: #1a1b26cc;
+}
+
+:root.rose-pine {
+  --primary: #ebbcba;
+  --fg: #e0def4;
+  --secondary: #c4a7e7;
+  --bg: #191724cc;
+}
+
+:root.solarized-dark {
+  --primary: #268bd2;
+  --fg: #93a1a1;
+  --secondary: #2aa198;
+  --bg: #002b36cc;
+}
+
+:root.everforest {
+  --primary: #a7c080;
+  --fg: #d3c6aa;
+  --secondary: #83c092;
+  --bg: #2d353bcc;
+}
+
+:root.monokai-pro {
+  --primary: #ffd866;
+  --fg: #fcfcfa;
+  --secondary: #ff6188;
+  --bg: #2d2a2ecc;
+}
+
+:root.kanagawa {
+  --primary: #7e9cd8;
+  --fg: #dcd7ba;
+  --secondary: #957fb8;
+  --bg: #1f1f28cc;
+}
+
 ::view-transition-old(root),
 ::view-transition-new(root) {
   animation: none;
