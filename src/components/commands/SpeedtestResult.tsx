@@ -1,57 +1,75 @@
-import { useState, useEffect } from "react";
+import { useCallback, useEffect, useRef, useState } from "react";
 import { SpeedtestCard } from "./SpeedtestCard";
+import { SpeedtestPhase, SpeedtestSample, runSpeedtest } from "../../lib/speedtest";
 
-type Stats = {
-    stage: "ping" | "download" | "upload" | "complete";
-    ping: number;
-    download: number;
-    upload: number;
-};
-
-async function startFullTest(onUpdate: (data: Partial<Stats>) => void) {
-    const testNode = "https://speed.cloudflare.com/__down?bytes=";
-
-    onUpdate({ stage: "ping", ping: 0, download: 0, upload: 0 });
-    const pings: number[] = [];
-    for (let i = 0; i < 4; i++) {
-        const start = performance.now();
-        await fetch("https://1.1.1.1", { mode: "no-cors", cache: "no-cache" });
-        pings.push(performance.now() - start);
-        onUpdate({ stage: "ping", ping: Math.min(...pings) });
-    }
-
-    onUpdate({ stage: "download" });
-    const sizes = [1_000_000, 5_000_000, 15_000_000, 50_000_000, 200_000_000];
-    for (const size of sizes) {
-        const start = performance.now();
-        const res = await fetch(`${testNode}${size}`, { cache: "no-cache" });
-        await res.arrayBuffer();
-        const duration = (performance.now() - start) / 1000;
-        const mbps = (size * 8) / (duration * 1024 * 1024);
-        onUpdate({ stage: "download", download: mbps });
-    }
-
-    onUpdate({ stage: "upload" });
-    for (const size of sizes) {
-        const start = performance.now();
-        const blob = new Uint8Array(size);
-        await fetch("https://speed.cloudflare.com/__up", { method: "POST", body: blob });
-        const duration = (performance.now() - start) / 1000;
-        onUpdate({ stage: "complete", upload: (blob.length * 8) / (duration * 1024 * 1024) });
-    }
+interface State {
+    phase: SpeedtestPhase;
+    progress: number;
+    latencyMs: number;
+    jitterMs: number;
+    downloadMbps: number;
+    uploadMbps: number;
+    error: string | null;
 }
 
-export const SpeedtestResult = () => {
-    const [stats, setStats] = useState<Stats>({
-        stage: "ping",
-        ping: 0,
-        download: 0,
-        upload: 0
-    });
+const INITIAL: State = {
+    phase: "idle",
+    progress: 0,
+    latencyMs: 0,
+    jitterMs: 0,
+    downloadMbps: 0,
+    uploadMbps: 0,
+    error: null,
+};
 
-    useEffect(() => {
-        startFullTest((update) => setStats(prev => ({ ...prev, ...update })));
+export const SpeedtestResult = () => {
+    const [state, setState] = useState<State>(INITIAL);
+    const controller = useRef<AbortController | null>(null);
+
+    const start = useCallback(() => {
+        // Replace any run still in flight rather than racing it.
+        controller.current?.abort();
+        const current = new AbortController();
+        controller.current = current;
+
+        setState({ ...INITIAL, phase: "latency" });
+
+        const apply = (sample: SpeedtestSample) => {
+            if (current.signal.aborted) return;
+
+            setState((prev) => ({
+                ...prev,
+                phase: sample.phase,
+                progress: sample.progress,
+                latencyMs: sample.latencyMs ?? prev.latencyMs,
+                jitterMs: sample.jitterMs ?? prev.jitterMs,
+                downloadMbps: sample.downloadMbps ?? prev.downloadMbps,
+                uploadMbps: sample.uploadMbps ?? prev.uploadMbps,
+            }));
+        };
+
+        runSpeedtest({ onSample: apply, signal: current.signal }).catch((e: unknown) => {
+            // Aborting is how we stop a run; it is not a failure to report.
+            if (current.signal.aborted) return;
+
+            console.error("Speed test failed", e);
+            setState((prev) => ({
+                ...prev,
+                phase: "done",
+                progress: 1,
+                error:
+                    e instanceof Error
+                        ? `Could not reach the test server. ${e.message}`
+                        : "Could not reach the test server.",
+            }));
+        });
     }, []);
 
-    return <SpeedtestCard {...stats} />;
+    useEffect(() => {
+        start();
+        // Leaving the command must stop the transfer, not let it run on.
+        return () => controller.current?.abort();
+    }, [start]);
+
+    return <SpeedtestCard {...state} onRestart={start} />;
 };
