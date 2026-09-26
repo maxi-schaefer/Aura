@@ -105,7 +105,6 @@ impl Connector for Anthropic {
             headers: vec![
                 ("x-api-key".into(), api_key.into()),
                 ("anthropic-version".into(), "2023-06-01".into()),
-                ("content-type".into(), "application/json".into()),
             ],
             body,
         }
@@ -171,7 +170,6 @@ impl Connector for OpenAi {
             url: "https://api.openai.com/v1/chat/completions".into(),
             headers: vec![
                 ("authorization".into(), format!("Bearer {api_key}")),
-                ("content-type".into(), "application/json".into()),
             ],
             body: json!({ "model": model, "messages": messages }),
         }
@@ -221,7 +219,6 @@ impl Connector for Gemini {
             url: format!("https://generativelanguage.googleapis.com/v1beta/models/{model}:generateContent"),
             headers: vec![
                 ("x-goog-api-key".into(), api_key.into()),
-                ("content-type".into(), "application/json".into()),
             ],
             body,
         }

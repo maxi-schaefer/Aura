@@ -1,6 +1,7 @@
 pub mod providers;
 pub mod secrets;
 
+use reqwest::header::{HeaderMap, HeaderName, HeaderValue, CONTENT_TYPE};
 use serde::Serialize;
 use serde_json::Value;
 use std::time::Duration;
@@ -71,6 +72,32 @@ pub fn ai_clear_key(app: AppHandle, provider: String) -> Result<(), String> {
     secrets::clear(&app, &provider)
 }
 
+/// Builds the header map for one call.
+///
+/// Uses insert rather than append: reqwest's `RequestBuilder::header` appends,
+/// so setting a header that a previous call already set sends it twice. A
+/// duplicated Content-Type makes providers reject the body as unparseable,
+/// which surfaces as a confusing complaint about a missing field.
+fn build_headers(headers: &[(String, String)]) -> Result<HeaderMap, String> {
+    let mut map = HeaderMap::new();
+    map.insert(CONTENT_TYPE, HeaderValue::from_static("application/json"));
+
+    for (name, value) in headers {
+        let name = HeaderName::from_bytes(name.as_bytes())
+            .map_err(|_| format!("Invalid header name: {name}"))?;
+
+        let mut header = HeaderValue::from_str(value)
+            .map_err(|_| format!("Invalid value for header {name}"))?;
+
+        // Keeps API keys out of reqwest's debug output.
+        header.set_sensitive(true);
+
+        map.insert(name, header);
+    }
+
+    Ok(map)
+}
+
 async fn send(
     connector: &dyn Connector,
     api_key: &str,
@@ -85,20 +112,24 @@ async fn send(
         .build()
         .map_err(|e| format!("Could not start the request: {e}"))?;
 
-    let mut request = client.post(&call.url).json(&call.body);
-    for (name, value) in &call.headers {
-        request = request.header(name, value);
-    }
+    let body = serde_json::to_vec(&call.body)
+        .map_err(|e| format!("Could not encode the request: {e}"))?;
 
-    let response = request.send().await.map_err(|e| {
-        if e.is_timeout() {
-            "The provider did not respond in time".to_string()
-        } else if e.is_connect() {
-            "Could not reach the provider - check your connection".to_string()
-        } else {
-            format!("Request failed: {e}")
-        }
-    })?;
+    let response = client
+        .post(&call.url)
+        .headers(build_headers(&call.headers)?)
+        .body(body)
+        .send()
+        .await
+        .map_err(|e| {
+            if e.is_timeout() {
+                "The provider did not respond in time".to_string()
+            } else if e.is_connect() {
+                "Could not reach the provider - check your connection".to_string()
+            } else {
+                format!("Request failed: {e}")
+            }
+        })?;
 
     let status = response.status().as_u16();
     let raw = response
@@ -163,4 +194,75 @@ pub async fn ai_complete(
         model,
         text,
     })
+}
+
+
+#[cfg(test)]
+mod tests {
+    use super::build_headers;
+    use reqwest::header::CONTENT_TYPE;
+
+    fn pairs(items: &[(&str, &str)]) -> Vec<(String, String)> {
+        items
+            .iter()
+            .map(|(k, v)| (k.to_string(), v.to_string()))
+            .collect()
+    }
+
+    #[test]
+    fn content_type_is_sent_exactly_once() {
+        // Every connector's own content-type must collapse into the one the
+        // transport sets - a duplicate is what broke the OpenAI request.
+        let headers = build_headers(&pairs(&[
+            ("content-type", "application/json"),
+            ("authorization", "Bearer KEY"),
+        ]))
+        .unwrap();
+
+        assert_eq!(headers.get_all(CONTENT_TYPE).iter().count(), 1);
+        assert_eq!(headers.get(CONTENT_TYPE).unwrap(), "application/json");
+    }
+
+    #[test]
+    fn no_header_is_ever_duplicated() {
+        let headers = build_headers(&pairs(&[
+            ("x-api-key", "first"),
+            ("x-api-key", "second"),
+        ]))
+        .unwrap();
+
+        assert_eq!(headers.get_all("x-api-key").iter().count(), 1);
+        assert_eq!(headers.get("x-api-key").unwrap(), "second");
+    }
+
+    #[test]
+    fn credentials_are_marked_sensitive() {
+        let headers = build_headers(&pairs(&[("x-api-key", "sk-secret")])).unwrap();
+        assert!(
+            headers.get("x-api-key").unwrap().is_sensitive(),
+            "the key would show up in debug output"
+        );
+    }
+
+    #[test]
+    fn every_connector_builds_valid_headers() {
+        for connector in super::providers::all() {
+            let call = connector.request("KEY", "some-model", "", "hi");
+            let headers = build_headers(&call.headers)
+                .unwrap_or_else(|e| panic!("{}: {e}", connector.spec().id));
+
+            assert_eq!(
+                headers.get_all(CONTENT_TYPE).iter().count(),
+                1,
+                "{} sends content-type more than once",
+                connector.spec().id
+            );
+        }
+    }
+
+    #[test]
+    fn a_malformed_header_name_is_reported_not_panicked() {
+        assert!(build_headers(&pairs(&[("bad header", "v")])).is_err());
+        assert!(build_headers(&pairs(&[("x", "bad\nvalue")])).is_err());
+    }
 }
