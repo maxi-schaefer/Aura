@@ -189,6 +189,8 @@ mod tests {
             window_mode: Some("expanded".into()),
             main_shortcut: Some("Ctrl+Space".into()),
                 command_shortcuts: None,
+                ai_provider: None,
+                ai_models: None,
         }
     }
 
@@ -336,6 +338,8 @@ mod tests {
                 window_mode: Some("expanded".into()),
                 main_shortcut: Some("Ctrl+Space".into()),
                 command_shortcuts: None,
+                ai_provider: None,
+                ai_models: None,
             }),
             aliases: Some(HashMap::from([("gh".into(), "github.com".into())])),
         };

@@ -50,6 +50,12 @@ pub struct Config {
     /// Global shortcut per command id, e.g. {"color": "Alt+C"}.
     #[serde(default)]
     pub command_shortcuts: Option<std::collections::HashMap<String, String>>,
+    /// Which AI connector is used by default.
+    #[serde(default)]
+    pub ai_provider: Option<String>,
+    /// Chosen model per provider id. API keys live in the encrypted store.
+    #[serde(default)]
+    pub ai_models: Option<std::collections::HashMap<String, String>>,
 }
 
 pub fn create_hidden_command(program: &str) -> StdCommand {
@@ -398,6 +404,8 @@ pub fn get_config(app: AppHandle) -> Config {
         window_mode: Some("compact".into()),
         main_shortcut: Some("ALT+Space".into()),
         command_shortcuts: None,
+        ai_provider: None,
+        ai_models: None,
     };
 
     fs::read_to_string(path)

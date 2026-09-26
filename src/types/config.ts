@@ -16,6 +16,10 @@ export interface Config {
     main_shortcut?: string | null;
     /** Global shortcut per command id, e.g. { color: "Alt+C" }. */
     command_shortcuts?: Record<string, string> | null;
+    /** Which AI connector /ask uses by default. */
+    ai_provider?: string | null;
+    /** Chosen model per provider id. API keys are NOT stored here. */
+    ai_models?: Record<string, string> | null;
 }
 
 /** Outcome of registering one accelerator, from `refresh_shortcuts`. */
