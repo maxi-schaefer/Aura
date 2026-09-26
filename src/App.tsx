@@ -16,6 +16,7 @@ import { useKeyboardNavigation } from "./hooks/useKeyboardNavigation";
 import { playSuccess, playTick } from "./lib/sound";
 import { Result } from "./types/result";
 import { SearchHeader } from "./components/SearchHeader";
+import { parseArguments } from "./lib/commandArgs";
 
 export default function App() {
     const [query, setQuery] = useState("");
@@ -45,6 +46,12 @@ export default function App() {
     const selectedItem = results[selectedIndex];
 
     const time = useClock();
+
+    // The active command's query, split across the arguments it declares.
+    const commandArgs = useMemo(
+        () => parseArguments(activeCommand?.args, query).values,
+        [activeCommand, query]
+    );
 
     const triggerCopied = useCallback(() => {
         setShowCopied(true);
@@ -177,7 +184,9 @@ export default function App() {
                                         <LoadingState />
                                     ) : activeCommand ? (
                                         <motion.div initial={{ opacity: 0, y: 4 }} animate={{ opacity: 1, y: 0 }} className="p-2">
-                                            {activeCommand.render ? activeCommand.render(query, setConfig, showCopied, config) : activeCommand.view}
+                                            {activeCommand.render
+                                                ? activeCommand.render(query, setConfig, showCopied, config, commandArgs)
+                                                : activeCommand.view}
                                         </motion.div>
                                     ) : (
                                         <>

@@ -8,6 +8,7 @@ const command = {
         title: "Timer",
         description: "Start, pause, or manage countdown timers using natural time inputs.",
         icon: AlarmClock,
+        args: [{ name: "duration", description: "Duration, e.g. 10m or 1h30m", required: true }],
     },
 
     render: (query: string) => {

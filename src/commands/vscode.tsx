@@ -8,6 +8,7 @@ const command: CommandModule = {
         title: "VS Code Projects",
         description: "Reopen a recent VS Code folder or workspace.",
         icon: Code2,
+        args: [{ name: "filter", description: "Filter projects by name or path", rest: true }],
     },
 
     render: (query) => <VsCodeProjects query={query} />,

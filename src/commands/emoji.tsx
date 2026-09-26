@@ -8,6 +8,7 @@ const command: CommandModule = {
         title: "Emoji Search",
         description: "Search and copy emojis to your clipboard instantly.",
         icon: Smile,
+        args: [{ name: "search", description: "Search emoji by name", rest: true }],
     },
 
     render: (query) => <EmojiPicker query={query} />,

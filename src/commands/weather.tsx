@@ -8,6 +8,7 @@ const command: CommandModule = {
         title: "Weather",
         description: "View current weather conditions and forecasts for any location.",
         icon: CloudSun,
+        args: [{ name: "city", description: "City to look up", required: true, rest: true }],
     },
 
     render: (query) => <WeatherCard city={query} />,

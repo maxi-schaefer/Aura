@@ -7,7 +7,8 @@ const command: CommandModule = {
         cmd: "settings",
         title: "Settings",
         description: "Configure application preferences and customize your experience.",
-        icon: Settings
+        icon: Settings,
+        args: [{ name: "section", description: "Jump to a settings section" }]
     },
 
     render: (query, setConfig, _copied, config) => <SettingsView query={query} config={config} setConfig={setConfig} />,

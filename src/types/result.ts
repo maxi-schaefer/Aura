@@ -1,4 +1,5 @@
 import { LucideIcon } from "lucide-react";
+import { CommandArgument } from "./command";
 
 /** Modifier held alongside Enter (or a click) to run a secondary action. */
 export type ResultModifier = "ctrl" | "shift";
@@ -25,8 +26,12 @@ export type Result = {
         query: string,
         setConfig: (config: any) => void,
         copied?: boolean,
-        config?: any
+        config?: any,
+        args?: Record<string, string>
     ) => React.ReactNode;
+
+    /** For command results: the arguments the command declares. */
+    args?: CommandArgument[];
 
     view?: React.ReactNode;
     width?: number;

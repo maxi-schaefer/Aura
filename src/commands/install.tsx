@@ -7,7 +7,8 @@ const command: CommandModule = {
         cmd: "install",
         title: "Winget Manager",
         description: "Search, install, and manage Windows packages using Winget.",
-        icon: Download
+        icon: Download,
+        args: [{ name: "package", description: "Package to search for", rest: true }]
     },
 
     render: (query) => <WingetManager query={query} />,

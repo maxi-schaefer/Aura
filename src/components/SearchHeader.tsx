@@ -1,6 +1,7 @@
 import { AnimatePresence, motion } from "framer-motion";
 import icon from "../assets/icon.png";
 import { Result } from "../types/result";
+import { argumentPlaceholder } from "../lib/commandArgs";
 
 interface SearchHeaderProps {
     query: string;
@@ -51,7 +52,10 @@ export function SearchHeader({
                     autoFocus
                     value={query}
                     onChange={(e) => setQuery(e.target.value)}
-                    placeholder="Search for apps and commands..."
+                    placeholder={
+                        (activeCommand && argumentPlaceholder(activeCommand.args)) ??
+                        "Search for apps and commands..."
+                    }
                     className="z-10 w-full bg-transparent outline-none text-lg text-white/90 placeholder:text-white/10 font-light tracking-tight pl-10"
                 />
 

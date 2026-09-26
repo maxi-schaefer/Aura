@@ -65,6 +65,7 @@ export function buildCommandResults(
             type: "command" as const,
             group: "Commands",
             icon: command.icon,
+            args: command.args,
             render: command.render,
             score: 100,
             action: async (runtimeArgs?: string[]) => {
