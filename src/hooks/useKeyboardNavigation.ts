@@ -45,6 +45,18 @@ export function useKeyboardNavigation({
 
             if (firstRun || isLoading) return;
 
+            // A command view may host its own text entry (the scratchpad, the
+            // alias form). Typing there must not drive list navigation or fire
+            // the default action; Escape still backs out of the command.
+            const target = e.target as HTMLElement | null;
+            const isTextEntry =
+                !!target &&
+                (target.tagName === "TEXTAREA" ||
+                    (target.tagName === "INPUT" && target !== inputRef.current) ||
+                    target.isContentEditable);
+
+            if (isTextEntry && e.key !== "Escape") return;
+
             const max = Math.max(0, results.length - 1);
 
             if (!activeCommand) inputRef.current?.focus();

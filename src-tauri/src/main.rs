@@ -42,6 +42,9 @@ pub fn run() {
             commands::backup::import_settings,
             commands::system::reveal_in_explorer,
             commands::system::launch_app_elevated,
+            commands::notes::get_note,
+            commands::notes::save_note,
+            commands::notes::append_note,
         ])
         .setup(|app| {
             setup::init(app)?;
