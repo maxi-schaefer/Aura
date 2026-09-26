@@ -1,5 +1,6 @@
 import { invoke } from "@tauri-apps/api/core";
 import { useCallback } from "react";
+import { Config } from "../types/config";
 
 export const THEMES = [
   { id: "default", label: "Aura Dark", primary: "#fff" },
@@ -11,7 +12,10 @@ export const THEMES = [
   { id: "stormy-morning", label: "Stormy Morning", primary: "#bdddfc" },
 ];
 
-export function useTheme(config: any, setConfig: (c: any) => void) {
+export function useTheme(
+  config: Config | null,
+  setConfig: (c: Config) => void
+) {
   const theme = config?.theme || "default";
 
   const applyTheme = useCallback((themeName: string) => {
@@ -38,6 +42,8 @@ export function useTheme(config: any, setConfig: (c: any) => void) {
       document.startViewTransition(() => {
         applyTheme(themeName);
       });
+
+      if (!config) return;
 
       const newConfig = { ...config, theme: themeName };
       setConfig(newConfig);

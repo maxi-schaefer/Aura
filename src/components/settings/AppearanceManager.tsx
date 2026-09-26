@@ -2,16 +2,17 @@ import { Check } from "lucide-react";
 import { Section, WindowModeSelector } from "../commands/SettingsView";
 import { THEMES, useTheme } from "../../hooks/useTheme";
 import { invoke } from "@tauri-apps/api/core";
+import { Config, SetConfig, WindowMode } from "../../types/config";
 
 interface AppearanceManagerProps {
-  config: any;
-  setConfig: (config: any) => void;
+  config: Config;
+  setConfig: SetConfig;
 }
 
 export const AppearanceManager = ({ config, setConfig }: AppearanceManagerProps) => {
   const { theme, changeTheme } = useTheme(config, setConfig);
 
-  const handleWindowModeChange = async (mode: 'compact' | 'expanded') => {
+  const handleWindowModeChange = async (mode: WindowMode) => {
     const newConfig = { ...config, window_mode: mode };
     setConfig(newConfig);
     await invoke("save_config", { config: newConfig });

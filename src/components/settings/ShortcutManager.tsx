@@ -2,8 +2,15 @@ import { useState, useEffect } from "react";
 import { Section } from "../commands/SettingsView"; // Adjust path as needed
 import { invoke } from "@tauri-apps/api/core";
 import { RotateCcw } from "lucide-react";
+import { Config, SetConfig } from "../../types/config";
 
-export const ShortcutsManager = ({ config, setConfig, isSetup = false }: any) => {
+interface ShortcutsManagerProps {
+  config: Config;
+  setConfig: SetConfig;
+  isSetup?: boolean;
+}
+
+export const ShortcutsManager = ({ config, setConfig, isSetup = false }: ShortcutsManagerProps) => {
   const [isRecording, setIsRecording] = useState(false);
   const [recordedKeys, setRecordedKeys] = useState(config.main_shortcut || "Alt+Space");
   const [heldModifiers, setHeldModifiers] = useState<string[]>([]);

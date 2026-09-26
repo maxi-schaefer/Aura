@@ -11,6 +11,7 @@ import About from "../settings/About";
 import { AppearanceManager } from "../settings/AppearanceManager";
 import { User } from "lucide-react"
 import { ShortcutsManager } from "../settings/ShortcutManager";
+import { Config, SetConfig } from "../../types/config";
 
 const CATEGORIES = [
   { id: "general", label: "General", icon: <Settings size={14} /> },
@@ -20,12 +21,12 @@ const CATEGORIES = [
   { id: "about", label: "About", icon: <Info size={14} /> },
 ];
 
-export const SettingsView = ({ query = "", config, setConfig }: { query?: string; config: any; setConfig: (config: any) => void }) => {
+export const SettingsView = ({ query = "", config, setConfig }: { query?: string; config: Config | null; setConfig: SetConfig }) => {
   const [activeTab, setActiveTab] = useState("general");
 
   // Load config on mount
   useEffect(() => {
-    invoke("get_config").then((res) => setConfig(res));
+    invoke<Config>("get_config").then(setConfig);
   }, []);
 
   const filteredCategories = useMemo(() => {
@@ -82,7 +83,7 @@ export const SettingsView = ({ query = "", config, setConfig }: { query?: string
 };
 
 // --- New Body Component ---
-const SettingsBody = ({ activeTab, config, setConfig }: any) => {
+const SettingsBody = ({ activeTab, config, setConfig }: { activeTab: string; config: Config; setConfig: SetConfig }) => {
   return (
     <div className="flex-1 overflow-y-auto custom-scrollbar">
       <AnimatePresence mode="wait">

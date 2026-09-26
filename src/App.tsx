@@ -204,7 +204,7 @@ export default function App() {
                 
                 <AnimatePresence>
 
-                    {!(config.window_mode === "compact" && !activeCommand && query.length === 0) && (
+                    {!(config?.window_mode === "compact" && !activeCommand && query.length === 0) && (
                         <motion.div
                             initial={{ height: 0, opacity: 0 }}
                             animate={{ height: "auto", opacity: 1 }}

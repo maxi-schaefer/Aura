@@ -11,6 +11,7 @@ import yahooIcon from "../../assets/engines/yahoo.png";
 import braveIcon from "../../assets/engines/brave.png";
 import ecosiaIcon from "../../assets/engines/ecosia.png";
 import { useEffect, useState } from "react";
+import { Config, SetConfig } from "../../types/config";
 
 const ENGINES = [
     { id: "bing", name: "Bing", url: "https://www.bing.com/search?q=", icon: bingIcon },
@@ -22,8 +23,8 @@ const ENGINES = [
 ];
 
 interface GeneralManagerProps {
-  config: any;
-  setConfig: (config: any) => void;
+  config: Config;
+  setConfig: SetConfig;
 }
 
 export const GeneralManager = ({ config, setConfig }: GeneralManagerProps) => {

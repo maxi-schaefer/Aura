@@ -1,10 +1,13 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
+import { Config } from "../types/config";
 
-export function useAppInitialization(applyTheme: any) {
-    const [allApps, setAllApps] = useState<any[]>([]);
+type AppItem = { name: string; path: string; icon?: string | null };
+
+export function useAppInitialization(applyTheme: (theme: string) => void) {
+    const [allApps, setAllApps] = useState<AppItem[]>([]);
     const [aliases, setAliases] = useState<Record<string, string>>({});
-    const [config, setConfig] = useState<any>(null);
+    const [config, setConfig] = useState<Config | null>(null);
     const [isLoading, setIsLoading] = useState(true);
     const [firstRun, setFirstRun] = useState<boolean | null>(null);
 
@@ -12,13 +15,13 @@ export function useAppInitialization(applyTheme: any) {
         const init = async () => {
             try {
                 const [apps, aliasMap, cfg] = await Promise.all([
-                    invoke("get_installed_apps"),
-                    invoke("get_aliases"),
-                    invoke("get_config") as Promise<any>,
+                    invoke<AppItem[]>("get_installed_apps"),
+                    invoke<Record<string, string>>("get_aliases"),
+                    invoke<Config>("get_config"),
                 ]);
 
-                setAllApps(apps as any[]);
-                setAliases(aliasMap as Record<string, string>);
+                setAllApps(apps);
+                setAliases(aliasMap);
                 setConfig(cfg);
 
                 setFirstRun(cfg.first_run_complete === false);
