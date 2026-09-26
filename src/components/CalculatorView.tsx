@@ -1,4 +1,5 @@
 import { ArrowRight } from "lucide-react";
+import { groupNumbersInText } from "../lib/calculator";
 
 interface CalculatorViewProps {
     query: string;
@@ -9,25 +10,8 @@ interface CalculatorViewProps {
 
 export const CalculatorView = ({ query, result, fromLabel, toLabel }: CalculatorViewProps) => {
     const parts = query.toLowerCase().split(/\s+(to|in|=)\s+/);
-    let inputAmount = parts[0] || query;
-    inputAmount = inputAmount.replace("pi", "π");
-
-    // Format numbers with commas and cap to 4 decimal places
-    inputAmount = inputAmount.replace(
-        /(\d+)(\.\d+)?/g,
-        (_, intPart, decPart) => {
-            const num = Number(intPart + (decPart || ""));
-            return num.toLocaleString(undefined, { maximumFractionDigits: 4 });
-        }
-    );
-
-    const formattedResult = result.replace(
-        /(\d+)(\.\d+)?/g,
-        (_, intPart, decPart) => {
-            const num = Number(intPart + (decPart || ""));
-            return num.toLocaleString(undefined, { maximumFractionDigits: 4 });
-        }
-    );
+    const inputAmount = groupNumbersInText((parts[0] || query).replace("pi", "π"));
+    const formattedResult = groupNumbersInText(result);
 
     return (
         <div className="w-full py-12 px-8 flex flex-col items-center justify-center border border-white/5 bg-white/2 rounded-xl overflow-hidden">

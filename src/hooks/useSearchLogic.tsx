@@ -1,6 +1,7 @@
 import { useEffect, useMemo, useState } from "react";
 import { Result } from "../types/result";
-import { calculateExpression, detectColor } from "../lib/utils";
+import { detectColor } from "../lib/utils";
+import { evaluateExpression } from "../lib/calculator";
 import { invoke } from "@tauri-apps/api/core";
 import { loadCommands } from "../lib/command";
 import { buildAliasResults, buildAppResults, buildCalculatorResult, buildColorResult, buildCommandResults, buildFallback, buildFileResults } from "../lib/resultBuilders";
@@ -17,7 +18,7 @@ export function useSearchLogic(
     const [fileResults, setFileResults] = useState<FileItem[]>([]);
     const [commands, setCommands] = useState<Record<string, Command>>({});
 
-    const calculation = useMemo(() => calculateExpression(query), [query]);
+    const calculation = useMemo(() => evaluateExpression(query), [query]);
     const detectedColor = useMemo(() => detectColor(query), [query]);
 
     useEffect(() => {

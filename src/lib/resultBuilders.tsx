@@ -3,36 +3,31 @@ import { CalculatorView } from "../components/CalculatorView";
 import { invoke } from "@tauri-apps/api/core";
 import { AppItem, FileItem } from "../types/system";
 import { Command } from "../types/command";
+import { CalculationResult } from "./calculator";
 
 const MAX_PER_GROUP = 30;
 
-export function buildCalculatorResult(calculation: string | null) {
+export function buildCalculatorResult(calculation: CalculationResult | null) {
     if (!calculation) return [];
-
-    // Format numbers with commas
-    const formattedCalculation = calculation.replace(
-        /(\d+)(\.\d+)?/g,
-        (_, intPart, decPart) => {
-            return Number(intPart).toLocaleString() + (decPart || "");
-        }
-    );
 
     return [{
         id: "calc",
-        title: formattedCalculation,
+        title: calculation.display,
         subtitle: "Calculator",
         type: "calc" as const,
         score: 1000,
         group: "Calculator",
+        // CalculatorView formats what it is given, so hand it the raw value.
         render: (q: string) => (
             <CalculatorView
                 query={q}
-                result={formattedCalculation}
+                result={calculation.raw}
                 fromLabel="Input"
                 toLabel="Result"
             />
         ),
-        action: () => navigator.clipboard.writeText(formattedCalculation),
+        // Copy the canonical value, not the locale-formatted one.
+        action: () => navigator.clipboard.writeText(calculation.raw),
     }];
 }
 
