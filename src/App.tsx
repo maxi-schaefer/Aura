@@ -5,7 +5,6 @@ import Footer from "./components/footer/Footer";
 import { ResultList } from "./components/ResultList";
 import { useSearchLogic } from "./hooks/useSearchLogic";
 import { useWindowShadow } from "./hooks/useWindowShadow";
-import icon from "./assets/icon.png";
 import { InfoPanel } from "./components/InfoPanel";
 import SetupScreen from "./components/SetupScreen";
 import { useTheme } from "./hooks/useTheme";
@@ -16,6 +15,7 @@ import { useExecution } from "./hooks/useExecution";
 import { useKeyboardNavigation } from "./hooks/useKeyboardNavigation";
 import { playSuccess, playTick } from "./lib/sound";
 import { Result } from "./types/result";
+import { SearchHeader } from "./components/SearchHeader";
 
 export default function App() {
     const [query, setQuery] = useState("");
@@ -149,59 +149,14 @@ export default function App() {
                 transition={{ type: "spring", stiffness: 400, damping: 35 }}
                 className="glass flex flex-col overflow-hidden"
             >
-                <header className="relative flex items-center px-4 py-3 border-b border-white/4">
-                    <AnimatePresence mode="popLayout">
-                        {activeCommand && (
-                            <motion.div
-                                initial={{ opacity: 0, x: -8 }}
-                                animate={{ opacity: 1, x: 0 }}
-                                exit={{ opacity: 0, x: -8 }}
-                                transition={{ duration: 0.15, ease: "easeOut" }}
-                                className="flex items-center gap-2 mr-3 px-2 py-1 rounded bg-white/4"
-                            >
-                                <span className="text-[10px] font-medium text-white/30 uppercase tracking-[0.12em]">
-                                    {activeCommand.title}
-                                </span>
-                                <span className="text-[9px] text-white/10 font-mono select-none">/</span>
-                            </motion.div>
-                        )}
-                    </AnimatePresence>
-
-                    <div className="relative flex-1 flex items-center h-8">
-                        <img
-                            src={icon}
-                            alt="icon"
-                            className="absolute left-1 w-5 h-5 pointer-events-none"
-                        />
-
-                        <input
-                            ref={inputRef}
-                            autoFocus
-                            value={query}
-                            onChange={(e) => setQuery(e.target.value)}
-                            placeholder="Search for apps and commands..."
-                            className="z-10 w-full bg-transparent outline-none text-lg text-white/90 placeholder:text-white/10 font-light tracking-tight pl-10"
-                        />
-
-                        {!activeCommand && query && (
-                            <div className="absolute pl-10 text-lg font-light pointer-events-none flex items-center tracking-tight whitespace-pre">
-                                <span className="opacity-0 select-none">{query}</span>
-                                <span className="text-white/10">{suggestion}</span>
-                                {suggestion && (
-                                    <motion.div
-                                        initial={{ opacity: 0, x: -5 }}
-                                        animate={{ opacity: 1, x: 0 }}
-                                        className="ml-3 flex items-center gap-1.5 px-1.5 py-0.5 rounded-sm bg-white/3 border border-white/8 shadow-sm"
-                                    >
-                                        <span className="text-[10px] font-medium text-white/20 tracking-wide uppercase">Tab</span>
-                                    </motion.div>
-                                )}
-                            </div>
-                        )}
-                    </div>
-
-                    <div className="ml-4 tabular-nums text-[11px] text-white/20 font-medium">{time}</div>
-                </header>
+                <SearchHeader
+                    query={query}
+                    setQuery={setQuery}
+                    suggestion={suggestion}
+                    activeCommand={activeCommand}
+                    time={time}
+                    inputRef={inputRef}
+                />
                 
                 <AnimatePresence>
 
