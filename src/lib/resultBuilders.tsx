@@ -85,38 +85,53 @@ export function buildCommandResults(
         }));
 }
 
+/**
+ * Apps and files differ only in how they are labelled and ranked; both
+ * resolve to a path that the backend launches.
+ */
+function buildLaunchableResults<T extends { name: string; path: string; icon?: string | null }>(
+    items: T[],
+    options: {
+        type: "app" | "file";
+        group: string;
+        baseScore: number;
+        subtitle: (item: T) => string;
+    }
+) {
+    return items.slice(0, MAX_PER_GROUP).map((item, index) => ({
+        id: item.path,
+        title: item.name,
+        subtitle: options.subtitle(item),
+        type: options.type,
+        score: options.baseScore - index,
+        group: options.group,
+        icon: item.icon,
+        action: async () => {
+            await invoke("launch_app", { path: item.path });
+        },
+    }));
+}
+
 export function buildAppResults(query: string, allApps: AppItem[]) {
     const filtered = query
         ? matchSorter(allApps, query, { keys: ["name"] })
         : allApps;
 
-    return filtered.slice(0, MAX_PER_GROUP).map((app, index) => ({
-        id: app.path,
-        title: app.name,
-        subtitle: "Application",
-        type: "app" as const,
-        score: 50 - index,
+    return buildLaunchableResults(filtered, {
+        type: "app",
         group: "Applications",
-        icon: app.icon,
-        action: async () => {
-            await invoke("launch_app", { path: app.path });
-        },
-    }));
+        baseScore: 50,
+        subtitle: () => "Application",
+    });
 }
 
 export function buildFileResults(fileResults: FileItem[]) {
-    return fileResults.slice(0, MAX_PER_GROUP).map((file, index) => ({
-        id: file.path,
-        title: file.name,
-        subtitle: file.is_dir ? "Folder" : "File",
-        type: "file" as const,
-        score: 40 - index,
+    return buildLaunchableResults(fileResults, {
+        type: "file",
         group: "Files",
-        icon: file.icon,
-        action: async () => {
-            await invoke("launch_app", { path: file.path });
-        },
-    }));
+        baseScore: 40,
+        subtitle: (file) => (file.is_dir ? "Folder" : "File"),
+    });
 }
 
 export function buildAliasResults(query: string, aliases: Record<string, string>) {
