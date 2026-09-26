@@ -1,5 +1,6 @@
 #![cfg_attr(not(debug_assertions), windows_subsystem = "windows")]
 
+mod ai;
 mod commands;
 mod scanner;
 mod setup;
@@ -46,6 +47,11 @@ pub fn run() {
             commands::notes::save_note,
             commands::notes::append_note,
             commands::picker::start_color_pick,
+            commands::system::refresh_shortcuts,
+            ai::ai_providers,
+            ai::ai_set_key,
+            ai::ai_clear_key,
+            ai::ai_complete,
         ])
         .setup(|app| {
             setup::init(app)?;

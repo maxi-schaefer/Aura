@@ -363,6 +363,12 @@ pub fn launch_app_elevated(path: String) -> Result<(), String> {
         .map_err(|e| format!("Could not run {path} as administrator: {e}"))
 }
 
+/// Re-applies every global shortcut and reports which ones registered.
+#[command]
+pub fn refresh_shortcuts(app: AppHandle) -> Vec<setup::ShortcutRegistration> {
+    setup::refresh_global_shortcut(&app)
+}
+
 #[command]
 pub fn get_aliases(app: AppHandle) -> HashMap<String, String> {
     let path = app.path().app_config_dir().unwrap().join("aliases.json");
