@@ -1,22 +1,22 @@
-export async function loadCommands() {
-    const modules = import.meta.glob("../commands/*.tsx");
+import { Command, CommandModule } from "../types/command";
 
-    const entries = await Promise.all(
-        Object.entries(modules).map(async ([_path, loader]) => {
-            const mod: any = await loader();
-            return mod.default;
-        })
+/**
+ * Loads every module in src/commands and flattens each one into a Command,
+ * keyed by the `cmd` it declares in its meta.
+ */
+export async function loadCommands(): Promise<Record<string, Command>> {
+    const modules = import.meta.glob<{ default: CommandModule }>(
+        "../commands/*.tsx"
     );
 
-    const map: Record<string, any> = {};
+    const loaded = await Promise.all(
+        Object.values(modules).map(async (load) => (await load()).default)
+    );
 
-    for (const cmd of entries) {
-        map[cmd.meta.cmd] = {
-        ...cmd.meta,
-            render: cmd.render,
-            execute: cmd.execute,
-        };
-    }
-
-    return map;
+    return Object.fromEntries(
+        loaded.map(({ meta, render, execute }) => [
+            meta.cmd,
+            { ...meta, render, execute },
+        ])
+    );
 }
