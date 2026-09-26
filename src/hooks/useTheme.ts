@@ -26,20 +26,20 @@ export function useTheme(config: Config | null, setConfig: SetConfig) {
 
   const changeTheme = useCallback(
     async (themeName: string, event?: React.MouseEvent) => {
-      if (!document.startViewTransition) {
+      if (document.startViewTransition) {
+        const x = event?.clientX ?? window.innerWidth / 2;
+        const y = event?.clientY ?? window.innerHeight / 2;
+
+        document.documentElement.style.setProperty("--reveal-x", `${x}px`);
+        document.documentElement.style.setProperty("--reveal-y", `${y}px`);
+
+        document.startViewTransition(() => {
+          applyTheme(themeName);
+        });
+      } else {
+        // No View Transitions support: swap the theme without the reveal.
         applyTheme(themeName);
-        return;
       }
-
-      const x = event?.clientX ?? window.innerWidth / 2;
-      const y = event?.clientY ?? window.innerHeight / 2;
-
-      document.documentElement.style.setProperty("--reveal-x", `${x}px`);
-      document.documentElement.style.setProperty("--reveal-y", `${y}px`);
-
-      document.startViewTransition(() => {
-        applyTheme(themeName);
-      });
 
       await patchConfig({ theme: themeName });
     },
