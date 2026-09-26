@@ -1,4 +1,3 @@
-import { invoke } from "@tauri-apps/api/core";
 import { Section, ToggleItem } from "../commands/SettingsView"; // Adjust paths as needed
 import { disable, enable, isEnabled } from "@tauri-apps/plugin-autostart";
 import { motion } from "framer-motion";
@@ -12,6 +11,7 @@ import braveIcon from "../../assets/engines/brave.png";
 import ecosiaIcon from "../../assets/engines/ecosia.png";
 import { useEffect, useState } from "react";
 import { Config, SetConfig } from "../../types/config";
+import { useConfigPatch } from "../../hooks/useConfigPatch";
 
 const ENGINES = [
     { id: "bing", name: "Bing", url: "https://www.bing.com/search?q=", icon: bingIcon },
@@ -29,6 +29,7 @@ interface GeneralManagerProps {
 
 export const GeneralManager = ({ config, setConfig }: GeneralManagerProps) => {
   const [autoStart, setAutoStart] = useState(false);
+  const patchConfig = useConfigPatch(config, setConfig);
 
   useEffect(() => {
       isEnabled().then(setAutoStart);
@@ -40,11 +41,8 @@ export const GeneralManager = ({ config, setConfig }: GeneralManagerProps) => {
       setAutoStart(await isEnabled());
     };
   
-  const updateEngine = async (engineUrl: string) => {
-    const newConfig = { ...config, search_engine: engineUrl };
-    setConfig(newConfig);
-    await invoke("save_config", { config: newConfig });
-  };
+  const updateEngine = (engineUrl: string) =>
+    patchConfig({ search_engine: engineUrl });
 
   return (
     <div className="space-y-8">

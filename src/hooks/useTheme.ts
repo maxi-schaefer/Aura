@@ -1,6 +1,6 @@
-import { invoke } from "@tauri-apps/api/core";
 import { useCallback } from "react";
-import { Config } from "../types/config";
+import { Config, SetConfig } from "../types/config";
+import { useConfigPatch } from "./useConfigPatch";
 
 export const THEMES = [
   { id: "default", label: "Aura Dark", primary: "#fff" },
@@ -12,11 +12,9 @@ export const THEMES = [
   { id: "stormy-morning", label: "Stormy Morning", primary: "#bdddfc" },
 ];
 
-export function useTheme(
-  config: Config | null,
-  setConfig: (c: Config) => void
-) {
+export function useTheme(config: Config | null, setConfig: SetConfig) {
   const theme = config?.theme || "default";
+  const patchConfig = useConfigPatch(config, setConfig);
 
   const applyTheme = useCallback((themeName: string) => {
     const root = document.documentElement;
@@ -43,18 +41,9 @@ export function useTheme(
         applyTheme(themeName);
       });
 
-      if (!config) return;
-
-      const newConfig = { ...config, theme: themeName };
-      setConfig(newConfig);
-
-      try {
-        await invoke("save_config", { config: newConfig });
-      } catch (e) {
-        console.error("Failed to save config:", e);
-      }
+      await patchConfig({ theme: themeName });
     },
-    [config, setConfig, applyTheme]
+    [applyTheme, patchConfig]
   );
 
   return { theme, applyTheme, changeTheme };

@@ -1,8 +1,8 @@
 import { Check } from "lucide-react";
 import { Section, WindowModeSelector } from "../commands/SettingsView";
 import { THEMES, useTheme } from "../../hooks/useTheme";
-import { invoke } from "@tauri-apps/api/core";
 import { Config, SetConfig, WindowMode } from "../../types/config";
+import { useConfigPatch } from "../../hooks/useConfigPatch";
 
 interface AppearanceManagerProps {
   config: Config;
@@ -11,12 +11,10 @@ interface AppearanceManagerProps {
 
 export const AppearanceManager = ({ config, setConfig }: AppearanceManagerProps) => {
   const { theme, changeTheme } = useTheme(config, setConfig);
+  const patchConfig = useConfigPatch(config, setConfig);
 
-  const handleWindowModeChange = async (mode: WindowMode) => {
-    const newConfig = { ...config, window_mode: mode };
-    setConfig(newConfig);
-    await invoke("save_config", { config: newConfig });
-  };
+  const handleWindowModeChange = (mode: WindowMode) =>
+    patchConfig({ window_mode: mode });
 
   return (
     <div className="space-y-8">
