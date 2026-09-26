@@ -8,7 +8,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { AliasManager } from "../settings/AliasManager";
 import { GeneralManager } from "../settings/GeneralManager";
 import About from "../settings/About";
-import { AppearanceManager } from "../settings/AppereanceManager";
+import { AppearanceManager } from "../settings/AppearanceManager";
 import { User } from "lucide-react"
 import { ShortcutsManager } from "../settings/ShortcutManager";
 
