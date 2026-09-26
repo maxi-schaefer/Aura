@@ -130,13 +130,29 @@ export const Section = ({ label, children }: { label: string; children: React.Re
   </div>
 );
 
-export const ToggleItem = ({ label, description, defaultChecked = false, checked, onChange }: any) => {
-  const [isChecked, setIsChecked] = useState(defaultChecked);
+interface ToggleItemProps {
+  label: string;
+  description?: string;
+  /** Initial state when the toggle is uncontrolled. */
+  defaultChecked?: boolean;
+  /** Supply to drive the toggle from the parent. */
+  checked?: boolean;
+  onChange?: (checked: boolean) => void;
+}
+
+export const ToggleItem = ({ label, description, defaultChecked = false, checked, onChange }: ToggleItemProps) => {
+  const [internalChecked, setInternalChecked] = useState(defaultChecked);
+
+  // Controlled when a `checked` prop is supplied, uncontrolled otherwise.
+  const isControlled = checked !== undefined;
+  const isChecked = isControlled ? checked : internalChecked;
+
   return (
     <div 
         onClick={() => {
-          setIsChecked(!isChecked);
-          if (onChange) onChange(!isChecked);
+          const next = !isChecked;
+          if (!isControlled) setInternalChecked(next);
+          onChange?.(next);
         }}
         className="flex items-center justify-between p-4 bg-transparent hover:bg-white/3 transition-colors cursor-pointer group border-b border-white/5 last:border-0"
     >
@@ -144,9 +160,9 @@ export const ToggleItem = ({ label, description, defaultChecked = false, checked
         <div className="text-[13.5px] text-fg/90 font-medium group-hover:text-fg">{label}</div>
         <div className="text-[12px] text-fg/30 leading-snug mt-0.5">{description}</div>
       </div>
-      <div className={`w-9 h-5 rounded-full relative transition-all duration-200 ${checked ? 'bg-linear-to-r from-primary to-secondary' : 'bg-white/5'}`}>
+      <div className={`w-9 h-5 rounded-full relative transition-all duration-200 ${isChecked ? 'bg-linear-to-r from-primary to-secondary' : 'bg-white/5'}`}>
           <motion.div 
-            animate={{ x: checked ? 18 : 3 }}
+            animate={{ x: isChecked ? 18 : 3 }}
             transition={{ type: "spring", stiffness: 500, damping: 30 }}
             className="absolute top-0.5 size-4 rounded-full bg-white shadow-lg" 
           />
