@@ -4,6 +4,7 @@ import { invoke } from "@tauri-apps/api/core";
 import { AppItem, FileItem } from "../types/system";
 import { Command } from "../types/command";
 import { CalculationResult } from "./calculator";
+import { nameOf, parseColor } from "./color";
 
 const MAX_PER_GROUP = 30;
 
@@ -34,10 +35,13 @@ export function buildCalculatorResult(calculation: CalculationResult | null) {
 export function buildColorResult(color: string | null) {
     if (!color) return [];
 
+    const parsed = parseColor(color);
+    const name = parsed ? nameOf(parsed) : null;
+
     return [{
         id: "color",
         title: color,
-        subtitle: "Color",
+        subtitle: name ? `Color · ${name}` : "Color",
         type: "color" as const,
         score: 95,
         group: "Quick Actions",

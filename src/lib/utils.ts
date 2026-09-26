@@ -1,18 +1,15 @@
 import { open } from "@tauri-apps/plugin-shell";
+import { parseColor, toHex } from "./color";
 
+/**
+ * Canonical hex for a query that explicitly spells out a colour.
+ *
+ * Colour names are excluded on purpose: "red" and "gold" are ordinary
+ * search terms, so only #hex, rgb() and hsl() produce an inline result.
+ */
 export const detectColor = (query: string): string | null => {
-    const hexRegex = /^#([A-Fa-f0-9]{6}|[A-Fa-f0-9]{3})$/;
-    const rgbRegex = /^rgb\(\s*(\d{1,3})\s*,\s*(\d{1,3})\s*,\s*(\d{1,3})\s*\)$/;
-
-    if (hexRegex.test(query)) return query;
-    
-    const rgbMatch = query.match(rgbRegex);
-    if (rgbMatch) {
-        const [_, r, g, b] = rgbMatch;
-        return `#${((1 << 24) + (+r << 16) + (+g << 8) + +b).toString(16).slice(1)}`;
-    }
-
-    return null;
+    const rgb = parseColor(query, { allowNames: false });
+    return rgb ? toHex(rgb) : null;
 };
 
 export const handleLinkClick = async (url: string) => {
