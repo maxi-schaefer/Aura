@@ -36,6 +36,8 @@ pub fn run() {
             commands::system::update_package,
             commands::vscode::get_vscode_projects,
             commands::vscode::open_vscode_project,
+            commands::content::search_file_contents,
+            commands::content::open_file_at_line,
         ])
         .setup(|app| {
             setup::init(app)?;

@@ -149,7 +149,7 @@ pub fn get_vscode_projects() -> Vec<VsCodeProject> {
 }
 
 /// Locates the executable for a variant, preferring a real install path.
-fn editor_binary(editor: &str) -> Option<PathBuf> {
+pub(crate) fn editor_binary(editor: &str) -> Option<PathBuf> {
     let (program_files_name, cli) = match editor {
         "VS Code Insiders" => ("Microsoft VS Code Insiders", "code-insiders.cmd"),
         "VSCodium" => ("VSCodium", "codium.cmd"),

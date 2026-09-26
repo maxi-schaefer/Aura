@@ -23,3 +23,14 @@ export interface VsCodeProject {
     /** Display name of the editor variant, e.g. "VS Code". */
     editor: string;
 }
+
+/** A matching line inside a file, from `search_file_contents`. */
+export interface ContentMatch {
+    name: string;
+    path: string;
+    /** 1-based line number. */
+    line: number;
+    preview: string;
+    /** Total matching lines in the file, which may exceed those returned. */
+    total_in_file: number;
+}
