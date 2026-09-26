@@ -4,16 +4,18 @@ import { calculateExpression, detectColor } from "../lib/utils";
 import { invoke } from "@tauri-apps/api/core";
 import { loadCommands } from "../lib/command";
 import { buildAliasResults, buildAppResults, buildCalculatorResult, buildColorResult, buildCommandResults, buildFallback, buildFileResults } from "../lib/resultBuilders";
+import { AppItem, FileItem } from "../types/system";
+import { Command } from "../types/command";
 
 export function useSearchLogic(
     activeCommandMode: boolean,
     query: string,
-    allApps: any[],
+    allApps: AppItem[],
     aliases: Record<string, string>
 ) {
     const [results, setResults] = useState<Result[]>([]);
-    const [fileResults, setFileResults] = useState<any[]>([]);
-    const [commands, setCommands] = useState<Record<string, any>>({});
+    const [fileResults, setFileResults] = useState<FileItem[]>([]);
+    const [commands, setCommands] = useState<Record<string, Command>>({});
 
     const calculation = useMemo(() => calculateExpression(query), [query]);
     const detectedColor = useMemo(() => detectColor(query), [query]);
@@ -21,11 +23,11 @@ export function useSearchLogic(
     useEffect(() => {
         if (!query) return setFileResults([]);
 
-        invoke("search_files", { query }).then((res: any) => setFileResults(res));
+        invoke<FileItem[]>("search_files", { query }).then(setFileResults);
     }, [query]);
 
     useEffect(() => {
-        loadCommands().then((res: any) => setCommands(res));
+        loadCommands().then(setCommands);
     }, []);
 
     useEffect(() => {

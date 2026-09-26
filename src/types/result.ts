@@ -17,7 +17,8 @@ export type Result = {
 
     view?: React.ReactNode;
     width?: number;
-    icon?: string | LucideIcon;
+    /** Backend items carry Option<String>, so null is a real value here. */
+    icon?: string | LucideIcon | null;
 
     score: number;
     group: string;

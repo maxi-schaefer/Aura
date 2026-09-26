@@ -1,8 +1,7 @@
 import { useEffect, useState } from "react";
 import { invoke } from "@tauri-apps/api/core";
 import { Config } from "../types/config";
-
-type AppItem = { name: string; path: string; icon?: string | null };
+import { AppItem } from "../types/system";
 
 export function useAppInitialization(applyTheme: (theme: string) => void) {
     const [allApps, setAllApps] = useState<AppItem[]>([]);

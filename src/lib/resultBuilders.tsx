@@ -1,6 +1,8 @@
 import { matchSorter } from "match-sorter";
 import { CalculatorView } from "../components/CalculatorView";
 import { invoke } from "@tauri-apps/api/core";
+import { AppItem, FileItem } from "../types/system";
+import { Command } from "../types/command";
 
 const MAX_PER_GROUP = 30;
 
@@ -50,7 +52,7 @@ export function buildColorResult(color: string | null) {
 
 export function buildCommandResults(
     query: string,
-    commands: Record<string, any>
+    commands: Record<string, Command>
 ) {
     const [inputCmd, ...args] = query.toLowerCase().split(" ");
 
@@ -83,7 +85,7 @@ export function buildCommandResults(
         }));
 }
 
-export function buildAppResults(query: string, allApps: any[]) {
+export function buildAppResults(query: string, allApps: AppItem[]) {
     const filtered = query
         ? matchSorter(allApps, query, { keys: ["name"] })
         : allApps;
@@ -102,7 +104,7 @@ export function buildAppResults(query: string, allApps: any[]) {
     }));
 }
 
-export function buildFileResults(fileResults: any[]) {
+export function buildFileResults(fileResults: FileItem[]) {
     return fileResults.slice(0, MAX_PER_GROUP).map((file, index) => ({
         id: file.path,
         title: file.name,
